@@ -1,0 +1,94 @@
+/* Dialogue de type d'entité personnalisé (§2 v1.8). */
+.ct-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.ct-preview__ico {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+.ct-preview__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.ct-iconsearch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text-mute);
+}
+.ct-iconsearch__input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 0;
+}
+.ct-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 5px;
+  max-height: 148px;
+  overflow-y: auto;
+  margin-top: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.ct-icon {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast);
+}
+.ct-icon:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.ct-icon--on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft, rgba(139, 92, 246, 0.12));
+}
+
+.ct-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ct-field {
+  display: grid;
+  grid-template-columns: 1fr 150px auto;
+  gap: 6px;
+  align-items: center;
+}
+.ct-addfield {
+  align-self: flex-start;
+}
+.ct-editing-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}

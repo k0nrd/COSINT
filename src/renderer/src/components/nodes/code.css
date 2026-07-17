@@ -1,0 +1,355 @@
+/*
+ * Bloc de code (§5 v1.6) : mise en page de l'éditeur (textarea transparent sur
+ * `<pre>` colorié + gouttière de numéros) et thème de coloration Prism.
+ * Aucun thème Prism externe n'est importé : les couleurs des jetons passent par
+ * des variables, déclinées pour le thème sombre (défaut) et le thème clair —
+ * cohérence avec le reste de l'app (styles/tokens.css).
+ */
+
+/* ——— Palette des jetons Prism (thème sombre par défaut) ——— */
+:root,
+:root[data-theme='dark'] {
+  --code-bg: #0d1117;
+  --code-text: #c9d1d9;
+  --code-comment: #6a737d;
+  --code-punct: #9aa5b1;
+  --code-keyword: #ff7b72;
+  --code-string: #a5d6ff;
+  --code-number: #79c0ff;
+  --code-function: #d2a8ff;
+  --code-class: #ffa657;
+  --code-operator: #ff9bce;
+  --code-tag: #7ee787;
+  --code-attr: #79c0ff;
+  --code-gutter: #6a737d;
+}
+:root[data-theme='light'] {
+  --code-bg: #fbfcfe;
+  --code-text: #1f2328;
+  --code-comment: #6e7781;
+  --code-punct: #57606a;
+  --code-keyword: #cf222e;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-function: #8250df;
+  --code-class: #953800;
+  --code-operator: #a40e26;
+  --code-tag: #116329;
+  --code-attr: #0550ae;
+  --code-gutter: #8a94a3;
+}
+
+/* ——— Cadre du nœud « code » ——— */
+.nd-code {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--code-bg);
+}
+
+/* Barre du nœud : titre optionnel, sélecteur de langage, copier, plein écran.
+   §5a v1.7 : la barre n'est plus `nodrag` → curseur de déplacement, elle sert de
+   zone de drag dédiée (les contrôles interactifs, `nodrag`, gardent leur curseur). */
+.nd-code-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  cursor: grab;
+}
+.nd-code-bar:active {
+  cursor: grabbing;
+}
+/* En plein écran (Modal), la barre ne déplace rien : curseur normal. */
+.nd-code-bar--full {
+  cursor: default;
+}
+/* Bouton « Éditer » actif (mode édition en cours). */
+.nd-code-btn--active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.nd-code-title {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  padding: 2px 4px;
+}
+.nd-code-title::placeholder {
+  color: var(--text-mute);
+}
+.nd-code-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-mute);
+  border-radius: var(--r-sm);
+  padding: 3px 6px;
+  cursor: pointer;
+  transition:
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+.nd-code-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ——— Sélecteur de langage (popover cherchable) ——— */
+.nd-code-lang {
+  position: relative;
+  flex: 0 0 auto;
+}
+.nd-code-lang__current {
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
+  font-size: 11.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.nd-code-lang__current:hover {
+  border-color: var(--border-strong);
+}
+.nd-code-lang__pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  width: 220px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+.nd-code-lang__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-mute);
+}
+.nd-code-lang__list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.nd-code-lang__opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 5px 8px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  cursor: pointer;
+}
+.nd-code-lang__opt:hover {
+  background: var(--panel-2);
+}
+.nd-code-lang__opt--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.nd-code-lang__empty {
+  padding: 8px;
+  color: var(--text-mute);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ——— Éditeur colorié : conteneur défilant (les deux axes) ——— */
+.nd-code-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--code-bg);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  tab-size: 2;
+  /* §5a v1.7 : en aperçu (hors édition), le corps est une zone de déplacement
+     (curseur de drag) — l'édition démarre au double-clic. */
+  cursor: grab;
+}
+.nd-code-scroll:active {
+  cursor: grabbing;
+}
+/* En édition : curseur texte + fin anneau d'accent pour signaler le mode actif. */
+.nd-code-scroll--editing {
+  cursor: auto;
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+.nd-code-scroll--editing:active {
+  cursor: auto;
+}
+/* §5a v1.7 : le textarea ne capte le pointeur qu'en mode édition ; hors édition il
+   est neutralisé (`--locked`) pour que le simple clic sélectionne/déplace le nœud. */
+.nd-code-input--locked {
+  pointer-events: none;
+}
+.nd-code-inner {
+  display: flex;
+  min-width: max-content;
+  min-height: 100%;
+}
+/* Gouttière des numéros de ligne : collée à gauche (reste visible au scroll
+   horizontal), alignée ligne à ligne avec le code. */
+.nd-code-lines {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px 8px 8px 10px;
+  background: var(--code-bg);
+  border-right: 1px solid var(--border);
+  color: var(--code-gutter);
+  user-select: none;
+  text-align: right;
+}
+.nd-code-lines span {
+  display: block;
+}
+
+/* Zone code : le `<pre>` (dans le flux) dimensionne, le textarea se superpose. */
+.nd-code-area {
+  position: relative;
+  flex: 1 0 auto;
+}
+.nd-code-pre,
+.nd-code-input {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  tab-size: inherit;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  border: none;
+}
+.nd-code-pre {
+  display: block;
+  min-height: 100%;
+  color: var(--code-text);
+  pointer-events: none;
+}
+.nd-code-pre code {
+  font-family: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.nd-code-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text);
+  overflow: hidden;
+}
+.nd-code-input::placeholder {
+  color: var(--text-mute);
+}
+.nd-code-input::selection {
+  background: var(--accent-soft);
+}
+
+/* ——— Éditeur plein écran (Modal) ——— */
+.nd-code-full {
+  display: flex;
+  flex-direction: column;
+  height: min(72vh, 640px);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.nd-code-bar--full {
+  justify-content: flex-end;
+}
+
+/* ——— Coloration des jetons Prism ——— */
+.nd-code-pre .token.comment,
+.nd-code-pre .token.prolog,
+.nd-code-pre .token.doctype,
+.nd-code-pre .token.cdata {
+  color: var(--code-comment);
+  font-style: italic;
+}
+.nd-code-pre .token.punctuation {
+  color: var(--code-punct);
+}
+.nd-code-pre .token.keyword,
+.nd-code-pre .token.rule,
+.nd-code-pre .token.important,
+.nd-code-pre .token.atrule {
+  color: var(--code-keyword);
+}
+.nd-code-pre .token.string,
+.nd-code-pre .token.char,
+.nd-code-pre .token.attr-value,
+.nd-code-pre .token.regex {
+  color: var(--code-string);
+}
+.nd-code-pre .token.number,
+.nd-code-pre .token.boolean,
+.nd-code-pre .token.constant,
+.nd-code-pre .token.symbol {
+  color: var(--code-number);
+}
+.nd-code-pre .token.function,
+.nd-code-pre .token.method {
+  color: var(--code-function);
+}
+.nd-code-pre .token.class-name,
+.nd-code-pre .token.builtin,
+.nd-code-pre .token.namespace {
+  color: var(--code-class);
+}
+.nd-code-pre .token.operator,
+.nd-code-pre .token.entity,
+.nd-code-pre .token.url {
+  color: var(--code-operator);
+}
+.nd-code-pre .token.tag,
+.nd-code-pre .token.selector {
+  color: var(--code-tag);
+}
+.nd-code-pre .token.attr-name,
+.nd-code-pre .token.property,
+.nd-code-pre .token.variable {
+  color: var(--code-attr);
+}
+.nd-code-pre .token.bold {
+  font-weight: 700;
+}
+.nd-code-pre .token.italic {
+  font-style: italic;
+}

@@ -1,0 +1,84 @@
+# Packaging Windows (NSIS + portable). Icône générée par scripts/generate-icon.mjs.
+#
+# GUID / identité applicative (§5) : electron-builder dérive le GUID NSIS de
+# l'appId de manière DÉTERMINISTE. Tant que `appId` ne change pas, Windows
+# reconnaît la même application : installer une nouvelle version PAR-DESSUS
+# l'ancienne remplace proprement les fichiers sans désinstallation manuelle,
+# et l'entrée « Applications » est mise à jour. NE JAMAIS changer cet appId.
+appId: com.cosint.app
+productName: COSINT
+# Métadonnées de l'exécutable (§2 v1.4) : un binaire bien renseigné (éditeur,
+# copyright, description, version, icône) réduit les frictions SmartScreen.
+copyright: © COSINT — outil OSINT collaboratif pair-à-pair
+directories:
+  output: release
+  buildResources: build
+files:
+  - 'out/**'
+asar: true
+npmRebuild: false
+win:
+  target:
+    - nsis
+    - portable
+  icon: build/icon.ico
+  # Nom d'éditeur affiché (doit correspondre au sujet du certificat une fois signé).
+  publisherName: COSINT
+  # ——— Signature de code Windows (§2 v1.4) — voir le guide du README ———
+  # Pilotée par variables d'environnement (aucun secret dans le dépôt) :
+  #   - Certificat OV (.pfx) : définir CSC_LINK (chemin ou base64 du .pfx) et
+  #     CSC_KEY_PASSWORD ; electron-builder les détecte automatiquement.
+  #   - Certificat EV (jeton matériel / magasin Windows) : signer via
+  #     `electron-builder --win --config.win.certificateSubjectName="Nom Légal"`.
+  # Sans ces variables, le build produit un exécutable NON signé (fonctionnel) :
+  # `npm run build:win` marche toujours. Algorithme et horodatage ci-dessous ne
+  # s'appliquent QU'À la signature (ignorés si aucun certificat n'est fourni).
+  signingHashAlgorithms:
+    - sha256
+  rfc3161TimeStampServer: http://timestamp.sectigo.com
+  # Auto-update sans blocage tant que l'app n'est pas signée (repasser à true une
+  # fois un certificat en place pour vérifier la signature des mises à jour).
+  verifyUpdateCodeSignature: false
+nsis:
+  # Installeur assisté (non one-click) : choix du dossier, raccourcis,
+  # entrée « Applications » de Windows avec désinstallateur.
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: 'COSINT-Setup-${version}.exe'
+  shortcutName: COSINT
+  uninstallDisplayName: COSINT
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  runAfterFinish: true
+  # Désinstallation : build/installer.nsh propose de conserver (défaut) ou
+  # supprimer les données locales (%APPDATA%/COSINT — tableaux, profil).
+  include: build/installer.nsh
+portable:
+  artifactName: 'COSINT-Portable-${version}.exe'
+# ——— Packaging Linux (AppImage universel + .deb Debian/Ubuntu) ———
+# AppImage : un seul fichier exécutable, portable, aucune installation ni droits
+#   admin (idéal pour un poste verrouillé). .deb : installation gérée (apt/dpkg),
+#   pratique pour un déploiement par dépôt interne. L'icône vient de build/icon.png.
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: build/icon.png
+  category: Office
+  synopsis: Tableau collaboratif OSINT en pair-à-pair — aucune donnée sur serveur
+  description: >-
+    COSINT — tableau collaboratif OSINT en pair-à-pair. Les données ne transitent
+    par aucun serveur : synchronisation directe entre pairs, chiffrée de bout en bout.
+  # `maintainer` est requis pour le paquet .deb (remplacez par votre contact interne).
+  maintainer: COSINT <cosint@interne.local>
+appImage:
+  artifactName: 'COSINT-${version}-x86_64.AppImage'
+deb:
+  artifactName: 'COSINT-${version}-amd64.deb'
+# Mises à jour automatiques via GitHub Releases (§5) : renseignez votre compte
+# et votre dépôt, puis publiez avec `npm run release` (voir README).
+# electron-updater lit cette configuration (app-update.yml embarqué au build).
+publish:
+  provider: github
+  owner: k0nrd
+  repo: COSINT

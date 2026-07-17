@@ -1,0 +1,676 @@
+/*
+ * Styles du « chrome » du tableau (préfixe bd-) : barre supérieure, barre
+ * d'outils, panneaux flottants, présence, curseurs distants, panneau latéral.
+ * Esthétique « outil d'analyste » (§1) : densité élevée, bordures 1 px,
+ * coins peu arrondis, ombres minimales. Tout passe par les design tokens.
+ */
+
+/* ——— Base commune des panneaux flottants ——— */
+.bd-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* ——— Barre supérieure fine (44px) ——— */
+.bd-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 44px;
+  flex: none;
+  padding: 0 var(--sp-2);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 30;
+}
+.bd-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 1;
+  min-width: 0;
+}
+.bd-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.bd-topbar__title {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.bd-topbar__title:hover {
+  border-color: var(--border);
+}
+.bd-topbar__title:focus {
+  border-color: var(--border-focus);
+  background: var(--bg-elev);
+}
+
+/* ——— Menu déroulant local (export) ——— */
+.bd-menu-wrap {
+  position: relative;
+}
+.bd-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  padding: var(--sp-1);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+}
+.bd-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 9px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+.bd-menu__item:hover {
+  background: var(--panel-3);
+}
+/* Séparateur dans le menu d'export (§1 v1.7). */
+.bd-menu__sep {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+/* ——— Pastilles de présence ——— */
+.bd-presence {
+  display: flex;
+  align-items: center;
+}
+.bd-presence__dot {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--r-pill);
+  /* Bord de la couleur du panneau : détache les pastilles superposées. */
+  border: 1.5px solid var(--panel);
+  margin-left: -5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-text);
+  font-size: 10px;
+  font-weight: 700;
+  text-shadow: var(--shadow-sm);
+  user-select: none;
+}
+.bd-presence__dot:first-child {
+  margin-left: 0;
+}
+.bd-presence__more {
+  background: var(--panel-2);
+  color: var(--text-dim);
+  text-shadow: none;
+}
+
+/* ——— Barre d'outils verticale flottante ——— */
+.bd-toolbar {
+  position: absolute;
+  left: var(--sp-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-1);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  z-index: 20;
+}
+.bd-toolbar__btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.bd-toolbar__btn:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.bd-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+.bd-toolbar__btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.bd-toolbar__btn--active:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.bd-toolbar__sep {
+  height: 1px;
+  margin: 2px 3px;
+  background: var(--border);
+}
+
+/* ——— Pilule d'état de connexion (v1.3 : cliquable, dans la barre du haut) ——— */
+.bd-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: var(--r-md);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-dim);
+  font-size: 11.5px;
+  user-select: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bd-status:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.bd-status--topbar .bd-status__label {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-status__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--r-pill);
+}
+.bd-status--connected .bd-status__dot {
+  background: var(--success);
+}
+.bd-status--waiting .bd-status__dot {
+  background: var(--warn);
+}
+.bd-status--connecting .bd-status__dot {
+  background: var(--warn);
+  animation: bd-status-blink 1s ease-in-out infinite;
+}
+.bd-status--unreachable .bd-status__dot {
+  background: var(--danger);
+}
+.bd-status--local .bd-status__dot {
+  background: var(--text-mute);
+}
+@keyframes bd-status-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ——— Dialogue de partage ——— */
+.bd-share-code {
+  margin: var(--sp-3) 0;
+  padding: var(--sp-4) var(--sp-2);
+  background: var(--bg-elev);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text);
+  /* Code de partage = donnée technique : monospace (§1). */
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 26px;
+  letter-spacing: 4px;
+  text-align: center;
+  user-select: all;
+}
+.bd-share-actions {
+  display: flex;
+  justify-content: center;
+}
+.bd-share-participants {
+  margin: var(--sp-3) 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ——— Barre de recherche flottante ——— */
+.bd-search {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 5px 9px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  color: var(--text-dim);
+  z-index: 25;
+}
+.bd-search input {
+  width: 220px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+.bd-search__count {
+  font-size: 11.5px;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+/* §3 v1.7 : options de recherche (casse / mot entier) actives. */
+.bd-search__opt--on {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+/* Filtre par catégorie (menu déroulant compact). */
+.bd-search__cat {
+  max-width: 150px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11.5px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ——— Panneau de filtres flottant ——— */
+.bd-filter {
+  position: absolute;
+  top: 56px;
+  left: 56px;
+  width: 260px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  z-index: 24;
+}
+.bd-filter__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bd-filter__title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.bd-filter__section {
+  margin: var(--sp-2) 0 5px;
+  color: var(--text-mute);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.bd-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.bd-filter__chip {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.bd-filter__chip:hover {
+  border-color: var(--border-strong);
+  background: var(--panel-2);
+}
+.bd-filter__chip--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.bd-filter__empty {
+  margin: 0;
+  color: var(--text-mute);
+  font-size: 11.5px;
+}
+.bd-filter__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+
+/* ——— Curseurs des collègues (dans le repère du canvas) ——— */
+.bd-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 10;
+}
+.bd-cursor svg {
+  display: block;
+}
+.bd-cursor__label {
+  margin: 14px 0 0 -4px;
+  padding: 1px 7px;
+  border-radius: var(--r-sm);
+  color: var(--accent-text);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  /* Pseudo venu d'un pair : borné pour ne pas balayer tout l'écran. */
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ——— Panneau latéral droit ——— */
+.bd-side {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  z-index: 22;
+}
+.bd-side__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px var(--sp-2) 0;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.bd-side__tab {
+  padding: 7px 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--t-fast);
+}
+.bd-side__tab:hover {
+  color: var(--text);
+}
+.bd-side__tab--active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.bd-side__close {
+  margin-left: auto;
+}
+.bd-side__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-3);
+}
+.bd-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 3px 0;
+  font-size: 12px;
+}
+.bd-detail-key {
+  flex: none;
+  color: var(--text-dim);
+}
+.bd-detail-val {
+  text-align: right;
+  word-break: break-word;
+}
+.bd-side__trace {
+  margin: var(--sp-2) 0;
+  padding: 7px 9px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.bd-side__danger {
+  display: flex;
+  margin-top: var(--sp-4);
+}
+
+/* ——— Onglet commentaires ——— */
+.bd-comments {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.bd-comments__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.bd-comments__empty {
+  margin-top: var(--sp-4);
+  color: var(--text-mute);
+  font-size: 12px;
+  text-align: center;
+}
+.bd-comment {
+  position: relative;
+  padding: 7px 9px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.bd-comment__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: 3px;
+  /* Marge pour ne pas passer sous le bouton de suppression */
+  padding-right: 20px;
+}
+.bd-comment__author {
+  color: var(--text-dim);
+  font-size: 11.5px;
+  font-weight: 700;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-comment__date {
+  color: var(--text-mute);
+  font-size: 10.5px;
+}
+.bd-comment__text {
+  font-size: 12.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.bd-comment__delete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 2px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.bd-comment:hover .bd-comment__delete,
+.bd-comment__delete:focus-visible {
+  opacity: 1;
+}
+.bd-comment__delete:hover {
+  color: var(--danger);
+}
+.bd-comments__composer {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.bd-comments__composer .cm-btn {
+  align-self: flex-end;
+}
+
+/* ——— Sélecteur de type d'entité (barre d'outils, §3) ——— */
+.bd-toolbar__entity-wrap {
+  position: relative;
+}
+.bd-entity-picker {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 0;
+  min-width: 220px;
+  padding: var(--sp-1);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 60;
+}
+.bd-entity-picker__title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-mute);
+  padding: 5px 9px 3px;
+}
+.bd-entity-picker__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 6px 9px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+.bd-entity-picker__item:hover {
+  background: var(--panel-3);
+}
+
+/* Pastille de couleur de catégorie dans le filtre (§2). */
+.bd-filter__cat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.bd-filter__chip {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Filtre par statut (§3 v1.5) : pastille + compteur. */
+.bd-filter__status-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  margin-right: 5px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+.bd-filter__count {
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--panel-3);
+  color: var(--text-mute);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,9 @@
+# Normalisation des fins de ligne (le dépôt vit sur Windows ET WSL).
+* text=auto
+
+# Binaires : jamais de conversion.
+*.png binary
+*.ico binary
+*.icns binary
+*.exe binary
+*.7z binary

@@ -1,0 +1,118 @@
+/*
+ * Design tokens — source unique de vérité visuelle (§1).
+ *
+ * Esthétique « outil d'analyste » (réf. Maltego / Linear / Obsidian) :
+ * fonds quasi noirs, bordures fines 1 px, coins peu arrondis (2–4 px), ombres
+ * minimales, accents rares et signifiants. Thème sombre par défaut, thème clair
+ * décliné des mêmes principes.
+ *
+ * Les noms de variables couleur (--bg, --panel, --border, --accent…) sont
+ * stables : tout le CSS des composants s'y réfère. Ne pas coder de couleur en dur
+ * dans les composants — ajouter un token ici.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  /* Surfaces (anthracite → quasi noir) */
+  --bg: #0b0d10;
+  --bg-elev: #101318;
+  --panel: #14181e;
+  --panel-2: #1a1f27;
+  --panel-3: #212833;
+
+  /* Bordures fines */
+  --border: #242b35;
+  --border-strong: #333c49;
+  --border-focus: #3b5bdb;
+
+  /* Texte */
+  --text: #e8ecf2;
+  --text-dim: #9aa6b6;
+  --text-mute: #64707e;
+
+  /* Accent unique, sobre (bleu froid) — usage rare et signifiant */
+  --accent: #3b82f6;
+  --accent-hover: #4b8df8;
+  --accent-soft: rgba(59, 130, 246, 0.14);
+  --accent-text: #ffffff;
+
+  /* États sémantiques */
+  --danger: #f0616d;
+  --danger-soft: rgba(240, 97, 109, 0.14);
+  --warn: #f5b301;
+  --success: #29c26f;
+  --success-soft: rgba(41, 194, 111, 0.14);
+
+  /* Canvas */
+  --canvas-bg: #090b0e;
+  --canvas-dots: #1b212b;
+  --node-bg: #14181e;
+
+  --scrollbar: #2b333f;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f5f6f8;
+  --bg-elev: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f1f3f6;
+  --panel-3: #e7eaef;
+
+  --border: #dfe3ea;
+  --border-strong: #c3cad6;
+  --border-focus: #3b5bdb;
+
+  --text: #161b22;
+  --text-dim: #5a6472;
+  --text-mute: #8a94a3;
+
+  --accent: #2f6fed;
+  --accent-hover: #275fd6;
+  --accent-soft: rgba(47, 111, 237, 0.10);
+  --accent-text: #ffffff;
+
+  --danger: #d23b47;
+  --danger-soft: rgba(210, 59, 71, 0.10);
+  --warn: #b8860b;
+  --success: #128a4e;
+  --success-soft: rgba(18, 138, 78, 0.10);
+
+  --canvas-bg: #eceff3;
+  --canvas-dots: #cdd4de;
+  --node-bg: #ffffff;
+
+  --scrollbar: #c6cdd8;
+
+  color-scheme: light;
+}
+
+:root {
+  /* Rayons — peu arrondis */
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --r-pill: 999px;
+
+  /* Ombres minimales */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 6px 22px rgba(0, 0, 0, 0.45);
+
+  /* Espacement compact */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  /* Typographie */
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', Consolas, ui-monospace, monospace;
+
+  /* Transitions discrètes */
+  --t-fast: 110ms ease;
+  --t-med: 150ms ease;
+}

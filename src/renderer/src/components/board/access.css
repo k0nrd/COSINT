@@ -1,0 +1,610 @@
+/*
+ * Contrôle d'accès (§6) : indicateur de mode, sélecteur du dialogue de partage,
+ * salle d'attente et pop-ups d'approbation. Uniquement des tokens (tokens.css).
+ */
+
+/* ——— Indicateur de mode (pastille de la barre supérieure) ——— */
+.bd-access-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast);
+}
+.bd-access-indicator:hover {
+  background: var(--panel-2);
+  border-color: var(--border);
+}
+/* Accent discret et signifiant : ouvert = vert, verrouillé = ambre. */
+.bd-access-indicator--open {
+  color: var(--success);
+}
+.bd-access-indicator--private {
+  color: var(--warn);
+}
+
+/* ——— Sélecteur de mode (dialogue de partage) ——— */
+.bd-access-section {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.bd-access-title {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-mute);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bd-access-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.bd-access-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast);
+}
+.bd-access-option:hover {
+  background: var(--panel-2);
+}
+.bd-access-option--active {
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+.bd-access-option__radio {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.bd-access-option__icon {
+  display: inline-flex;
+  margin-top: 2px;
+  color: var(--text-dim);
+}
+.bd-access-option--active .bd-access-option__icon {
+  color: var(--text);
+}
+.bd-access-option__text {
+  min-width: 0;
+}
+.bd-access-option__label {
+  display: block;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.bd-access-option__desc {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* ——— Journal des accès ——— */
+.bd-access-log {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.bd-access-log__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  max-height: 108px;
+  overflow-y: auto;
+  list-style: none;
+}
+.bd-access-log__item {
+  padding: 2px 0;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+/* ——— Salle d'attente (écran plein, §6) ——— */
+.bd-waiting {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  font-family: var(--font-ui);
+}
+.bd-waiting-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 400px;
+  padding: var(--sp-5);
+  text-align: center;
+}
+.bd-waiting-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-dim);
+}
+.bd-waiting--refused .bd-waiting-icon,
+.bd-waiting--unreachable .bd-waiting-icon {
+  color: var(--danger);
+  border-color: var(--border-strong);
+}
+.bd-waiting--no-member .bd-waiting-icon {
+  color: var(--warn);
+}
+.bd-waiting-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+.bd-waiting-text {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.bd-waiting-sub {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bd-waiting-dots {
+  display: flex;
+  gap: 6px;
+  padding: var(--sp-1) 0;
+}
+.bd-waiting-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--text-mute);
+  animation: bd-waiting-blink 1.2s ease-in-out infinite;
+}
+.bd-waiting-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.bd-waiting-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes bd-waiting-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.bd-waiting-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+/* ——— Pop-ups d'approbation (empilées en bas à droite) ——— */
+.bd-approval-stack {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  pointer-events: none;
+}
+.bd-approval-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 268px;
+  padding: var(--sp-3);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+  animation: bd-approval-in var(--t-med);
+}
+@keyframes bd-approval-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bd-approval-title {
+  margin: 0;
+  color: var(--text-mute);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bd-approval-who {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.bd-approval-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.bd-approval-pseudo {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-approval-role {
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-approval-message {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.bd-approval-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+/* ——— Panneau de diagnostic de connexion (v1.3, §1.4) ——— */
+.bd-diag-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.bd-diag-summary--connected {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+.bd-diag-summary--unreachable {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+.bd-diag-section {
+  margin: var(--sp-4) 0 var(--sp-1);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.bd-diag-list {
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bd-diag-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 5px var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  font-size: 12px;
+  min-width: 0;
+}
+.bd-diag-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--text-mute);
+}
+.bd-diag-dot--connected {
+  background: var(--success);
+}
+.bd-diag-dot--connecting {
+  background: var(--warn);
+}
+.bd-diag-dot--failed {
+  background: var(--danger);
+}
+.bd-diag-url {
+  flex: 1;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-diag-state {
+  flex: none;
+  color: var(--text-dim);
+}
+.bd-diag-empty {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.bd-diag-warning {
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--warn);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.bd-diag-error {
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  word-break: break-word;
+}
+.bd-diag-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-4);
+}
+
+/* ——— v1.4 : indicateur « solo » (§5) ——— */
+.bd-status--solo .bd-status__dot {
+  background: var(--text-mute);
+}
+.bd-status--solo {
+  border-style: dashed;
+}
+
+/* ——— v1.4 : limite de participants (§6) ——— */
+.bd-limit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.bd-limit-row input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.bd-limit-value {
+  min-width: 1.5em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ——— v1.4 : panneau Participants (§6) ——— */
+.bd-participants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.bd-participant {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.bd-participant__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text);
+}
+.bd-participant__me {
+  color: var(--text-mute);
+  font-size: 11px;
+}
+.bd-participant__offline {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-style: italic;
+}
+.bd-participant__role {
+  max-width: 120px;
+}
+.bd-participant__badge {
+  padding: 1px 7px;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+}
+.bd-participant__badge--admin {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.bd-participant__actions {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+/* ——— v1.5 §1a : écran de synchronisation initiale ——— */
+.bd-sync-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--canvas-bg) 82%, transparent);
+  backdrop-filter: blur(2px);
+}
+.bd-sync-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-5);
+  min-width: 320px;
+  max-width: 420px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop);
+}
+.bd-sync-spinner {
+  color: var(--accent);
+  display: flex;
+}
+.bd-sync-spinner svg {
+  animation: bd-spin 1s linear infinite;
+}
+@keyframes bd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.bd-sync-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.bd-sync-sub {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin: 0;
+}
+.bd-sync-progress {
+  font-size: 12px;
+  color: var(--text-mute);
+  margin: var(--sp-1) 0 0;
+}
+
+/* ——— v1.5 §1b : cycle de vie du partage (deux actions distinctes) ——— */
+.bd-share-lifecycle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.bd-share-lifecycle__btn {
+  align-self: flex-start;
+}
+.bd-share-lifecycle .cm-hint {
+  margin: 0 0 var(--sp-2);
+}
+
+/* ——— v1.5 §1d : journal de synchronisation dans le diagnostic ——— */
+.bd-diag-log {
+  list-style: none;
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.bd-diag-logitem {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: baseline;
+  padding: 3px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  border-left: 2px solid var(--border-strong);
+  font-size: 11.5px;
+}
+.bd-diag-logitem--success {
+  border-left-color: var(--success);
+}
+.bd-diag-logitem--warn {
+  border-left-color: var(--warn);
+}
+.bd-diag-logitem--info {
+  border-left-color: var(--accent);
+}
+.bd-diag-logtime {
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.bd-diag-logmsg {
+  color: var(--text-dim);
+  min-width: 0;
+}
+
+/* Rappel du mode réseau actif dans le diagnostic (§réseau v1.7.1). */
+.bd-diag-netmode {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.bd-diag-netmode svg {
+  flex: none;
+  margin-top: 1px;
+}
+.bd-diag-netmode--warn {
+  color: var(--warning, #d97706);
+}

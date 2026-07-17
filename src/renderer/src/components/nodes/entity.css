@@ -1,0 +1,206 @@
+/*
+ * Styles des fiches entité (nd-entity-*) et source (nd-source-*).
+ * Densité « outil d'analyste » : tout passe par les tokens (thèmes sombre + clair),
+ * seules les teintes propres au nœud (pastille d'icône) sont posées inline en JS.
+ */
+
+/* ——— Corps commun ——— */
+.nd-entity,
+.nd-source {
+  padding: var(--sp-2);
+  gap: 6px;
+}
+
+/* ——— En-tête : pastille d'icône + (catégorie / titre) ——— */
+.nd-entity-head,
+.nd-source-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* §6 : catégorie et titre EMPILÉS (colonne), plus jamais collés en ligne
+   (« InternetCompte / profil »). La catégorie devient une petite étiquette
+   au-dessus du titre, avec un espacement propre. */
+.nd-entity-head-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+.nd-entity-cat {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pastille d'icône — fond/couleur (couleur du nœud) posés inline. */
+.nd-entity-ico,
+.nd-source-ico {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+}
+
+.nd-entity-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nd-entity-title--empty {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-dim);
+}
+.nd-entity-title-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+}
+
+/* ——— Aperçu des champs (3 premiers non vides) ——— */
+.nd-entity-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+.nd-entity-field {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-width: 0;
+  line-height: 1.35;
+}
+.nd-entity-field-label {
+  flex: 0 0 auto;
+  max-width: 42%;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* §6bis : retour à la ligne automatique (jusqu'à 2 lignes) au lieu d'un
+   débordement/troncature sur une seule ligne. Les longues chaînes (URL) sont
+   coupées ; le texte complet reste lisible dans le panneau Détails. */
+.nd-entity-field-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--text);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.nd-entity-field-value.cm-mono {
+  font-size: 11px;
+}
+
+/* ——— Badge du type d'entité ——— */
+.nd-entity-foot {
+  margin-top: auto;
+  display: flex;
+  min-width: 0;
+}
+.nd-entity-badge {
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  font-size: 10px;
+  color: var(--text-mute);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ——— Source : badge de notation (fiabilité + crédibilité) ——— */
+.nd-source-badge {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  cursor: help;
+}
+
+/* ——— Source : ligne URL ouvrable ——— */
+.nd-source-url {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast),
+    color var(--t-fast);
+}
+.nd-source-url:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.nd-source-url:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.nd-source-url svg {
+  flex: 0 0 auto;
+}
+.nd-source-url-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nd-source-url-empty {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-mute);
+}
+
+/* ——— Source : type en petit ——— */
+.nd-source-type {
+  margin-top: auto;
+  font-size: 10.5px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,152 @@
+/* Sélecteur d'entité par catégories (§2 v1.2). */
+.ep-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  margin-bottom: var(--sp-3);
+}
+.ep-search__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.ep-scroll {
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.ep-category {
+  margin-bottom: var(--sp-3);
+}
+.ep-category__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-mute);
+  margin-bottom: var(--sp-2);
+}
+.ep-category__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+}
+.ep-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 5px;
+}
+.ep-type {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.ep-type:hover {
+  background: var(--panel-3);
+}
+.ep-type__ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+  flex: 0 0 auto;
+}
+
+/* ——— v1.4 : tri + favoris (§6bis) ——— */
+.ep-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.ep-topbar .ep-search {
+  flex: 1;
+}
+.ep-sort {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 2px;
+}
+.ep-sort__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.ep-sort__btn--active {
+  background: var(--panel-2);
+  color: var(--accent);
+}
+.ep-type-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.ep-star {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-mute);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--t-fast), color var(--t-fast);
+}
+.ep-type-wrap:hover .ep-star,
+.ep-star--on {
+  opacity: 1;
+}
+.ep-star--on {
+  color: var(--warn);
+}
+
+/* §2 v1.8 : bouton « Nouveau type » dans la section Personnalisés. */
+.ep-type--create {
+  border-style: dashed !important;
+  color: var(--text-dim);
+}
+.ep-type--create:hover {
+  color: var(--text);
+}
+.ep-type__ico--create {
+  background: var(--bg-elev);
+  color: var(--accent);
+}

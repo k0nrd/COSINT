@@ -1,0 +1,70 @@
+/* Sélecteur de couleur libre (§5). */
+.cp-root {
+  display: flex;
+  flex-direction: column;
+}
+.cp-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-mute);
+  font-weight: 700;
+  margin: var(--sp-2) 0 5px;
+}
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 5px;
+}
+.cp-swatch {
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--t-fast);
+}
+.cp-swatch:hover {
+  transform: scale(1.14);
+}
+.cp-swatch--active {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+.cp-custom {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.cp-wheel {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.cp-hex {
+  flex: 1;
+}
+.cp-hex--error {
+  border-color: var(--danger);
+}
+.cp-error {
+  color: var(--danger);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+/* Recadrage des grilles denses sur les petits panneaux */
+@media (max-width: 360px) {
+  .cp-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}

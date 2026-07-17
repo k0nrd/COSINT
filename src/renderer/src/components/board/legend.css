@@ -1,0 +1,80 @@
+/* Légende repliable (§3). */
+.bd-legend {
+  position: absolute;
+  right: var(--sp-3);
+  bottom: 46px;
+  width: 230px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  z-index: 22;
+}
+.bd-legend__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.bd-legend__title {
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.bd-legend__body {
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  overflow-y: auto;
+}
+.bd-legend__section {
+  margin: var(--sp-2) 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-mute);
+}
+.bd-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+}
+.bd-legend__dot,
+.bd-legend__swatch {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  border-radius: var(--r-pill);
+}
+.bd-legend__swatch {
+  border-radius: var(--r-xs);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.bd-legend__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-legend__count {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.bd-legend__line {
+  width: 22px;
+  height: 0;
+  flex: 0 0 auto;
+  border-top: 2px solid var(--text-dim);
+}
+.bd-legend__line--dashed {
+  border-top-style: dashed;
+}
+.bd-legend__line--dotted {
+  border-top-style: dotted;
+  border-top-width: 3px;
+}

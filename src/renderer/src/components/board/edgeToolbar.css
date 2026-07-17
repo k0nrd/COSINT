@@ -1,0 +1,187 @@
+/* Barre contextuelle du lien sélectionné (§1). */
+.et-bar {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
+  padding: 5px 8px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  z-index: 26;
+}
+.et-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 1px;
+  background: var(--border);
+}
+.et-select {
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.et-input {
+  height: 26px;
+  width: 130px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.et-input:focus,
+.et-select:focus {
+  border-color: var(--border-focus);
+}
+
+/* Groupes segmentés */
+.et-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.et-seg__btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.et-seg__btn:last-child {
+  border-right: none;
+}
+.et-seg__btn:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.et-seg__btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Icônes maison pour style/épaisseur */
+.et-ico-dashed,
+.et-ico-dotted {
+  width: 15px;
+  height: 0;
+  border-top: 2px solid currentColor;
+}
+.et-ico-dashed {
+  border-top-style: dashed;
+}
+.et-ico-dotted {
+  border-top-style: dotted;
+  border-top-width: 3px;
+}
+.et-ico-w {
+  width: 15px;
+  background: currentColor;
+  border-radius: 2px;
+}
+.et-ico-w1 {
+  height: 1px;
+}
+.et-ico-w2 {
+  height: 2px;
+}
+.et-ico-w3 {
+  height: 4px;
+}
+
+/* Couleur */
+.et-color {
+  position: relative;
+}
+.et-color__swatch {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  padding: 0;
+}
+.et-color__pop {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 240px;
+  padding: var(--sp-3);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 40;
+}
+
+.et-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.et-btn:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.et-btn--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+/* ——— v1.4 : popover de fond du NodeToolbar (§4) ——— */
+.et-fill-pop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 190px;
+}
+.et-fill-transparent {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.et-fill-opacity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.et-fill-opacity input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}

@@ -1,0 +1,82 @@
+/* Badges et sélecteurs de statut (§3 v1.5). */
+
+/* Pastille en coin de nœud / près d'un lien. */
+.bd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+  border: 1.5px solid var(--panel);
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+  /* §2 v1.6 : compensation inverse-zoom bornée [0,85 ; 2,4] pour rester lisible au
+     dézoom sans devenir énorme. Hors canvas la variable --fl-inv-zoom n'est pas
+     posée → repli 1 → aucune mise à l'échelle (panneaux, légende, etc.). */
+  scale: clamp(0.85, var(--fl-inv-zoom, 1), 2.4);
+  transition: scale var(--t-fast);
+}
+
+/* Pastille ancrée en coin HAUT-GAUCHE d'un nœud (overlay).
+   §5c v1.7 : déplacée du coin haut-droit vers le haut-gauche et passée SOUS les
+   poignées de redimensionnement (z-index 2 < 5, cf. nodes.css) — la poignée de resize
+   du coin haut-droit n'est plus jamais masquée ni « volée » par le badge. Le badge
+   reste au-dessus du contenu clippé (z-index par défaut du contenu). */
+.bd-status-badge--corner {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  z-index: 2;
+}
+
+/* Sélecteur : rangée de pastilles cliquables. */
+.bd-status-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.bd-status-opt {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform var(--t-fast),
+    box-shadow var(--t-fast);
+}
+.bd-status-opt:hover {
+  transform: scale(1.12);
+}
+.bd-status-opt--active {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.bd-status-picker--compact .bd-status-opt {
+  width: 19px;
+  height: 19px;
+  font-size: 11px;
+}
+
+/* Ligne « Statut » dans un menu contextuel. */
+.bd-status-menurow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px var(--sp-2);
+}
+.bd-status-menurow__label {
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}

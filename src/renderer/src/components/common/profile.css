@@ -1,0 +1,130 @@
+/* ——— Éditeur de profil (§7) : avatar, rôle, statut, aperçu ——— */
+
+.pe-root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Onglets du type d'avatar (initiales / emoji / image) */
+.pe-tabs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--panel-2);
+}
+.pe-tab {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+.pe-tab:last-child {
+  border-right: none;
+}
+.pe-tab:hover {
+  color: var(--text);
+}
+.pe-tab--active {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* Saisie de l'emoji : étroite et centrée */
+.pe-emoji-input {
+  width: 96px;
+  margin-top: var(--sp-2);
+  text-align: center;
+  font-size: 16px;
+}
+
+/* Choix d'image : l'input file réel reste masqué */
+.pe-image-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+.pe-file-input {
+  display: none;
+}
+
+/* Statut (radios) */
+.pe-radios {
+  display: flex;
+  gap: var(--sp-4);
+}
+.pe-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.pe-radio input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Aperçu en direct du profil */
+.pe-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.pe-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pe-preview-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pe-preview-role {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pe-preview-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+.pe-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  flex: none;
+}
+.pe-status-dot[data-status='available'] {
+  background: var(--success);
+}
+.pe-status-dot[data-status='busy'] {
+  background: var(--danger);
+}
+.pe-status-dot[data-status='away'] {
+  background: var(--warn);
+}

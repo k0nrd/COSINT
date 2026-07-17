@@ -1,0 +1,17 @@
+/* Bannière de mise à jour (v1.3, §5) — discrète, en bas à droite. */
+.cm-update-banner {
+  position: fixed;
+  right: var(--sp-3);
+  bottom: var(--sp-3);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-md);
+  color: var(--text);
+  font-size: 12.5px;
+}

@@ -1,0 +1,417 @@
+/* Chronologie / frise (§4 v1.7) — overlay plein cadre au-dessus du canvas. */
+
+.tl-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas-bg, #0b0d11);
+}
+
+.tl-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.tl-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.tl-count {
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+.tl-header__spacer {
+  flex: 1;
+}
+
+.tl-filters {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  font-size: 12px;
+}
+.tl-status-filter {
+  display: flex;
+  gap: 3px;
+}
+.tl-status-btn {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity var(--t-fast);
+}
+.tl-status-btn--on,
+.tl-status-btn:hover {
+  opacity: 1;
+}
+.tl-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+}
+.tl-authors {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tl-author {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.tl-author--on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tl-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+.tl-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 13px;
+}
+.tl-content {
+  position: relative;
+  min-width: 100%;
+}
+
+/* Axe temporel. */
+.tl-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--border-strong);
+}
+.tl-tick {
+  position: absolute;
+  top: 0;
+}
+.tl-tick__line {
+  position: absolute;
+  width: 1px;
+  background: var(--border);
+  opacity: 0.5;
+}
+.tl-tick__label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10.5px;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+
+/* Cartes d'éléments. */
+.tl-item {
+  position: absolute;
+  width: 150px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), transform var(--t-fast);
+}
+.tl-item:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  z-index: 2;
+}
+.tl-item__ico {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--text-dim);
+}
+.tl-item__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-item__badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+/* ——— §3 v1.8 : onglets Ajouts / Événements ——— */
+.tl-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.tl-tab {
+  padding: 5px 14px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.tl-tab:hover {
+  color: var(--text);
+}
+.tl-tab--on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tl-sort,
+.tl-viewtoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.tl-viewtoggle {
+  gap: 2px;
+}
+
+/* Fenêtre d'événement (barre hachurée) + point de date exacte. */
+.tl-eventrow {
+  position: absolute;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+.tl-eventbar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 8px;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.tl-eventdot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--canvas-bg, #0b0d11);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.tl-item--event {
+  position: relative;
+  z-index: 1;
+}
+
+/* Vue LISTE des événements. */
+.tl-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.tl-list th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tl-list__row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.tl-list__row:hover {
+  background: var(--bg-elev);
+}
+.tl-list td {
+  padding: 7px 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tl-list__name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-list__row--selected {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* ——— §1/§3 v1.8.1 : bandeau descriptif de la frise ——— */
+.tl-desc {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-size: 11.5px;
+}
+.tl-desc--added {
+  box-shadow: inset 3px 0 0 var(--warn, #f59e0b);
+}
+.tl-desc__what {
+  color: var(--text-dim);
+}
+.tl-desc__hint {
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+/* ——— §1 v1.8.1 : déplacement au glisser ——— */
+.tl-scroll--pan {
+  cursor: grab;
+}
+.tl-scroll--panning {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Élément sélectionné (détail ouvert). */
+.tl-item--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-sm);
+  z-index: 3;
+}
+
+/* ——— §1 v1.8.1 : panneau de détail SUR la frise ——— */
+.tl-detail {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 12;
+  width: 300px;
+  max-width: calc(100% - 28px);
+  max-height: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  overflow-y: auto;
+}
+.tl-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tl-detail__ico {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+.tl-detail__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 13.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-detail__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tl-detail__row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+.tl-detail__key {
+  flex: 0 0 auto;
+  min-width: 84px;
+  color: var(--text-mute);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.tl-detail__val {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+.tl-detail__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.tl-detail__field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.tl-detail__flabel {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-detail__fval {
+  font-size: 12.5px;
+  color: var(--text);
+  word-break: break-word;
+}
+.tl-detail__locate {
+  justify-content: center;
+  width: 100%;
+}

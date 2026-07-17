@@ -1,0 +1,499 @@
+/*
+ * Styles des nœuds et connexions du canvas (préfixe nd-).
+ * Esthétique « outil d'analyste » (§1) : bordures fines 1 px, coins peu
+ * arrondis, ombres minimales. Tout passe par les design tokens (tokens.css),
+ * aucune couleur en dur hors couleur libre du nœud (posée inline en JS).
+ */
+
+/* ——— Cadre commun (texte / lien / image / horodaté) ——— */
+.nd-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* §4 : fond et bordure personnalisables via variables (--nd-*), avec repli sur
+     les défauts du thème pour les nœuds non personnalisés. */
+  background: var(--nd-fill, var(--node-bg));
+  border: var(--nd-border-width, 1px) var(--nd-border-style, solid)
+    var(--nd-border-color, var(--border));
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  /* PAS d'overflow:hidden ici : sinon les poignées débordantes sont rognées et
+     la connexion devient impossible (§1). Le contenu est clippé par .nd-clip. */
+  overflow: visible;
+  font-size: 13px;
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast);
+}
+/* ——— Taille de texte (§4) — l'icône suit la taille du texte. ——— */
+.nd-shell[data-textsize='small'] .nd-entity,
+.nd-shell[data-textsize='small'] .nd-source {
+  font-size: 11px;
+}
+.nd-shell[data-textsize='large'] .nd-entity,
+.nd-shell[data-textsize='large'] .nd-source {
+  font-size: 15px;
+}
+.nd-shell[data-textsize='small'] .nd-entity-ico,
+.nd-shell[data-textsize='small'] .nd-source-ico {
+  width: 18px;
+  height: 18px;
+}
+.nd-shell[data-textsize='large'] .nd-entity-ico,
+.nd-shell[data-textsize='large'] .nd-source-ico {
+  width: 26px;
+  height: 26px;
+}
+.nd-shell:hover {
+  border-color: var(--border-strong);
+}
+.nd-shell--selected,
+.nd-shell--selected:hover {
+  border-color: var(--accent);
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 1px var(--accent);
+}
+
+/* Wrapper interne : clippe le contenu aux coins arrondis, sans rogner les poignées. */
+.nd-clip {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: calc(var(--r-md) - 1px);
+}
+
+/* Barre d'accent fine : couleur libre du nœud, posée inline. */
+.nd-accent {
+  flex: 0 0 2px;
+  height: 2px;
+}
+
+.nd-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ——— Poignées de connexion (§1) : larges cibles à cheval sur le bord,
+       discrètes au repos, bien visibles au survol/sélection. ——— */
+/* §2 v1.6 : taille des poignées = base × inverse du zoom, borné [0,8 ; 3], pour une
+   taille écran ~constante (posé via --fl-inv-zoom par ZoomCompensator). On agrandit
+   via `width`/`height` (et NON `scale:`) : React Flow mesure la poignée via
+   getBoundingClientRect (échelle comprise) MAIS sa largeur via offsetWidth — un
+   `scale:` désynchroniserait les deux et décalerait l'ancrage des liens (handleBounds
+   faux). Avec width/height, la mesure reste cohérente et le centre (posé par le
+   `transform: translate(-50%,-50%)` de React Flow) reste sur le bord quelle que soit
+   la taille. La zone d'ancrage grandit donc aussi → plus facile à viser. */
+.nd-shell .nd-handle {
+  --nd-handle-size: calc(11px * clamp(0.8, var(--fl-inv-zoom, 1), 3));
+  width: var(--nd-handle-size);
+  height: var(--nd-handle-size);
+  background: var(--accent);
+  border: 2px solid var(--node-bg);
+  border-radius: var(--r-pill);
+  opacity: 0;
+  transition:
+    opacity var(--t-fast),
+    box-shadow var(--t-fast);
+  z-index: 3;
+}
+/* Zone de clic invisible élargie autour de la poignée : on ne vise plus au pixel
+   près (l'inset suit la taille de la poignée, donc reste large au dézoom). */
+.nd-shell .nd-handle::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+}
+.nd-shell:hover .nd-handle,
+.nd-shell--selected .nd-handle {
+  opacity: 1;
+}
+/* Survol : anneau + couleur accentuée (pas de scale/transform, qui casserait la
+   mesure de la poignée par React Flow). */
+.nd-shell .nd-handle:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+/* Centrées sur le bord (moitié dehors) : cible franche, cadre non masqué. */
+.nd-shell .nd-handle--left {
+  left: -6px;
+}
+.nd-shell .nd-handle--right {
+  right: -6px;
+}
+.nd-shell .nd-handle--top {
+  top: -6px;
+}
+.nd-shell .nd-handle--bottom {
+  bottom: -6px;
+}
+/* Pendant un tracé de connexion, révéler les poignées de TOUS les nœuds pour
+   viser facilement la cible. */
+.react-flow.fl-connecting .nd-handle {
+  opacity: 0.55;
+}
+.react-flow.fl-connecting .nd-shell:hover .nd-handle {
+  opacity: 1;
+}
+
+/* ——— Poignées de redimensionnement (§2 v1.6, affiné §5c v1.7) : React Flow les
+       rend minuscules (5 px) et sans compensation de zoom. On les agrandit via
+       `width`/`height` (PAS `scale:`, pour rester compatible avec le
+       `translate: -50% -50%` par défaut de React Flow qui centre la poignée sur le
+       coin). §5c v1.7 : bornes resserrées — base 9 px, facteur borné [0,75 ; 2] →
+       taille écran ~7 à 18 px, confortable sans être envahissante au dézoom (l'ancien
+       plafond ×3 donnait des carrés de 30 px qui débordaient sur texte et badges).
+       z-index 5 : les poignées passent AU-DESSUS du badge de statut (z-index 2) et du
+       contenu, donc restent toujours visibles et cliquables (correctif du conflit
+       badge/poignée haut-droit). ——— */
+.react-flow__resize-control.handle {
+  width: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
+  height: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
+  border-radius: 2px;
+  border-width: 1.5px;
+  z-index: 5;
+}
+/* Les bords (lignes) de redimensionnement : zone de saisie plus épaisse au dézoom. */
+.react-flow__resize-control.line {
+  border-width: calc(1px * clamp(1, var(--fl-inv-zoom, 1), 3));
+  z-index: 5;
+}
+
+/* ——— Chips de tags en pied de nœud ——— */
+.nd-tags {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-2) 7px;
+}
+.nd-tag {
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  font-size: 10.5px;
+  line-height: 1.7;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ——— Corps markdown (texte / horodaté) ——— */
+.nd-md {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-2) 10px 9px;
+  overflow: hidden;
+  line-height: 1.5;
+  /* §6bis : retour à la ligne + coupe des longues chaînes (URL) sans débordement. */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.nd-md p {
+  margin: 0 0 6px;
+}
+.nd-md p:last-child {
+  margin-bottom: 0;
+}
+.nd-md ul,
+.nd-md ol {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+.nd-md li {
+  margin: 2px 0;
+}
+.nd-md code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0 4px;
+}
+.nd-placeholder {
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+/* Éditeur plein cadre (double-clic). §4 v1.6 : hauteur pilotée par le contenu
+   (AutoTextarea) — `flex: 0 0 auto` pour que la hauteur mesurée soit respectée dans
+   la colonne flex du nœud auto-hauteur (flex:1/basis 0 l'ignorerait). */
+.nd-editor {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--sp-2) 10px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.5;
+}
+.nd-editor::placeholder {
+  color: var(--text-mute);
+}
+
+/* Champ d'édition inline (titre de lien, URL, libellé de groupe) */
+.nd-inline-input {
+  width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--border-focus);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+/* ——— Nœud lien ——— */
+.nd-link {
+  padding: var(--sp-2) 10px;
+  gap: 5px;
+}
+.nd-link-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.nd-link-ico {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+}
+.nd-link-title {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nd-link-title--empty {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-mute);
+}
+/* URL = donnée technique : monospace (§1). */
+.nd-link-url {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nd-link-url--invalid {
+  color: var(--danger);
+}
+.nd-link-open {
+  margin-top: auto;
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 3px 9px;
+}
+
+/* ——— Nœud image ——— */
+.nd-image-body {
+  padding: var(--sp-1);
+}
+/* Damier discret sous l'image (transparence visible sans agressivité). */
+.nd-image-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background-image:
+    linear-gradient(45deg, var(--canvas-dots) 25%, transparent 25%, transparent 75%, var(--canvas-dots) 75%),
+    linear-gradient(45deg, var(--canvas-dots) 25%, transparent 25%, transparent 75%, var(--canvas-dots) 75%);
+  background-size: 14px 14px;
+  background-position:
+    0 0,
+    7px 7px;
+}
+.nd-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+/* §2 v1.8.1 : bouton « Copier l'image » (visible sur nœud sélectionné). */
+.nd-image-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+.nd-image-copy:hover {
+  opacity: 1;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.nd-image-empty,
+.nd-image-loading,
+.nd-image-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+}
+.nd-image-error {
+  color: var(--danger);
+}
+/* Barre de progression du transfert d'image (§1 : affichage progressif). */
+.nd-image-progress {
+  width: 80%;
+  max-width: 180px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.nd-image-progress__bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--t-fast);
+}
+
+/* ——— Nœud horodaté : en-tête permanent ——— */
+.nd-ts-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.nd-ts-header svg {
+  flex: 0 0 auto;
+  opacity: 0.8;
+}
+
+/* ——— Groupe / zone ——— */
+/* Neutralise les styles par défaut de React Flow pour le type intégré « group ». */
+.react-flow__node-group {
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: auto;
+  height: auto;
+  box-shadow: none;
+}
+.nd-group {
+  width: 100%;
+  height: 100%;
+  border: 1px solid;
+  border-radius: var(--r-lg);
+}
+.nd-group-label {
+  display: block;
+  max-width: calc(100% - 24px);
+  margin: var(--sp-2) 0 0 var(--sp-3);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nd-group-label--empty {
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0.5;
+}
+.nd-group-input {
+  display: block;
+  margin: var(--sp-2) 0 0 var(--sp-2);
+  width: min(240px, calc(100% - 20px));
+}
+
+/* ——— Libellé de connexion ——— */
+.nd-edge-label {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 1px 7px;
+  font-size: 11px;
+  color: var(--text);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: all;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ——— Poignées de routage manuel des liens (§1 v1.6) ———
+   Compensation inverse-zoom via `scale:` + transform-box:fill-box (centrage sur
+   cx/cy), pour une taille écran ~constante et confortablement cliquable. ——— */
+.cosint-wp,
+.cosint-wp-add {
+  pointer-events: all;
+  transform-box: fill-box;
+  transform-origin: center;
+  scale: clamp(0.7, var(--fl-inv-zoom, 1), 3);
+}
+.cosint-wp {
+  fill: var(--accent);
+  stroke: var(--node-bg);
+  stroke-width: 2;
+  cursor: grab;
+}
+.cosint-wp:hover {
+  fill: var(--accent-hover);
+}
+.cosint-wp-add {
+  fill: var(--node-bg);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0.45;
+  cursor: copy;
+}
+.cosint-wp-add:hover {
+  opacity: 1;
+}
