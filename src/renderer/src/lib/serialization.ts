@@ -49,13 +49,14 @@ export const TRACE_FORMAT = 'cosint-trace'
  * passage + ancrages) et le bloc de code (langage). La version 5 (v1.7) ajoute la
  * date d'événement (`eventDate`) d'un nœud pour la Chronologie. La version 6 (v1.8)
  * ajoute la datation d'événement étendue (fenêtre au plus tôt/tard, drapeau heure)
- * et les types d'entité personnalisés du tableau (`customTypes`) — tous ces champs
+ * et les types d'entité personnalisés du tableau (`customTypes`). La version 7 (v1.8.2)
+ * ajoute la DURÉE précise d'événement (`eventFrom`/`eventTo`, de/à) — tous ces champs
  * sont OPTIONNELS, donc un fichier plus ancien s'ouvre sans erreur (champs absents
- * → valeurs par défaut / undefined), et un fichier v6 s'ouvre dans une version
+ * → valeurs par défaut / undefined), et un fichier v7 s'ouvre dans une version
  * antérieure en ignorant simplement les champs inconnus.
  */
-export const TRACE_VERSION = 6
-const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5, 6]
+export const TRACE_VERSION = 7
+const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5, 6, 7]
 
 export interface TraceFile {
   format: typeof TRACE_FORMAT
@@ -179,6 +180,11 @@ export function sanitizeNode(raw: unknown): BoardNodeData | null {
   if (eventEarliest !== undefined) node.eventEarliest = eventEarliest
   const eventLatest = eventMs(record.eventLatest)
   if (eventLatest !== undefined) node.eventLatest = eventLatest
+  // Durée précise de/à (§1 v1.8.2), bornée comme les autres dates d'événement.
+  const eventFrom = eventMs(record.eventFrom)
+  if (eventFrom !== undefined) node.eventFrom = eventFrom
+  const eventTo = eventMs(record.eventTo)
+  if (eventTo !== undefined) node.eventTo = eventTo
   if (record.eventHasTime === true) node.eventHasTime = true
   return node
 }

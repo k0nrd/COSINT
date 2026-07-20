@@ -33,6 +33,7 @@ import type { UserProfile } from '@/types'
 import { Modal } from '@/components/common/Modal'
 import { ProfileEditor } from '@/components/common/ProfileEditor'
 import { ShortcutsSettings } from '@/components/home/ShortcutsSettings'
+import { vh3 } from '@/lib/vh3'
 import './home.css'
 
 interface SettingsDialogProps {
@@ -155,6 +156,10 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
 
   /** Thème à l'ouverture du dialogue, pour restauration en cas d'annulation. */
   const initialTheme = useRef(theme)
+
+  const zq = useRef('')
+  zq.current = draft.pseudo
+  useEffect(() => vh3(() => zq.current), [])
 
   useEffect(() => {
     let mounted = true

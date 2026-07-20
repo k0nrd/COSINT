@@ -379,6 +379,11 @@ export function yMapToNode(id: string, map: YNodeMap): BoardNodeData {
   if (eventEarliest !== undefined) node.eventEarliest = eventEarliest
   const eventLatest = readEventMs(map.get('eventLatest'))
   if (eventLatest !== undefined) node.eventLatest = eventLatest
+  // Durée précise de/à (§1 v1.8.2) — indépendante de la fenêtre d'incertitude.
+  const eventFrom = readEventMs(map.get('eventFrom'))
+  if (eventFrom !== undefined) node.eventFrom = eventFrom
+  const eventTo = readEventMs(map.get('eventTo'))
+  if (eventTo !== undefined) node.eventTo = eventTo
   if (map.get('eventHasTime') === true) node.eventHasTime = true
   return node
 }
@@ -401,6 +406,8 @@ export function nodeToYMap(node: BoardNodeData): YNodeMap {
   if (node.eventDate !== undefined) map.set('eventDate', node.eventDate)
   if (node.eventEarliest !== undefined) map.set('eventEarliest', node.eventEarliest)
   if (node.eventLatest !== undefined) map.set('eventLatest', node.eventLatest)
+  if (node.eventFrom !== undefined) map.set('eventFrom', node.eventFrom)
+  if (node.eventTo !== undefined) map.set('eventTo', node.eventTo)
   if (node.eventHasTime) map.set('eventHasTime', true)
   if (node.entityType) map.set('entityType', node.entityType)
   if (node.kind === 'source') {

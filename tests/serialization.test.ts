@@ -216,9 +216,9 @@ describe('parseTrace — rejets (messages français)', () => {
     expect(() => parseTrace(json)).toThrowError('n’est pas un fichier .trace COSINT')
   })
 
-  it('rejette une version non supportée (les versions 1 à 6 restent lisibles)', () => {
-    const json = JSON.stringify({ format: TRACE_FORMAT, version: 7, nodes: [], edges: [] })
-    expect(() => parseTrace(json)).toThrowError('version de fichier non supportée (7)')
+  it('rejette une version non supportée (les versions 1 à 7 restent lisibles)', () => {
+    const json = JSON.stringify({ format: TRACE_FORMAT, version: 8, nodes: [], edges: [] })
+    expect(() => parseTrace(json)).toThrowError('version de fichier non supportée (8)')
   })
 })
 

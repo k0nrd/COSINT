@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import type { BoardNodeData } from '@/types'
-import { assignLanes, chooseTickStepDays, DAY_MS, timelineDate, toTimelineItems } from '@/lib/timeline'
+import {
+  assignLanes,
+  chooseTickStepDays,
+  DAY_MS,
+  eventTimingOf,
+  timelineDate,
+  toTimelineItems
+} from '@/lib/timeline'
 
 function node(overrides: Partial<BoardNodeData> = {}): BoardNodeData {
   return {
@@ -29,15 +36,18 @@ describe('lib/timeline — placement sur la frise (§4 v1.7)', () => {
     expect(timelineDate(node({ createdAt: 100, eventDate: 500 }))).toBe(500)
   })
 
-  it('toTimelineItems : trié par date, flag isEventDate', () => {
+  it('toTimelineItems : Ajouts = date de CRÉATION, jamais la date d’événement (§1 v1.8.2)', () => {
+    // « a » porte une date d'événement TRÈS antérieure (10) mais a été ajouté en
+    // DERNIER (createdAt 300) : la frise Ajouts le place à sa date d'ajout, donc en fin.
     const items = toTimelineItems([
-      node({ id: 'b', createdAt: 300 }),
-      node({ id: 'a', createdAt: 100, eventDate: 50 }),
+      node({ id: 'a', createdAt: 300, eventDate: 10 }),
+      node({ id: 'b', createdAt: 100 }),
       node({ id: 'c', createdAt: 200 })
     ])
-    expect(items.map((i) => i.id)).toEqual(['a', 'c', 'b'])
-    expect(items[0].isEventDate).toBe(true)
-    expect(items[1].isEventDate).toBe(false)
+    expect(items.map((i) => i.id)).toEqual(['b', 'c', 'a'])
+    // La date affichée est toujours celle de l'ajout → isEventDate faux partout.
+    expect(items.every((i) => i.isEventDate === false)).toBe(true)
+    expect(items[2].date).toBe(300)
   })
 
   it('label : titre, sinon 1re valeur de champ', () => {
@@ -87,5 +97,34 @@ describe('lib/timeline — placement sur la frise (§4 v1.7)', () => {
     expect(chooseTickStepDays(3000)).toBeLessThan(1)
     // Dézoomé (0.1 px/jour) → pas de l'ordre de l'année.
     expect(chooseTickStepDays(0.1)).toBeGreaterThanOrEqual(365)
+  })
+})
+
+describe('lib/timeline — datation d’événement (§1 v1.8, durées §1 v1.8.2)', () => {
+  it('null si aucune date d’événement', () => {
+    expect(eventTimingOf(node())).toBeNull()
+  })
+
+  it('date exacte : point (start === end), pas une durée', () => {
+    const timing = eventTimingOf(node({ eventDate: 500 }))!
+    expect(timing.isDuration).toBe(false)
+    expect(timing.isRange).toBe(false)
+    expect([timing.start, timing.end]).toEqual([500, 500])
+  })
+
+  it('fenêtre au plus tôt/tard : plage d’incertitude, pas une durée', () => {
+    const timing = eventTimingOf(node({ eventEarliest: 100, eventLatest: 400 }))!
+    expect(timing.isDuration).toBe(false)
+    expect(timing.isRange).toBe(true)
+    expect([timing.start, timing.end]).toEqual([100, 400])
+  })
+
+  it('durée de/à : isDuration, plage bornée par from/to, prioritaire sur l’instant', () => {
+    const timing = eventTimingOf(node({ eventFrom: 200, eventTo: 900, eventDate: 300 }))!
+    expect(timing.isDuration).toBe(true)
+    expect(timing.isRange).toBe(true)
+    expect([timing.start, timing.end]).toEqual([200, 900])
+    expect(timing.from).toBe(200)
+    expect(timing.to).toBe(900)
   })
 })

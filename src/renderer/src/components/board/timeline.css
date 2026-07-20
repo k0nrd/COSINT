@@ -217,15 +217,51 @@
   display: flex;
   align-items: center;
 }
+/* §1 v1.8.2 : plages d'événement — deux natures visuellement DISTINCTES. Le corps porte
+   la couleur (semi-transparente) ; les embouts la reprennent en plein. */
 .tl-eventbar {
   position: absolute;
   left: 0;
   top: 50%;
-  height: 8px;
+  height: 12px;
   transform: translateY(-50%);
-  border-radius: 4px;
-  opacity: 0.55;
   pointer-events: none;
+}
+.tl-eventbar__body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 3px;
+}
+/* Durée réelle (de/à) : trait plein net, avec deux embouts marqués. Le fait s'étend
+   franchement d'un bout à l'autre — plus d'extrémité « qui s'arrête brusquement ». */
+.tl-eventbar--duration .tl-eventbar__body {
+  height: 6px;
+  opacity: 0.45;
+}
+.tl-eventcap {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+}
+.tl-eventcap--l {
+  left: 0;
+}
+.tl-eventcap--r {
+  right: 0;
+}
+/* Incertitude (au plus tôt/tard) : trait estompé aux deux bouts — les bornes sont
+   floues, l'instant se situe « quelque part » à l'intérieur. */
+.tl-eventbar--uncertain .tl-eventbar__body {
+  height: 8px;
+  border-radius: 4px;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
 }
 .tl-eventdot {
   position: absolute;
@@ -414,4 +450,109 @@
 .tl-detail__locate {
   justify-content: center;
   width: 100%;
+}
+
+/* ——— §1 v1.8.2 : piste de pan (marge libre de part et d'autre du contenu) ——— */
+.tl-track {
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* ——— §2 v1.8.2 : barre d'outils HORIZONTALE en bas de la frise ——— */
+.tl-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-3);
+  transform: translateX(-50%);
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--sp-1);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+.tl-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.tl-toolbar__btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.tl-toolbar__btn:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.tl-toolbar__btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.tl-toolbar__sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 3px 2px;
+  background: var(--border);
+}
+
+/* Sélecteur de date d'ajout — flotte au-dessus de la barre d'outils. */
+.tl-addpop {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 264px;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+}
+.tl-addpop__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tl-addpop__title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.tl-addpop__kind {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.tl-addpop__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.tl-addpop__hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.tl-addpop__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

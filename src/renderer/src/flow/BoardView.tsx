@@ -125,6 +125,7 @@ import {
   setEdgeRouting,
   setBoardTitle,
   setEdgesStatus,
+  setEventTiming,
   setNodesStatus,
   setParticipantLimit,
   setParticipantRole,
@@ -1315,15 +1316,24 @@ function BoardCanvas({
     [canvasCenterFlow]
   )
 
+  // §2 v1.8.2 : datation en attente lors d'un ajout d'ENTITÉ depuis la frise — la date
+  // est saisie AVANT le choix du type, puis appliquée à l'entité une fois créée.
+  const pendingTimingRef = useRef<{ exact: number; hasTime: boolean } | null>(null)
+
   const pickEntityType = useCallback(
     (typeId: EntityType) => {
       const pos = entityPickerAt ?? canvasCenterFlow()
       // §5 v1.6 : la catégorie « Code » du sélecteur crée un nœud « code », pas une entité.
       if (typeId === CODE_BLOCK_PICK) addNodeAt('code', pos.x, pos.y)
       else addEntityAt(typeId, pos.x, pos.y)
+      const timing = pendingTimingRef.current
+      if (timing && justCreatedId.current) {
+        setEventTiming(handle, justCreatedId.current, { exact: timing.exact, hasTime: timing.hasTime }, author)
+      }
+      pendingTimingRef.current = null
       setEntityPickerAt(null)
     },
-    [entityPickerAt, addEntityAt, addNodeAt, canvasCenterFlow]
+    [entityPickerAt, addEntityAt, addNodeAt, canvasCenterFlow, handle, author]
   )
 
   /** Ajoute un nœud simple ou une source au centre (barre d'outils). */
@@ -1337,6 +1347,26 @@ function BoardCanvas({
       }
     },
     [addNodeCenter, addSourceAt, canvasCenterFlow]
+  )
+
+  /** §2 v1.8.2 : ajoute un élément DATÉ depuis la frise. La date d'événement est déjà
+   * validée par le sélecteur de la frise (sans elle, cette fonction n'est pas appelée).
+   * Une entité passe par le sélecteur de type ; les autres nœuds sont créés puis datés. */
+  const addDatedFromTimeline = useCallback(
+    (kind: NodeKind, exact: number, hasTime: boolean) => {
+      if (kind === 'entity') {
+        pendingTimingRef.current = { exact, hasTime }
+        openEntityPicker()
+        return
+      }
+      const center = canvasCenterFlow()
+      if (kind === 'source') addSourceAt(center.x, center.y)
+      else addNodeAt(kind, center.x, center.y)
+      if (justCreatedId.current) {
+        setEventTiming(handle, justCreatedId.current, { exact, hasTime }, author)
+      }
+    },
+    [canvasCenterFlow, addSourceAt, addNodeAt, openEntityPicker, handle, author]
   )
 
   // Double-clic sur le fond → menu de type de nœud (§6). Désactivé pour un
@@ -2277,10 +2307,12 @@ function BoardCanvas({
             <TimelinePanel
               nodes={boardNodes}
               boardTitle={meta.title}
+              canEdit={canEdit}
               onLocate={(nodeId) => {
                 setView('canvas')
                 requestAnimationFrame(() => locateNode(nodeId))
               }}
+              onAddDated={addDatedFromTimeline}
               onClose={() => setView('canvas')}
             />
           )}
@@ -2334,6 +2366,9 @@ function BoardCanvas({
             />
           )}
 
+          {/* §2 v1.8.2 : la barre verticale n'apparaît qu'en vue canvas ; sur la frise,
+              c'est la barre horizontale du bas (TimelinePanel) qui prend le relais. */}
+          {view === 'canvas' && (
           <Toolbar
             onAddNode={addFromToolbar}
             onOpenEntityPicker={() => openEntityPicker()}
@@ -2354,8 +2389,9 @@ function BoardCanvas({
             searchActive={searchOpen}
             sourcesActive={sourcesOpen}
             legendActive={legendOpen}
-            timelineActive={view === 'timeline'}
+            timelineActive={false}
           />
+          )}
 
           {searchOpen && (
             <SearchBar

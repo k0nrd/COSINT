@@ -318,6 +318,10 @@ export interface EventTimingPatch {
   exact?: number | null
   earliest?: number | null
   latest?: number | null
+  /** Début de durée de/à (§1 v1.8.2). `null` supprime la clé. */
+  from?: number | null
+  /** Fin de durée de/à (§1 v1.8.2). `null` supprime la clé. */
+  to?: number | null
   hasTime?: boolean
 }
 
@@ -338,6 +342,8 @@ export function setEventTiming(
     applyDate('eventDate', patch.exact)
     applyDate('eventEarliest', patch.earliest)
     applyDate('eventLatest', patch.latest)
+    applyDate('eventFrom', patch.from)
+    applyDate('eventTo', patch.to)
     if (patch.hasTime !== undefined) {
       if (patch.hasTime) map.set('eventHasTime', true)
       else map.delete('eventHasTime')
