@@ -1603,3 +1603,73 @@ de datation).
     ISO, séparateur `;`). Tests de format `.trace` mis à la **v6** (round-trip, migrations
     v1/v3/v4 remontées à la version courante, rejet d'une version non supportée = 7). Suite
     complète au vert (typecheck + 233 tests).
+
+## v1.8.2 — Frises retravaillées, datation en durée, fenêtre de mise à jour
+
+### §1 — Frise « Ajouts » = date d'AJOUT stricte (`lib/timeline.ts`)
+
+1. **Séparation nette des deux frises.** La frise **Ajouts** plaçait un élément à sa date
+   d'ÉVÉNEMENT si elle était renseignée (elle retombait sur `createdAt` sinon) — une
+   entité datée du 8 mars mais saisie le 20 juillet apparaissait donc au 8 mars dans les
+   DEUX frises. Corrigé : **Ajouts** utilise TOUJOURS `createdAt` (quand l'élément a été
+   ajouté au tableau) ; **Événements** garde la datation d'événement résolue. `isEventDate`
+   est donc toujours faux dans Ajouts. `toTimelineItems` ne dépend plus de `timelineDate`.
+2. **Tests.** `toTimelineItems` vérifie qu'un élément à date d'événement très antérieure
+   mais ajouté en dernier figure bien EN FIN de la frise Ajouts (tri par `createdAt`).
+
+### §2 — Datation en DURÉE précise (de/à), en plus de la fenêtre d'incertitude
+
+3. **Deux natures distinctes.** La v1.8 offrait la date exacte OU une **fenêtre
+   d'incertitude** (`eventEarliest`/`eventLatest`, « le fait s'est produit quelque part
+   entre »). On ajoute la **DURÉE** (`eventFrom`/`eventTo`, « de … à … ») : un fait qui
+   S'ÉTEND réellement sur une plage (séjour, campagne). Nouveaux champs optionnels sur
+   `BoardNodeData`, persistés (Yjs + `.trace` + CSV `evenement_duree_de/a`).
+4. **Éditeur mutuellement exclusif (`SidePanel`).** Une bascule **Instant / Durée** :
+   « Instant » = exact + fenêtre au plus tôt/tard ; « Durée » = de/à. Changer de mode
+   efface les champs de l'autre nature en UNE op annulable (jamais de donnée mixte).
+   `eventTimingOf` donne la priorité à la durée si l'un des deux bouts est présent (robuste
+   à une donnée importée mixte). Garde-fou « de doit précéder à ».
+5. **Format `.trace` v7.** Ajout de `eventFrom`/`eventTo` (optionnels, bornés à la plage
+   Date valide comme les autres dates). Rétro-compatible : un fichier ≤ v6 s'ouvre sans
+   ces champs ; un v7 s'ouvre dans une version antérieure en les ignorant. Tests de format
+   remontés à la v7 (rejet d'une version non supportée = 8).
+
+### §3 — Refonte visuelle de la frise (barres claires, moins « générique »)
+
+6. **Une durée n'est plus un pointillé qui s'arrête net.** Les plages sont désormais
+   dessinées selon leur nature : **durée** = trait plein semi-opaque à **embouts nets**
+   (début/fin francs) ; **incertitude** = trait **estompé aux deux extrémités** (masque en
+   dégradé — les bornes sont floues). Fini la barre hachurée. Rendu à plat, cohérent avec
+   les jetons de thème (pas de dégradés/lueurs superflus).
+
+### §4 — Barre d'outils HORIZONTALE en bas de la frise + ajout DATÉ
+
+7. **La barre verticale de gauche laisse place à une barre horizontale en bas** quand on
+   est sur la frise (`TimelinePanel`) ; la barre verticale du canvas n'est rendue qu'en vue
+   canvas. La barre du bas regroupe l'ajout d'éléments, le zoom et le recentrage.
+8. **Ajout uniquement APRÈS une date.** Cliquer un outil d'ajout ouvre un petit sélecteur
+   de date ; **sans date validée, RIEN n'est créé**. La date saisie est la date
+   d'ÉVÉNEMENT (l'élément apparaît aussitôt sur la frise Événements). Une entité passe par
+   le sélecteur de type existant, puis la date est appliquée (`BoardView.addDatedFromTimeline`
+   + `pendingTimingRef`, réutilisant `EntityPicker` — modale au-dessus de la frise).
+
+### §5 — Pan libre + bouton « Recentrer »
+
+9. **Déplacement au-delà des éléments.** Le contenu est encadré d'une **marge de pan**
+   (`PAN_PAD`) de part et d'autre : on peut se déplacer à gauche/droite « même s'il n'y a
+   plus d'éléments plus loin ». Un bouton **Recentrer** (comme le « recentrer » du canvas)
+   réajuste le zoom sur la plage et ramène le défilement au début des éléments.
+
+### §6 — Fenêtre de mise à jour GitHub (`UpdatePopup`)
+
+10. **Annonce visible.** À la publication d'une nouvelle version GitHub, une **petite
+    fenêtre** (non bloquante, refermable) indique la version et propose le **lien vers la
+    release GitHub** (ouvert dans le navigateur externe via le pont preload). Une fois la
+    version téléchargée, elle propose « Redémarrer pour installer » ; la bannière discrète
+    subsiste ensuite comme rappel. Remplace l'ancien simple toast « disponible ».
+
+### §7 — Finalisation
+
+11. **Tests & build.** Nouveaux tests de datation (`eventTimingOf` : instant vs fenêtre vs
+    durée) et de la frise Ajouts (tri par date d'ajout). Format `.trace` en **v7**. Suite
+    complète au vert (typecheck node + web, **244 tests**), build de production OK.

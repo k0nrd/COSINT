@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="COSINT — collaborative OSINT investigation board" width="100%">
+  <img src="docs/assets/bannerpng.png" alt="COSINT — collaborative OSINT investigation board" width="100%">
 </p>
 
 <p align="center">
@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.1-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.2-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-240%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-244%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -72,20 +72,20 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.1
+## 🚀 What's new in 1.8.2
 
-- **🕒 Explorable timelines** — drag to pan both timelines; sorting no longer scrambles
-  the cards; clicking an item now opens its **details on the timeline** (a *"See on the
-  board"* button takes you to the canvas only if you want it).
-- **🖼️ Copy a board image** into any other document — a button on the image node, or
-  **Ctrl+C** on a single image, puts the bitmap on the system clipboard.
-- **🔗 "Link these?" suggestions** — enter a value that already appears elsewhere (a phone
-  number, an email…) and COSINT discreetly offers to connect the two elements.
-- **🧠 Dedicated modules per entity** — rich, searchable pickers for banks,
-  cryptocurrencies, brands, telecom operators, countries, card networks and hash
-  algorithms — always with a free **"Other"** entry (the lists are never limiting).
+- **🕒 Timelines, reworked** — *Additions* now places every element at its **creation
+  date** (never its event date); a **horizontal toolbar** sits at the bottom of the frise;
+  you can **pan freely beyond the last element** and hit **Recenter** to snap back.
+- **➕ Add on the timeline, with a date** — adding an entity or note from the frise asks
+  for a date first; **without a date, nothing is created**.
+- **⏱️ Precise durations** — event dating gains a **from → to** span, alongside the
+  *earliest / latest* uncertainty window (Instant / Duration toggle).
+- **🎨 Clearer range visuals** — a duration is a solid bar with clean end caps; an
+  uncertainty window fades at both ends. No more abrupt dotted bar.
+- **🚀 Update window** — a small pop-up announces a new GitHub release (version + link).
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.1.md`](docs/RELEASE_NOTES_v1.8.1.md).
+Full notes: [`docs/RELEASE_NOTES_v1.8.2.md`](docs/RELEASE_NOTES_v1.8.2.md).
 
 ---
 
@@ -114,7 +114,8 @@ The interface in action — drop your own captures into `docs/assets/` (`board.p
   operators, countries, card networks, hash algorithms; always a free *"Other"* value.
 - **Custom entity types per board** — define your own (name, icon, color, field template);
   synced to every peer and saved in the `.trace` export.
-- **Event dating** — an exact date/time, or an *earliest → latest* uncertainty window.
+- **Event dating** — an exact date/time, an *earliest → latest* uncertainty window, or a
+  precise *from → to* duration.
 - Notes (markdown), timestamped notes, images, syntax-highlighted code blocks, link
   cards, group zones.
 - Sources graded on the **Admiralty scale** (reliability A–F / credibility 1–6), attachable

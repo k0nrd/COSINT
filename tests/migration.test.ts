@@ -104,10 +104,10 @@ function buildV1Json(): string {
 }
 
 describe('parseTrace — migration v1 → v1.1', () => {
-  it('remonte la version du fichier à la version courante (6)', () => {
+  it('remonte la version du fichier à la version courante (7)', () => {
     const parsed = parseTrace(buildV1Json())
     expect(parsed.format).toBe(TRACE_FORMAT)
-    expect(parsed.version).toBe(6)
+    expect(parsed.version).toBe(7)
     expect(parsed.version).toBe(TRACE_VERSION)
   })
 

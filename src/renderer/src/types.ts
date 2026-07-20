@@ -209,6 +209,16 @@ export interface BoardNodeData {
   eventEarliest?: number
   /** §1 v1.8 : borne « au plus tard » d'un événement à l'instant incertain (epoch ms). */
   eventLatest?: number
+  /**
+   * §1 v1.8.2 : DÉBUT d'une DURÉE précise (de/à). À la différence de la fenêtre
+   * d'incertitude (`eventEarliest`/`eventLatest`, un instant unique mal connu), une
+   * durée décrit un fait qui S'ÉTEND réellement de `eventFrom` à `eventTo` (ex. un
+   * séjour, une campagne). Instant/durée sont mutuellement exclusifs côté éditeur.
+   * Epoch ms.
+   */
+  eventFrom?: number
+  /** §1 v1.8.2 : FIN d'une durée précise (de/à). Epoch ms. */
+  eventTo?: number
   /** §1 v1.8 : true si l'heure des dates d'événement est significative (sinon jour seul). */
   eventHasTime?: boolean
   /** Traçabilité (§3) : pseudo de l'auteur + horodatages (epoch ms). */

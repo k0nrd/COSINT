@@ -40,6 +40,7 @@ import { WaitingRoom, type WaitingRoomState } from '@/components/board/WaitingRo
 import { ApprovalPrompt } from '@/components/board/ApprovalPrompt'
 import { Toasts } from '@/components/common/Toasts'
 import { UpdateBanner } from '@/components/common/UpdateBanner'
+import { UpdatePopup } from '@/components/common/UpdatePopup'
 
 interface BoardRoute {
   handle: BoardHandle
@@ -60,6 +61,8 @@ export default function App(): ReactElement {
   const [menuSignal, setMenuSignal] = useState<MenuSignal>(null)
   const [waiting, setWaiting] = useState<{ state: WaitingRoomState } | null>(null)
   const [updateReady, setUpdateReady] = useState<string | null>(null)
+  // §3 v1.8.2 : fenêtre légère annonçant une mise à jour GitHub (disponible ou prête).
+  const [updatePopup, setUpdatePopup] = useState<{ state: 'available' | 'downloaded'; version: string } | null>(null)
   const [pending, setPending] = useState<PendingRequest[]>([])
   const [lobbyServer, setLobbyServer] = useState<LobbyServerHandle | null>(null)
 
@@ -702,13 +705,12 @@ export default function App(): ReactElement {
   useEffect(() => {
     if (typeof window.cosint === 'undefined' || !window.cosint.onUpdateStatus) return
     return window.cosint.onUpdateStatus((status) => {
-      if (status.state === 'available') {
-        pushToast(t('update.available', { version: status.version }), 'info')
-      } else if (status.state === 'downloaded') {
-        setUpdateReady(status.version)
-      }
+      // §3 v1.8.2 : fenêtre légère (version + lien GitHub) dès qu'une MAJ est publiée,
+      // enrichie d'un bouton « Redémarrer » une fois la version téléchargée.
+      setUpdatePopup(status)
+      if (status.state === 'downloaded') setUpdateReady(status.version)
     })
-  }, [pushToast])
+  }, [])
 
   if (!settings.profile) {
     return (
@@ -770,7 +772,15 @@ export default function App(): ReactElement {
       )}
 
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
-      {updateReady !== null && <UpdateBanner version={updateReady} />}
+      {updatePopup && (
+        <UpdatePopup
+          state={updatePopup.state}
+          version={updatePopup.version}
+          onClose={() => setUpdatePopup(null)}
+        />
+      )}
+      {/* La bannière discrète subsiste après fermeture de la fenêtre, comme rappel. */}
+      {updateReady !== null && updatePopup === null && <UpdateBanner version={updateReady} />}
       <Toasts />
     </>
   )

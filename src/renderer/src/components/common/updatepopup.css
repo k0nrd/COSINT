@@ -1,0 +1,79 @@
+/* Fenêtre légère de mise à jour (§3 v1.8.2) — flottante en bas à droite, non bloquante. */
+.cm-updatepop {
+  position: fixed;
+  right: var(--sp-3);
+  bottom: var(--sp-3);
+  z-index: 95;
+  width: 300px;
+  max-width: calc(100vw - 2 * var(--sp-3));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-pop, 0 12px 32px rgba(0, 0, 0, 0.35));
+  animation: cm-updatepop-in 180ms ease-out;
+}
+@keyframes cm-updatepop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.cm-updatepop__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute);
+  cursor: pointer;
+}
+.cm-updatepop__close:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.cm-updatepop__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 20px;
+}
+.cm-updatepop__icon {
+  color: var(--accent);
+}
+.cm-updatepop__title {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.cm-updatepop__body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.cm-updatepop__link {
+  align-self: flex-start;
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.cm-updatepop__link:hover {
+  text-decoration: underline;
+}
+.cm-updatepop__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}

@@ -437,6 +437,39 @@
 .bd-event__row input {
   min-width: 0;
 }
+/* §1 v1.8.2 : bascule Instant / Durée. */
+.bd-event__modes {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.bd-event__mode {
+  flex: 1;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.bd-event__mode:hover:not(:disabled) {
+  color: var(--text);
+}
+.bd-event__mode--on {
+  background: var(--accent);
+  color: var(--accent-text, #fff);
+}
+.bd-event__mode:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
 .bd-event__foot {
   display: flex;
   align-items: center;

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="COSINT — tableau d'enquête OSINT collaboratif" width="100%">
+  <img src="docs/assets/bannerpng.png" alt="COSINT — tableau d'enquête OSINT collaboratif" width="100%">
 </p>
 
 <p align="center">
@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.1-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.2-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-240%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-244%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -70,20 +70,21 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.1
+## 🚀 Nouveautés de la 1.8.2
 
-- **🕒 Frises que l'on parcourt** — glissez pour vous déplacer sur les deux frises ; le tri
-  n'emmêle plus les cartes ; cliquer un élément ouvre désormais son **détail sur la frise**
-  (un bouton *« Voir sur le tableau »* vous emmène au canevas seulement si vous le voulez).
-- **🖼️ Copier une image du tableau** vers un autre document — un bouton sur le nœud image,
-  ou **Ctrl+C** sur une image seule, pose le bitmap sur le presse-papiers système.
-- **🔗 Suggestions « relier ? »** — saisissez une valeur qui figure déjà ailleurs (un
-  numéro, un e-mail…) et COSINT propose discrètement de relier les deux éléments.
-- **🧠 Modules propres à chaque entité** — sélecteurs riches et cherchables pour banques,
-  cryptomonnaies, marques, opérateurs, pays, réseaux de carte et algorithmes de hachage —
-  toujours avec une entrée libre **« Autre »** (les listes ne sont jamais limitantes).
+- **🕒 Frises retravaillées** — *Ajouts* place chaque élément à sa **date de création**
+  (jamais sa date d'événement) ; une **barre d'outils horizontale** est en bas de la frise ;
+  on se **déplace librement au-delà du dernier élément** et un bouton **Recentrer** ramène la vue.
+- **➕ Ajout sur la frise, avec une date** — ajouter une entité ou une note depuis la frise
+  demande d'abord une date ; **sans date, rien n'est créé**.
+- **⏱️ Durées précises** — la datation gagne une plage **de → à**, en plus de la fourchette
+  *au plus tôt / au plus tard* (bascule Instant / Durée).
+- **🎨 Plages plus lisibles** — une durée est une barre pleine à embouts nets ; une fenêtre
+  d'incertitude est estompée aux deux bouts. Fini le pointillé qui s'arrête net.
+- **🚀 Fenêtre de mise à jour** — une petite fenêtre annonce une nouvelle version GitHub
+  (numéro + lien).
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.1.md`](docs/RELEASE_NOTES_v1.8.1.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.2.md`](docs/RELEASE_NOTES_v1.8.2.md).
 
 ---
 
@@ -112,7 +113,8 @@ L'interface en action — déposez vos captures dans `docs/assets/` (`board.png`
   opérateurs, pays, réseaux de carte, algorithmes de hachage ; toujours une valeur libre *« Autre »*.
 - **Types d'entité personnalisés par tableau** — définissez les vôtres (nom, icône, couleur,
   gabarit) ; synchronisés avec tous les pairs et inclus dans l'export `.trace`.
-- **Datation d'événement** — une date/heure exacte, ou une fourchette *au plus tôt → au plus tard*.
+- **Datation d'événement** — une date/heure exacte, une fourchette *au plus tôt → au plus tard*,
+  ou une durée précise *de → à*.
 - Notes (markdown), notes horodatées, images, blocs de code colorés, cartes de lien,
   zones de regroupement.
 - Sources graduées sur l'**échelle de l'Amirauté** (fiabilité A–F / crédibilité 1–6),

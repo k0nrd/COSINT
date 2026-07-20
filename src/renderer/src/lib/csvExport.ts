@@ -56,6 +56,8 @@ export function entityColumns(nodes: BoardNodeData[]): Array<CsvColumn<BoardNode
     { id: 'event_exact', header: 'evenement_date_exacte', group: 'fixed', get: (n) => iso(n.eventDate) },
     { id: 'event_earliest', header: 'evenement_au_plus_tot', group: 'fixed', get: (n) => iso(n.eventEarliest) },
     { id: 'event_latest', header: 'evenement_au_plus_tard', group: 'fixed', get: (n) => iso(n.eventLatest) },
+    { id: 'event_from', header: 'evenement_duree_de', group: 'fixed', get: (n) => iso(n.eventFrom) },
+    { id: 'event_to', header: 'evenement_duree_a', group: 'fixed', get: (n) => iso(n.eventTo) },
     { id: 'created_at', header: 'cree_le', group: 'fixed', get: (n) => iso(n.createdAt || undefined) },
     { id: 'created_by', header: 'cree_par', group: 'fixed', get: (n) => n.createdBy }
   ]

@@ -366,14 +366,40 @@ function EventTimingField({ node }: { node: BoardNodeData }): JSX.Element {
   const hasAny =
     node.eventDate !== undefined ||
     node.eventEarliest !== undefined ||
-    node.eventLatest !== undefined
+    node.eventLatest !== undefined ||
+    node.eventFrom !== undefined ||
+    node.eventTo !== undefined
   const badRange =
     node.eventEarliest !== undefined &&
     node.eventLatest !== undefined &&
     node.eventEarliest > node.eventLatest
+  const badDuration =
+    node.eventFrom !== undefined && node.eventTo !== undefined && node.eventFrom > node.eventTo
 
-  const setPart = (part: 'exact' | 'earliest' | 'latest', raw: string): void => {
+  // §1 v1.8.2 : deux natures de datation, mutuellement exclusives —
+  //  · Instant : date exacte OU fenêtre d'incertitude (au plus tôt / au plus tard) ;
+  //  · Durée   : le fait s'étend réellement « de » … « à » … (de/à).
+  // Le mode s'initialise depuis les données et se resynchronise au changement de nœud.
+  const [mode, setMode] = useState<'instant' | 'duration'>(
+    node.eventFrom !== undefined || node.eventTo !== undefined ? 'duration' : 'instant'
+  )
+  useEffect(() => {
+    setMode(node.eventFrom !== undefined || node.eventTo !== undefined ? 'duration' : 'instant')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.id])
+
+  const setPart = (part: 'exact' | 'earliest' | 'latest' | 'from' | 'to', raw: string): void => {
     setEventTiming(handle, node.id, { [part]: parseEventInput(raw, hasTime) }, author)
+  }
+
+  // Bascule de mode : on efface les champs de l'AUTRE nature (une seule op annulable)
+  // pour ne jamais mélanger « instant » et « durée » sur un même nœud.
+  const switchMode = (next: 'instant' | 'duration'): void => {
+    if (next === mode) return
+    setMode(next)
+    if (!canEdit) return
+    if (next === 'duration') setEventTiming(handle, node.id, { exact: null, earliest: null, latest: null }, author)
+    else setEventTiming(handle, node.id, { from: null, to: null }, author)
   }
 
   return (
@@ -382,37 +408,85 @@ function EventTimingField({ node }: { node: BoardNodeData }): JSX.Element {
         {t('event.section')}
       </label>
       <div className="bd-event">
-        <div className="bd-event__row">
-          <span className="bd-event__lbl" title={t('event.exactHint')}>{t('event.exact')}</span>
-          <input
-            type={inputType}
-            className="cm-input"
-            value={node.eventDate !== undefined ? fmt(node.eventDate) : ''}
+        <div className="bd-event__modes" role="group" aria-label={t('event.section')}>
+          <button
+            type="button"
+            className={`bd-event__mode${mode === 'instant' ? ' bd-event__mode--on' : ''}`}
+            onClick={() => switchMode('instant')}
             disabled={!canEdit}
-            onChange={(e) => setPart('exact', e.target.value)}
-          />
-        </div>
-        <div className="bd-event__row">
-          <span className="bd-event__lbl">{t('event.earliest')}</span>
-          <input
-            type={inputType}
-            className="cm-input"
-            value={node.eventEarliest !== undefined ? fmt(node.eventEarliest) : ''}
+          >
+            {t('event.modeInstant')}
+          </button>
+          <button
+            type="button"
+            className={`bd-event__mode${mode === 'duration' ? ' bd-event__mode--on' : ''}`}
+            onClick={() => switchMode('duration')}
             disabled={!canEdit}
-            onChange={(e) => setPart('earliest', e.target.value)}
-          />
+          >
+            {t('event.modeDuration')}
+          </button>
         </div>
-        <div className="bd-event__row">
-          <span className="bd-event__lbl">{t('event.latest')}</span>
-          <input
-            type={inputType}
-            className="cm-input"
-            value={node.eventLatest !== undefined ? fmt(node.eventLatest) : ''}
-            disabled={!canEdit}
-            onChange={(e) => setPart('latest', e.target.value)}
-          />
-        </div>
-        {badRange && <p className="bd-event__err">{t('event.badRange')}</p>}
+
+        {mode === 'duration' ? (
+          <>
+            <div className="bd-event__row">
+              <span className="bd-event__lbl" title={t('event.fromHint')}>{t('event.from')}</span>
+              <input
+                type={inputType}
+                className="cm-input"
+                value={node.eventFrom !== undefined ? fmt(node.eventFrom) : ''}
+                disabled={!canEdit}
+                onChange={(e) => setPart('from', e.target.value)}
+              />
+            </div>
+            <div className="bd-event__row">
+              <span className="bd-event__lbl">{t('event.to')}</span>
+              <input
+                type={inputType}
+                className="cm-input"
+                value={node.eventTo !== undefined ? fmt(node.eventTo) : ''}
+                disabled={!canEdit}
+                onChange={(e) => setPart('to', e.target.value)}
+              />
+            </div>
+            {badDuration && <p className="bd-event__err">{t('event.badDuration')}</p>}
+          </>
+        ) : (
+          <>
+            <div className="bd-event__row">
+              <span className="bd-event__lbl" title={t('event.exactHint')}>{t('event.exact')}</span>
+              <input
+                type={inputType}
+                className="cm-input"
+                value={node.eventDate !== undefined ? fmt(node.eventDate) : ''}
+                disabled={!canEdit}
+                onChange={(e) => setPart('exact', e.target.value)}
+              />
+            </div>
+            <div className="bd-event__row">
+              <span className="bd-event__lbl">{t('event.earliest')}</span>
+              <input
+                type={inputType}
+                className="cm-input"
+                value={node.eventEarliest !== undefined ? fmt(node.eventEarliest) : ''}
+                disabled={!canEdit}
+                onChange={(e) => setPart('earliest', e.target.value)}
+              />
+            </div>
+            <div className="bd-event__row">
+              <span className="bd-event__lbl">{t('event.latest')}</span>
+              <input
+                type={inputType}
+                className="cm-input"
+                value={node.eventLatest !== undefined ? fmt(node.eventLatest) : ''}
+                disabled={!canEdit}
+                onChange={(e) => setPart('latest', e.target.value)}
+              />
+            </div>
+            {badRange && <p className="bd-event__err">{t('event.badRange')}</p>}
+          </>
+        )}
+
         <div className="bd-event__foot">
           <label className="bd-event__time">
             <input
@@ -430,7 +504,7 @@ function EventTimingField({ node }: { node: BoardNodeData }): JSX.Element {
                 setEventTiming(
                   handle,
                   node.id,
-                  { exact: null, earliest: null, latest: null, hasTime: false },
+                  { exact: null, earliest: null, latest: null, from: null, to: null, hasTime: false },
                   author
                 )
               }
@@ -440,7 +514,7 @@ function EventTimingField({ node }: { node: BoardNodeData }): JSX.Element {
             </button>
           )}
         </div>
-        <p className="cm-hint">{t('event.windowHint')}</p>
+        <p className="cm-hint">{mode === 'duration' ? t('event.durationHint') : t('event.windowHint')}</p>
       </div>
     </>
   )

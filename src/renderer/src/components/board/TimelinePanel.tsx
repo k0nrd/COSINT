@@ -15,11 +15,13 @@ import { toPng } from 'html-to-image'
 import {
   Clock,
   Code2,
+  Contact,
   Crosshair,
   FileText,
   Image as ImageIcon,
   Link as LinkIcon,
   List,
+  LocateFixed,
   Minus,
   Plus,
   Square,
@@ -63,6 +65,23 @@ const TOP_PAD = 58
 const BOTTOM_PAD = 24
 const MIN_PX_PER_DAY = 0.02
 const MAX_PX_PER_DAY = 800
+// §1 v1.8.2 : marge de défilement de part et d'autre du contenu, pour pouvoir se
+// déplacer librement à gauche/droite « même s'il n'y a plus d'éléments plus loin ».
+// Le bouton « Recentrer » ramène la vue sur les éléments.
+const PAN_PAD = 1600
+
+/** Outils d'ajout de la barre horizontale de la frise (§2 v1.8.2). Un ajout depuis la
+ * frise n'aboutit qu'après avoir renseigné une date (voir le sélecteur de date). */
+const TL_ADD_TOOLS: Array<{ kind: NodeKind; icon: LucideIcon; titleKey: MessageKey }> = [
+  { kind: 'entity', icon: Contact, titleKey: 'toolbar.addEntity' },
+  { kind: 'text', icon: StickyNote, titleKey: 'toolbar.addText' },
+  { kind: 'source', icon: FileText, titleKey: 'toolbar.addSource' },
+  { kind: 'link', icon: LinkIcon, titleKey: 'toolbar.addLink' },
+  { kind: 'image', icon: ImageIcon, titleKey: 'toolbar.addImage' },
+  { kind: 'timestamped', icon: Clock, titleKey: 'toolbar.addTimestamped' },
+  { kind: 'group', icon: Square, titleKey: 'toolbar.addGroup' },
+  { kind: 'code', icon: Code2, titleKey: 'toolbar.addCode' }
+]
 
 /** Icônes des types de nœud « non entité ». */
 const KIND_ICONS: Record<Exclude<NodeKind, 'entity'>, LucideIcon> = {
@@ -92,11 +111,23 @@ type EventView = 'frise' | 'list'
 interface TimelinePanelProps {
   nodes: BoardNodeData[]
   boardTitle: string
+  /** false = visiteur : la barre d'ajout de la frise est masquée (§6). */
+  canEdit: boolean
   onLocate: (nodeId: string) => void
+  /** §2 v1.8.2 : crée un élément DATÉ depuis la frise (date d'événement obligatoire).
+   * Pour une entité, l'appelant ouvre le sélecteur de type puis applique la date. */
+  onAddDated: (kind: NodeKind, exact: number, hasTime: boolean) => void
   onClose: () => void
 }
 
-export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: TimelinePanelProps): JSX.Element {
+export function TimelinePanel({
+  nodes,
+  boardTitle,
+  canEdit,
+  onLocate,
+  onAddDated,
+  onClose
+}: TimelinePanelProps): JSX.Element {
   const pushToast = useToasts((state) => state.push)
   const { customTypeMap } = useBoardContext()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -110,6 +141,11 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
   // §1 v1.8.1 : élément dont le détail est affiché SUR la frise (un clic n'emmène
   // plus directement au tableau ; le détail propose ensuite « Voir sur le tableau »).
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // §2 v1.8.2 : ajout d'un élément DATÉ depuis la barre d'outils de la frise. Cliquer
+  // un outil ouvre le sélecteur de date ; sans date validée, RIEN n'est créé.
+  const [addKind, setAddKind] = useState<NodeKind | null>(null)
+  const [addDate, setAddDate] = useState('')
+  const [addHasTime, setAddHasTime] = useState(false)
 
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
   const selectedNode = selectedId ? (nodeById.get(selectedId) ?? null) : null
@@ -195,14 +231,20 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
 
   // ——— Zoom (px par jour) ———
   const [pxPerDay, setPxPerDay] = useState<number | null>(null)
+  // §1 v1.8.2 : demande de recentrage — après (re)calcul de la mise en page, on ramène
+  // le défilement sur le début du contenu (au-delà de la marge de pan libre PAN_PAD).
+  const pendingCenterRef = useRef(true)
   useLayoutEffect(() => {
     if (pxPerDay === null && scrollRef.current) {
       const width = scrollRef.current.clientWidth - 2 * GAP - CARD_W
       setPxPerDay(Math.max(MIN_PX_PER_DAY, Math.min(MAX_PX_PER_DAY, width / spanDays)))
     }
   }, [pxPerDay, spanDays])
-  // Réinitialise l'ajustement au changement d'onglet/vue (span différent).
-  useLayoutEffect(() => setPxPerDay(null), [tab, eventView])
+  // Réinitialise l'ajustement au changement d'onglet/vue (span différent) + recentre.
+  useLayoutEffect(() => {
+    setPxPerDay(null)
+    pendingCenterRef.current = true
+  }, [tab, eventView])
   // Le détail affiché se referme si l'on change d'onglet/vue (l'élément peut ne pas
   // figurer dans l'autre frise).
   useEffect(() => setSelectedId(null), [tab, eventView])
@@ -274,6 +316,48 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
   const laneCount = lanes.length > 0 ? Math.max(...lanes) + 1 : 1
   const contentWidth = Math.max((maxDate - minDate) * pxPerMs + CARD_W + 2 * GAP, 600)
   const contentHeight = TOP_PAD + AXIS_H + laneCount * LANE_H + BOTTOM_PAD
+
+  // §1 v1.8.2 : après (re)layout, ramène le défilement au début des éléments si un
+  // recentrage est en attente (ouverture, changement d'onglet, bouton « Recentrer »).
+  useLayoutEffect(() => {
+    if (!pendingCenterRef.current) return
+    const el = scrollRef.current
+    if (!el || !hasContent || !showFrise) return
+    el.scrollLeft = PAN_PAD - GAP
+    el.scrollTop = 0
+    pendingCenterRef.current = false
+  }, [pxPerDay, contentWidth, hasContent, showFrise])
+
+  const recenter = (): void => {
+    setPxPerDay(null)
+    pendingCenterRef.current = true
+    const el = scrollRef.current
+    if (el) {
+      el.scrollLeft = PAN_PAD - GAP
+      el.scrollTop = 0
+    }
+  }
+
+  // §2 v1.8.2 : validation du sélecteur de date d'ajout. Sans date valide → aucune
+  // création (exigence : « si on met pas de date ça ne s'ajoute pas »).
+  const confirmAdd = (): void => {
+    if (addKind === null) return
+    const ms = addHasTime
+      ? new Date(addDate).getTime()
+      : addDate
+        ? new Date(`${addDate}T00:00:00`).getTime()
+        : NaN
+    if (!Number.isFinite(ms)) return
+    onAddDated(addKind, ms, addHasTime)
+    setAddKind(null)
+    setAddDate('')
+    setAddHasTime(false)
+  }
+  const cancelAdd = (): void => {
+    setAddKind(null)
+    setAddDate('')
+    setAddHasTime(false)
+  }
 
   // ——— Graduations adaptatives ———
   const ticks = useMemo(() => {
@@ -423,16 +507,6 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
         </div>
         <span className="tl-count">{t('timeline.count', { count: hasContent ? (tab === 'added' ? items.length : eventItems.length) : 0 })}</span>
         <div className="tl-header__spacer" />
-        {showFrise && (
-          <>
-            <button className="cm-btn cm-btn--ghost cm-btn--icon" onClick={() => zoom(1 / 1.4)} title={t('toolbar.zoomOut')}>
-              <Minus size={15} />
-            </button>
-            <button className="cm-btn cm-btn--ghost cm-btn--icon" onClick={() => zoom(1.4)} title={t('toolbar.zoomIn')}>
-              <Plus size={15} />
-            </button>
-          </>
-        )}
         <button className="cm-btn cm-btn--ghost" onClick={() => void exportPng()}>{t('timeline.exportPng')}</button>
         <button className="cm-btn cm-btn--ghost" onClick={() => void exportCsv()}>{t('timeline.exportCsv')}</button>
         <button className="cm-btn cm-btn--ghost cm-btn--icon" onClick={onClose} title={t('timeline.backCanvas')} aria-label={t('timeline.backCanvas')}>
@@ -578,7 +652,8 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
           {!hasContent ? (
             <div className="tl-empty">{tab === 'added' ? t('timeline.empty') : t('timeline.emptyEvents')}</div>
           ) : (
-            <div className="tl-content" ref={contentRef} style={{ width: contentWidth, height: contentHeight }}>
+            <div className="tl-track" style={{ paddingLeft: PAN_PAD, paddingRight: PAN_PAD }}>
+              <div className="tl-content" ref={contentRef} style={{ width: contentWidth, height: contentHeight }}>
               <div className="tl-axis" style={{ top: TOP_PAD }} />
               {ticks.map((tick, i) => (
                 <div key={i} className="tl-tick" style={{ left: tick.x }}>
@@ -616,10 +691,21 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
                     const color = event.entityType ? resolveType(event.entityType, customTypeMap).color : 'var(--accent)'
                     return (
                       <div key={event.id} className="tl-eventrow" style={{ left: x, top }}>
-                        {/* Barre hachurée « au plus tôt → au plus tard » (fenêtre d'incertitude). */}
-                        {event.timing.isRange && (
-                          <span className="tl-eventbar" style={{ width: barW, background: `repeating-linear-gradient(90deg, ${color}, ${color} 5px, transparent 5px, transparent 10px)` }} title={eventTooltip(event.timing)} />
-                        )}
+                        {/* §1 v1.8.2 : barre de plage — une DURÉE (de/à) est un trait
+                            plein à embouts nets ; une INCERTITUDE (au plus tôt/tard) est
+                            un trait estompé aux extrémités (bornes floues). */}
+                        {event.timing.isRange &&
+                          (event.timing.isDuration ? (
+                            <span className="tl-eventbar tl-eventbar--duration" style={{ width: barW }} title={eventTooltip(event.timing)}>
+                              <span className="tl-eventbar__body" style={{ background: color }} />
+                              <span className="tl-eventcap tl-eventcap--l" style={{ background: color }} />
+                              <span className="tl-eventcap tl-eventcap--r" style={{ background: color }} />
+                            </span>
+                          ) : (
+                            <span className="tl-eventbar tl-eventbar--uncertain" style={{ width: barW }} title={eventTooltip(event.timing)}>
+                              <span className="tl-eventbar__body" style={{ background: color }} />
+                            </span>
+                          ))}
                         {/* Point à la date exacte, s'il y en a une (position relative dans la fenêtre). */}
                         {event.timing.exact !== undefined && (
                           <span className="tl-eventdot" style={{ left: (event.timing.exact - event.timing.start) * pxPerMs, background: color }} title={fmtBound(event.timing.exact, event.timing.hasTime)} />
@@ -639,6 +725,79 @@ export function TimelinePanel({ nodes, boardTitle, onLocate, onClose }: Timeline
                       </div>
                     )
                   })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* §2 v1.8.2 : barre d'outils HORIZONTALE en bas de la frise — ajout d'éléments
+          datés, zoom et recentrage (remplace la barre verticale de gauche du canvas). */}
+      {showFrise && (
+        <div className="tl-toolbar" role="toolbar" aria-label={t('timeline.toolbar')}>
+          {canEdit && (
+            <>
+              <div className="tl-toolbar__group">
+                {TL_ADD_TOOLS.map(({ kind, icon: Icon, titleKey }) => (
+                  <button
+                    key={kind}
+                    className={`tl-toolbar__btn${addKind === kind ? ' tl-toolbar__btn--active' : ''}`}
+                    onClick={() => {
+                      setAddDate('')
+                      setAddHasTime(false)
+                      setAddKind((current) => (current === kind ? null : kind))
+                    }}
+                    title={t(titleKey)}
+                    aria-label={t(titleKey)}
+                  >
+                    <Icon size={17} />
+                  </button>
+                ))}
+              </div>
+              <div className="tl-toolbar__sep" />
+            </>
+          )}
+          <div className="tl-toolbar__group">
+            <button className="tl-toolbar__btn" onClick={() => zoom(1 / 1.4)} title={t('toolbar.zoomOut')} aria-label={t('toolbar.zoomOut')}>
+              <Minus size={17} />
+            </button>
+            <button className="tl-toolbar__btn" onClick={() => zoom(1.4)} title={t('toolbar.zoomIn')} aria-label={t('toolbar.zoomIn')}>
+              <Plus size={17} />
+            </button>
+            <button className="tl-toolbar__btn" onClick={recenter} title={t('timeline.recenter')} aria-label={t('timeline.recenter')}>
+              <LocateFixed size={17} />
+            </button>
+          </div>
+
+          {/* Sélecteur de date : l'ajout n'aboutit qu'une fois une date renseignée. */}
+          {addKind !== null && (
+            <div className="tl-addpop" role="dialog" aria-label={t('timeline.addDated')}>
+              <div className="tl-addpop__head">
+                <span className="tl-addpop__title">{t('timeline.addDated')}</span>
+                <span className="tl-addpop__kind">{t(`nodeType.${addKind}` as MessageKey)}</span>
+              </div>
+              <input
+                type={addHasTime ? 'datetime-local' : 'date'}
+                className="cm-input"
+                value={addDate}
+                autoFocus
+                onChange={(e) => setAddDate(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirmAdd()
+                  else if (e.key === 'Escape') cancelAdd()
+                }}
+              />
+              <label className="tl-addpop__time">
+                <input type="checkbox" checked={addHasTime} onChange={(e) => setAddHasTime(e.target.checked)} />
+                {t('event.withTime')}
+              </label>
+              <p className="tl-addpop__hint">{t('timeline.addDatedHint')}</p>
+              <div className="tl-addpop__foot">
+                <button className="cm-btn cm-btn--sm" onClick={cancelAdd}>{t('common.cancel')}</button>
+                <button className="cm-btn cm-btn--primary cm-btn--sm" onClick={confirmAdd} disabled={addDate === ''}>
+                  {t('timeline.addConfirm')}
+                </button>
+              </div>
             </div>
           )}
         </div>

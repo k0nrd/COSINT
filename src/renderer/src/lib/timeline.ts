@@ -2,8 +2,12 @@
  * Logique pure de la Chronologie (§4 v1.7) — dérivation des éléments datés, placement
  * en « voies » (lanes) sans chevauchement, et choix d'un pas d'échelle adaptatif.
  *
- * Date d'un élément : la date d'ÉVÉNEMENT (`eventDate`) si renseignée (elle date le
- * FAIT en OSINT), sinon la date de CRÉATION (`createdAt`).
+ * Deux frises, deux dates DISTINCTES (§1 v1.8.2) :
+ *  - « Ajouts »     : QUAND l'élément a été AJOUTÉ au tableau → toujours `createdAt`.
+ *                     La date d'événement n'y intervient JAMAIS (une entité datée du
+ *                     8 mars mais saisie le 20 juillet figure au 20 juillet ici).
+ *  - « Événements » : QUAND LE FAIT s'est déroulé → datation d'événement résolue
+ *                     (`eventTimingOf` : date exacte, fenêtre, ou durée de/à).
  */
 import type { BoardNodeData, ElementStatus, NodeKind } from '@/types'
 
@@ -24,6 +28,16 @@ export interface EventTiming {
   earliest?: number
   /** Borne « au plus tard » d'un instant incertain. */
   latest?: number
+  /** Début d'une durée précise (de/à), si le nœud décrit une durée (§1 v1.8.2). */
+  from?: number
+  /** Fin d'une durée précise (de/à). */
+  to?: number
+  /**
+   * true si la datation décrit une DURÉE réelle (de/à) plutôt qu'un instant. Une durée
+   * s'affiche en barre pleine (le fait s'étend sur toute la plage) ; une fenêtre
+   * d'incertitude s'affiche estompée (instant unique mal localisé). §1 v1.8.2.
+   */
+  isDuration: boolean
   /** true si l'heure est significative (sinon jour seul). */
   hasTime: boolean
   /** Extrémité gauche pour le placement (min des bornes connues). */
@@ -35,14 +49,30 @@ export interface EventTiming {
 }
 
 /**
- * Résout la datation d'un nœud (§1 v1.8) : null si le nœud ne porte AUCUNE date
- * d'événement (ni exacte, ni fenêtre). `start`/`end` bornent la fenêtre pour la
- * frise ; un point (exact seul, ou une seule borne) a `start === end`.
+ * Résout la datation d'un nœud (§1 v1.8, durées §1 v1.8.2) : null si le nœud ne porte
+ * AUCUNE date d'événement (ni exacte, ni fenêtre, ni durée). `start`/`end` bornent la
+ * plage pour la frise ; un point (exact seul, ou une seule borne) a `start === end`.
+ * La DURÉE (`eventFrom`/`eventTo`) prime : si l'un des deux est renseigné, le nœud est
+ * traité comme une durée et les champs d'instant sont ignorés (l'éditeur les tient
+ * mutuellement exclusifs, mais on reste robuste à une donnée mixte importée).
  */
 export function eventTimingOf(node: BoardNodeData): EventTiming | null {
-  const { eventDate, eventEarliest, eventLatest } = node
-  if (eventDate === undefined && eventEarliest === undefined && eventLatest === undefined) {
+  const { eventDate, eventEarliest, eventLatest, eventFrom, eventTo } = node
+  const isDuration = eventFrom !== undefined || eventTo !== undefined
+  if (
+    !isDuration &&
+    eventDate === undefined &&
+    eventEarliest === undefined &&
+    eventLatest === undefined
+  ) {
     return null
+  }
+  const hasTime = node.eventHasTime === true
+  if (isDuration) {
+    const known = [eventFrom, eventTo].filter((value): value is number => value !== undefined)
+    const start = Math.min(...known)
+    const end = Math.max(...known)
+    return { from: eventFrom, to: eventTo, isDuration: true, hasTime, start, end, isRange: end > start }
   }
   const known = [eventEarliest, eventDate, eventLatest].filter(
     (value): value is number => value !== undefined
@@ -53,19 +83,22 @@ export function eventTimingOf(node: BoardNodeData): EventTiming | null {
     exact: eventDate,
     earliest: eventEarliest,
     latest: eventLatest,
-    hasTime: node.eventHasTime === true,
+    isDuration: false,
+    hasTime,
     start,
     end,
     isRange: end > start
   }
 }
 
-/** true si le nœud porte une datation d'événement (exacte ou fenêtre). */
+/** true si le nœud porte une datation d'événement (exacte, fenêtre ou durée). */
 export function hasEventTiming(node: BoardNodeData): boolean {
   return (
     node.eventDate !== undefined ||
     node.eventEarliest !== undefined ||
-    node.eventLatest !== undefined
+    node.eventLatest !== undefined ||
+    node.eventFrom !== undefined ||
+    node.eventTo !== undefined
   )
 }
 
@@ -143,17 +176,21 @@ export interface TimelineItem {
   label: string
 }
 
-/** Convertit les nœuds en éléments de frise, triés par date croissante. */
+/**
+ * Éléments de la frise « Ajouts » (§1 v1.8.2) : chaque nœud placé à sa date d'AJOUT au
+ * tableau (`createdAt`) — jamais à sa date d'événement. Triés par date croissante.
+ * `isEventDate` est donc toujours faux ici (la date affichée est celle de la saisie).
+ */
 export function toTimelineItems(nodes: BoardNodeData[]): TimelineItem[] {
   return nodes
     .map((node) => ({
       id: node.id,
-      date: timelineDate(node),
+      date: node.createdAt,
       kind: node.kind,
       entityType: node.entityType,
       author: node.createdBy,
       status: node.status,
-      isEventDate: node.eventDate !== undefined,
+      isEventDate: false,
       label: node.title.trim() || node.fields.find((f) => f.value.trim() !== '')?.value || ''
     }))
     .sort((a, b) => a.date - b.date)
