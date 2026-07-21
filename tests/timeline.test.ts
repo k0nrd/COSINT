@@ -3,6 +3,7 @@ import type { BoardNodeData } from '@/types'
 import {
   assignLanes,
   chooseTickStepDays,
+  datationMode,
   DAY_MS,
   eventTimingOf,
   timelineDate,
@@ -126,5 +127,30 @@ describe('lib/timeline — datation d’événement (§1 v1.8, durées §1 v1.8.
     expect([timing.start, timing.end]).toEqual([200, 900])
     expect(timing.from).toBe(200)
     expect(timing.to).toBe(900)
+  })
+})
+
+describe('lib/timeline — mode de datation & repères (§1 v1.8.3)', () => {
+  it('datationMode : durée > fenêtre > date précise', () => {
+    expect(datationMode(node())).toBe('exact')
+    expect(datationMode(node({ eventDate: 5 }))).toBe('exact')
+    expect(datationMode(node({ eventEarliest: 1 }))).toBe('window')
+    expect(datationMode(node({ eventLatest: 9 }))).toBe('window')
+    expect(datationMode(node({ eventFrom: 1 }))).toBe('duration')
+    // La durée prime même si des champs d'instant traînent (donnée mixte importée).
+    expect(datationMode(node({ eventFrom: 1, eventEarliest: 2, eventDate: 3 }))).toBe('duration')
+  })
+
+  it('eventTimingOf : repères filtrés à la plage résolue et triés', () => {
+    const timing = eventTimingOf(
+      node({ eventFrom: 100, eventTo: 500, eventMarks: [400, 50, 300, 900] })
+    )!
+    // 50 (avant le début) et 900 (après la fin) sont écartés ; le reste est trié.
+    expect(timing.marks).toEqual([300, 400])
+  })
+
+  it('eventTimingOf : aucun repère hors plage → tableau vide, jamais indéfini', () => {
+    const timing = eventTimingOf(node({ eventDate: 500 }))!
+    expect(timing.marks).toEqual([])
   })
 })

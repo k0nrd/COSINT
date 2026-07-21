@@ -341,6 +341,19 @@ describe('parseTrace — migration v1.6 (v4) → v1.7 (v5) : date d’événemen
     })
     expect(parseTrace(bad).nodes[0].eventDate).toBeUndefined()
   })
+
+  it('aller-retour : repères d’événement (§1 v1.8.3) triés/dédupliqués, valeurs sales écartées', () => {
+    const bad = JSON.stringify({
+      format: TRACE_FORMAT,
+      version: TRACE_VERSION,
+      exportedAt: 0,
+      meta: { title: 'x', createdAt: 0, createdBy: 'a', accessMode: 'open' },
+      nodes: [{ ...makeNode({ eventFrom: 100, eventTo: 900 }), eventMarks: [300, 'x', 300, 200] }],
+      edges: [],
+      comments: []
+    })
+    expect(parseTrace(bad).nodes[0].eventMarks).toEqual([200, 300])
+  })
 })
 
 describe('colorHex', () => {

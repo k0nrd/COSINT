@@ -10,7 +10,15 @@
  * Filtres (catégorie, statut, auteur, plage), échelle adaptative, export PNG/CSV.
  * La frise se met à jour en temps réel (dérivée de `nodes`, source Yjs).
  */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent
+} from 'react'
 import { toPng } from 'html-to-image'
 import {
   Clock,
@@ -19,6 +27,7 @@ import {
   Crosshair,
   FileText,
   Image as ImageIcon,
+  LayoutGrid,
   Link as LinkIcon,
   List,
   LocateFixed,
@@ -30,7 +39,7 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import type { BoardNodeData, ElementStatus, NodeKind } from '@/types'
-import { t, formatDateTime, type MessageKey } from '@/i18n'
+import { t, type MessageKey } from '@/i18n'
 import {
   taxonomyCategory,
   taxonomyType,
@@ -38,20 +47,21 @@ import {
   type CategoryId
 } from '@/lib/taxonomy'
 import { resolveType, type CustomTypeMap } from '@/lib/entityTypes'
-import { visibleNodeFields } from '@/lib/entities'
 import { EntityIcon } from '@/components/nodes/entityIcons'
 import { StatusBadge } from '@/components/board/StatusBadge'
+import { NodeDetails } from '@/components/board/SidePanel'
 import { useBoardContext } from '@/flow/BoardContext'
+import { setEventTiming, type EventTimingPatch } from '@/sync/boardOps'
 import { stringifyCsv } from '@/lib/csv'
 import {
   assignLanes,
   chooseTickStepDays,
   DAY_MS,
-  eventTimingOf,
   toEventItems,
   toTimelineItems,
   type EventSortKey,
   type EventTiming,
+  type TimelineEvent,
   type TimelineItem
 } from '@/lib/timeline'
 import { useToasts } from '@/store/toasts'
@@ -129,9 +139,16 @@ export function TimelinePanel({
   onClose
 }: TimelinePanelProps): JSX.Element {
   const pushToast = useToasts((state) => state.push)
-  const { customTypeMap } = useBoardContext()
+  const { customTypeMap, handle, author } = useBoardContext()
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  // §5 v1.8.3 : position/largeur du défilement, suivies pour le navigateur de zoom (barre
+  // du bas, façon Premiere). Mises à jour au défilement et au redimensionnement.
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [viewportW, setViewportW] = useState(0)
+  // §5 v1.8.3 : après un changement de zoom, on veut replacer une date précise au bord
+  // gauche du viewport — appliqué APRÈS le re-calcul de mise en page (voir l'effet).
+  const pendingScrollMsRef = useRef<number | null>(null)
 
   // §3 v1.8.1 : à l'ouverture, on montre d'abord la frise des ÉVÉNEMENTS (quand les
   // faits se sont déroulés), puis celle des ajouts — les onglets sont ordonnés ainsi.
@@ -255,7 +272,11 @@ export function TimelinePanel({
     if (event.button !== 0) return
     // On ne démarre PAS un déplacement depuis un élément interactif (carte, bouton,
     // ligne de liste, champ, panneau de détail) : clic et sélection y restent normaux.
-    if ((event.target as HTMLElement).closest('.tl-item, .tl-list, .tl-detail, button, a, input, select')) {
+    if (
+      (event.target as HTMLElement).closest(
+        '.tl-item, .tl-eventrow, .tl-list, .tl-detail, button, a, input, select'
+      )
+    ) {
       return
     }
     const el = scrollRef.current
@@ -317,16 +338,37 @@ export function TimelinePanel({
   const contentWidth = Math.max((maxDate - minDate) * pxPerMs + CARD_W + 2 * GAP, 600)
   const contentHeight = TOP_PAD + AXIS_H + laneCount * LANE_H + BOTTOM_PAD
 
-  // §1 v1.8.2 : après (re)layout, ramène le défilement au début des éléments si un
-  // recentrage est en attente (ouverture, changement d'onglet, bouton « Recentrer »).
+  // §1 v1.8.2 / §5 v1.8.3 : après (re)layout, applique le défilement en attente —
+  // priorité au repositionnement de zoom (une date précise ramenée au bord gauche),
+  // sinon au recentrage sur le début des éléments.
   useLayoutEffect(() => {
-    if (!pendingCenterRef.current) return
     const el = scrollRef.current
     if (!el || !hasContent || !showFrise) return
-    el.scrollLeft = PAN_PAD - GAP
-    el.scrollTop = 0
-    pendingCenterRef.current = false
-  }, [pxPerDay, contentWidth, hasContent, showFrise])
+    if (pendingScrollMsRef.current !== null) {
+      const leftMs = pendingScrollMsRef.current
+      pendingScrollMsRef.current = null
+      pendingCenterRef.current = false
+      el.scrollLeft = PAN_PAD + (leftMs - minDate) * pxPerMs
+      return
+    }
+    if (pendingCenterRef.current) {
+      el.scrollLeft = PAN_PAD - GAP
+      el.scrollTop = 0
+      pendingCenterRef.current = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pxPerDay, contentWidth, hasContent, showFrise, minDate, pxPerMs])
+
+  // §5 v1.8.3 : suit la largeur visible (viewport) de la frise pour le navigateur de zoom.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = (): void => setViewportW(el.clientWidth)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [showFrise, tab, eventView])
 
   const recenter = (): void => {
     setPxPerDay(null)
@@ -399,6 +441,31 @@ export function TimelinePanel({
 
   const zoom = (factor: number): void => {
     setPxPerDay((prev) => Math.max(MIN_PX_PER_DAY, Math.min(MAX_PX_PER_DAY, (prev ?? ppd) * factor)))
+  }
+
+  // §5 v1.8.3 : cadre la frise sur la fenêtre temporelle [startMs, endMs] — le zoom
+  // (px/jour) s'ajuste pour qu'elle remplisse le viewport, puis on réancre le bord
+  // indiqué (`left` = bord droit figé quand on tire la poignée gauche, et inversement).
+  const applyView = (startMs: number, endMs: number, anchor: 'left' | 'right'): void => {
+    const el = scrollRef.current
+    if (!el) return
+    const vw = el.clientWidth || viewportW || 1
+    const days = Math.max((endMs - startMs) / DAY_MS, 1e-9)
+    const nextPpd = Math.max(MIN_PX_PER_DAY, Math.min(MAX_PX_PER_DAY, vw / days))
+    const winMs = (vw / nextPpd) * DAY_MS
+    pendingScrollMsRef.current = anchor === 'left' ? endMs - winMs : startMs
+    setPxPerDay(nextPpd)
+  }
+  // §5 v1.8.3 : défile (sans changer le zoom) pour amener `startMs` au bord gauche.
+  const panToStart = (startMs: number): void => {
+    const el = scrollRef.current
+    if (el) el.scrollLeft = PAN_PAD + (startMs - minDate) * pxPerMs
+  }
+
+  // §6 v1.8.3 : édition d'une datation depuis la frise (glisser une barre/un embout/un
+  // repère), en réutilisant l'op du tableau — une seule étape d'annulation par geste.
+  const editTiming = (id: string, patch: EventTimingPatch): void => {
+    if (canEdit) setEventTiming(handle, id, patch, author)
   }
 
   const exportPng = async (): Promise<void> => {
@@ -589,15 +656,6 @@ export function TimelinePanel({
         )}
       </div>
 
-      {/* §1/§3 v1.8.1 : bandeau descriptif de la frise courante (interface enrichie,
-          notamment pour les Ajouts) + rappel du déplacement au glisser. */}
-      <div className={`tl-desc tl-desc--${tab}`}>
-        <span className="tl-desc__what">
-          {tab === 'added' ? t('timeline.tabAddedDesc') : t('timeline.tabEventsDesc')}
-        </span>
-        {showFrise && <span className="tl-desc__hint">{t('timeline.panHint')}</span>}
-      </div>
-
       {/* ——— Vue LISTE (onglet Événements) ——— */}
       {tab === 'events' && eventView === 'list' ? (
         <div className="tl-scroll">
@@ -644,6 +702,7 @@ export function TimelinePanel({
         <div
           className="tl-scroll tl-scroll--pan"
           ref={scrollRef}
+          onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}
           onPointerDown={onPanPointerDown}
           onPointerMove={onPanPointerMove}
           onPointerUp={onPanPointerEnd}
@@ -684,45 +743,24 @@ export function TimelinePanel({
                     )
                   })
                 : eventItems.map((event, i) => {
-                    const x = (event.timing.start - minDate) * pxPerMs
                     const top = TOP_PAD + AXIS_H + lanes[i] * LANE_H
-                    const barW = Math.max(0, (event.timing.end - event.timing.start) * pxPerMs)
                     const label = event.label || (nodeById.get(event.id) ? typeLabelOfNode(nodeById.get(event.id)!) : '')
                     const color = event.entityType ? resolveType(event.entityType, customTypeMap).color : 'var(--accent)'
                     return (
-                      <div key={event.id} className="tl-eventrow" style={{ left: x, top }}>
-                        {/* §1 v1.8.2 : barre de plage — une DURÉE (de/à) est un trait
-                            plein à embouts nets ; une INCERTITUDE (au plus tôt/tard) est
-                            un trait estompé aux extrémités (bornes floues). */}
-                        {event.timing.isRange &&
-                          (event.timing.isDuration ? (
-                            <span className="tl-eventbar tl-eventbar--duration" style={{ width: barW }} title={eventTooltip(event.timing)}>
-                              <span className="tl-eventbar__body" style={{ background: color }} />
-                              <span className="tl-eventcap tl-eventcap--l" style={{ background: color }} />
-                              <span className="tl-eventcap tl-eventcap--r" style={{ background: color }} />
-                            </span>
-                          ) : (
-                            <span className="tl-eventbar tl-eventbar--uncertain" style={{ width: barW }} title={eventTooltip(event.timing)}>
-                              <span className="tl-eventbar__body" style={{ background: color }} />
-                            </span>
-                          ))}
-                        {/* Point à la date exacte, s'il y en a une (position relative dans la fenêtre). */}
-                        {event.timing.exact !== undefined && (
-                          <span className="tl-eventdot" style={{ left: (event.timing.exact - event.timing.start) * pxPerMs, background: color }} title={fmtBound(event.timing.exact, event.timing.hasTime)} />
-                        )}
-                        <button
-                          className={`tl-item tl-item--event${selectedId === event.id ? ' tl-item--selected' : ''}`}
-                          style={{ borderLeftColor: color }}
-                          onClick={() => setSelectedId(event.id)}
-                          title={`${label}\n${eventTooltip(event.timing)}`}
-                        >
-                          <span className="tl-item__ico"><EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} /></span>
-                          <span className="tl-item__label">{label}</span>
-                          {event.status && event.status !== 'none' && (
-                            <span className="tl-item__badge"><StatusBadge status={event.status} size={13} /></span>
-                          )}
-                        </button>
-                      </div>
+                      <EventRow
+                        key={event.id}
+                        event={event}
+                        top={top}
+                        label={label}
+                        color={color}
+                        minDate={minDate}
+                        pxPerMs={pxPerMs}
+                        selected={selectedId === event.id}
+                        canEdit={canEdit}
+                        customTypeMap={customTypeMap}
+                        onSelect={() => setSelectedId(event.id)}
+                        onCommit={(patch) => editTiming(event.id, patch)}
+                      />
                     )
                   })}
               </div>
@@ -731,10 +769,32 @@ export function TimelinePanel({
         </div>
       )}
 
-      {/* §2 v1.8.2 : barre d'outils HORIZONTALE en bas de la frise — ajout d'éléments
-          datés, zoom et recentrage (remplace la barre verticale de gauche du canvas). */}
+      {/* §5 v1.8.3 : navigateur de zoom (barre du bas, façon Premiere Pro) — élargir la
+          poignée dézoome, la rétrécir zoome ; glisser le milieu fait défiler. */}
+      {showFrise && hasContent && (
+        <ZoomBar
+          minDate={minDate}
+          maxDate={maxDate}
+          pxPerMs={pxPerMs}
+          scrollLeft={scrollLeft}
+          viewportW={viewportW}
+          panPad={PAN_PAD}
+          onZoomTo={applyView}
+          onPanTo={panToStart}
+        />
+      )}
+
+      {/* §2 v1.8.2 : barre d'outils HORIZONTALE en bas de la frise — retour au tableau,
+          ajout d'éléments datés, zoom et recentrage (remplace la barre verticale du canvas). */}
       {showFrise && (
         <div className="tl-toolbar" role="toolbar" aria-label={t('timeline.toolbar')}>
+          {/* §4 v1.8.3 : retour au tableau principal directement depuis la barre du bas. */}
+          <div className="tl-toolbar__group">
+            <button className="tl-toolbar__btn" onClick={onClose} title={t('timeline.backBoard')} aria-label={t('timeline.backBoard')}>
+              <LayoutGrid size={17} />
+            </button>
+          </div>
+          <div className="tl-toolbar__sep" />
           {canEdit && (
             <>
               <div className="tl-toolbar__group">
@@ -810,7 +870,6 @@ export function TimelinePanel({
         <TimelineDetail
           node={selectedNode}
           customTypeMap={customTypeMap}
-          typeLabel={typeLabelOfNode(selectedNode)}
           onLocate={() => onLocate(selectedNode.id)}
           onClose={() => setSelectedId(null)}
         />
@@ -820,27 +879,26 @@ export function TimelinePanel({
 }
 
 /**
- * Détail d'un élément affiché sur la frise (§1 v1.8.1) : type, statut, auteur,
- * datation (ajout + événement) et informations renseignées. « Voir sur le tableau »
- * est la seule action qui bascule vers le canvas.
+ * Détail d'un élément affiché sur la frise (§1 v1.8.1 ; §6 v1.8.3) : embarque l'ÉDITEUR
+ * COMPLET du tableau (`NodeDetails` — titre, champs, couleur, tags, datation, suppression)
+ * pour modifier les DONNÉES sans quitter la frise. L'édition VISUELLE (glisser la barre)
+ * se fait directement sur la piste. « Voir sur le tableau » bascule vers le canvas.
  */
 function TimelineDetail({
   node,
   customTypeMap,
-  typeLabel,
   onLocate,
   onClose
 }: {
   node: BoardNodeData
   customTypeMap: CustomTypeMap
-  typeLabel: string
   onLocate: () => void
   onClose: () => void
 }): JSX.Element {
   const label =
-    node.title.trim() || node.fields.find((field) => field.value.trim() !== '')?.value || typeLabel
-  const timing = eventTimingOf(node)
-  const fields = visibleNodeFields(node.fields).slice(0, 8)
+    node.title.trim() ||
+    node.fields.find((field) => field.value.trim() !== '')?.value ||
+    t(`nodeType.${node.kind}` as MessageKey)
 
   return (
     <div className="tl-detail" role="dialog" aria-label={label}>
@@ -860,40 +918,10 @@ function TimelineDetail({
         </button>
       </div>
 
-      <div className="tl-detail__meta">
-        <div className="tl-detail__row">
-          <span className="tl-detail__key">{t('entity.type')}</span>
-          <span className="tl-detail__val">{typeLabel}</span>
-        </div>
-        <div className="tl-detail__row">
-          <span className="tl-detail__key">{t('timeline.detailAuthor')}</span>
-          <span className="tl-detail__val">{node.createdBy}</span>
-        </div>
-        <div className="tl-detail__row">
-          <span className="tl-detail__key">{t('timeline.detailAddedAt')}</span>
-          <span className="tl-detail__val">{formatDateTime(node.createdAt)}</span>
-        </div>
-        {timing && (
-          <div className="tl-detail__row">
-            <span className="tl-detail__key">
-              {timing.isRange ? t('timeline.detailWindow') : t('timeline.detailEventAt')}
-            </span>
-            <span className="tl-detail__val">{eventTooltip(timing)}</span>
-          </div>
-        )}
+      {/* §6 v1.8.3 : éditeur IDENTIQUE à celui du panneau latéral du tableau. */}
+      <div className="tl-detail__editor">
+        <NodeDetails key={node.id} node={node} />
       </div>
-
-      {fields.length > 0 && (
-        <div className="tl-detail__fields">
-          <span className="tl-detail__key">{t('timeline.detailInfo')}</span>
-          {fields.map((field) => (
-            <div key={field.id} className="tl-detail__field">
-              <span className="tl-detail__flabel" title={field.label}>{field.label}</span>
-              <span className="tl-detail__fval" title={field.value}>{field.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
 
       <button className="cm-btn cm-btn--primary tl-detail__locate" onClick={onLocate}>
         <Crosshair size={14} />
@@ -930,5 +958,372 @@ function eventTooltip(timing: EventTiming): string {
     const to = timing.latest !== undefined ? fmtBound(timing.latest, timing.hasTime) : '?'
     parts.push(`${t('timeline.approx')} ${from} ${t('timeline.rangeSep')} ${to}`)
   }
+  if (timing.from !== undefined || timing.to !== undefined) {
+    const from = timing.from !== undefined ? fmtBound(timing.from, timing.hasTime) : '?'
+    const to = timing.to !== undefined ? fmtBound(timing.to, timing.hasTime) : '?'
+    parts.push(`${from} ${t('timeline.rangeSep')} ${to}`)
+  }
   return parts.join(' · ') || t('timeline.unknownDate')
+}
+
+/**
+ * §6 v1.8.3 : ligne d'un événement sur la piste — carte + barre de plage éditable
+ * VISUELLEMENT. La barre se glisse (déplacer la plage), ses embouts ajustent le début
+ * et la fin, un double-clic pose un repère (glissable, clic droit pour retirer). Chaque
+ * geste = une seule op annulable (commit au relâcher). Une DURÉE (de/à) est un trait
+ * plein ; une FOURCHETTE incertaine est un trait hachuré gris ; toutes deux à embouts.
+ */
+interface EventRowProps {
+  event: TimelineEvent
+  top: number
+  label: string
+  color: string
+  minDate: number
+  pxPerMs: number
+  selected: boolean
+  canEdit: boolean
+  customTypeMap: CustomTypeMap
+  onSelect: () => void
+  onCommit: (patch: EventTimingPatch) => void
+}
+
+type TlDragKind = 'move' | 'l' | 'r' | 'mark'
+interface TlDragState {
+  kind: TlDragKind
+  idx: number
+  originX: number
+  deltaMs: number
+  moved: boolean
+}
+
+function EventRow({
+  event,
+  top,
+  label,
+  color,
+  minDate,
+  pxPerMs,
+  selected,
+  canEdit,
+  customTypeMap,
+  onSelect,
+  onCommit
+}: EventRowProps): JSX.Element {
+  const { timing } = event
+  const [drag, setDrag] = useState<TlDragState | null>(null)
+  const suppressClick = useRef(false)
+
+  const isDuration = timing.isDuration
+  const lowKey: 'from' | 'earliest' = isDuration ? 'from' : 'earliest'
+  const highKey: 'to' | 'latest' = isDuration ? 'to' : 'latest'
+  const origLow = isDuration ? timing.from : timing.earliest
+  const origHigh = isDuration ? timing.to : timing.latest
+
+  const snapMs = timing.hasTime ? 60_000 : DAY_MS
+  const snap = (ms: number): number => Math.round(ms / snapMs) * snapMs
+  const clampMs = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v))
+
+  // Bornes de prévisualisation appliquées pendant le glisser (aucune écriture avant le
+  // relâcher). En dehors d'un glisser, ce sont les bornes réelles de la datation.
+  const d = drag ? snap(drag.deltaMs) : 0
+  let pStart = timing.start
+  let pEnd = timing.end
+  let pMarks = timing.marks
+  if (drag) {
+    if (drag.kind === 'move') {
+      pStart += d
+      pEnd += d
+      pMarks = pMarks.map((m) => m + d)
+    } else if (drag.kind === 'l') {
+      pStart = Math.min(timing.start + d, timing.end)
+    } else if (drag.kind === 'r') {
+      pEnd = Math.max(timing.end + d, timing.start)
+    } else if (drag.kind === 'mark') {
+      pMarks = pMarks.map((m, i) => (i === drag.idx ? clampMs(m + d, timing.start, timing.end) : m))
+    }
+  }
+  const x = (pStart - minDate) * pxPerMs
+  const barW = Math.max(0, (pEnd - pStart) * pxPerMs)
+
+  const beginDrag =
+    (kind: TlDragKind, idx: number) =>
+    (e: ReactPointerEvent): void => {
+      if (!canEdit || e.button !== 0) return
+      e.stopPropagation()
+      if (kind !== 'move') e.preventDefault()
+      try {
+        ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+      } catch {
+        /* capture indisponible */
+      }
+      setDrag({ kind, idx, originX: e.clientX, deltaMs: 0, moved: false })
+    }
+  const moveDrag = (e: ReactPointerEvent): void =>
+    setDrag((cur) =>
+      cur
+        ? { ...cur, deltaMs: (e.clientX - cur.originX) / pxPerMs, moved: cur.moved || Math.abs(e.clientX - cur.originX) > 3 }
+        : cur
+    )
+  const endDrag = (e: ReactPointerEvent): void => {
+    try {
+      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    } catch {
+      /* déjà relâché */
+    }
+    setDrag((cur) => {
+      if (!cur) return null
+      const dd = snap(cur.deltaMs)
+      if (!cur.moved || dd === 0) return null // simple clic → laissé à onClick (sélection)
+      suppressClick.current = true
+      const patch: EventTimingPatch = {}
+      if (cur.kind === 'mark') {
+        patch.marks = timing.marks.map((m, i) => (i === cur.idx ? clampMs(m + dd, timing.start, timing.end) : m))
+      } else if (!timing.isRange) {
+        // Point unique : on déplace la seule borne renseignée.
+        if (timing.exact !== undefined) patch.exact = timing.exact + dd
+        else if (origLow !== undefined) patch[lowKey] = origLow + dd
+        else if (origHigh !== undefined) patch[highKey] = origHigh + dd
+      } else if (cur.kind === 'l' && origLow !== undefined) {
+        patch[lowKey] = Math.min(origLow + dd, origHigh ?? timing.end)
+      } else if (cur.kind === 'r' && origHigh !== undefined) {
+        patch[highKey] = Math.max(origHigh + dd, origLow ?? timing.start)
+      } else if (cur.kind === 'move') {
+        if (origLow !== undefined) patch[lowKey] = origLow + dd
+        if (origHigh !== undefined) patch[highKey] = origHigh + dd
+        if (timing.marks.length > 0) patch.marks = timing.marks.map((m) => m + dd)
+      }
+      onCommit(patch)
+      return null
+    })
+  }
+  const dragProps = { onPointerMove: moveDrag, onPointerUp: endDrag, onPointerCancel: endDrag }
+  const clickSelect = (): void => {
+    if (suppressClick.current) {
+      suppressClick.current = false
+      return
+    }
+    onSelect()
+  }
+
+  const addMarkAt = (e: ReactMouseEvent): void => {
+    if (!canEdit || !timing.isRange) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const ms = clampMs(snap(timing.start + (e.clientX - rect.left) / pxPerMs), timing.start, timing.end)
+    onCommit({ marks: [...timing.marks, ms] })
+  }
+  const removeMark =
+    (i: number) =>
+    (e: ReactMouseEvent): void => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (canEdit) onCommit({ marks: timing.marks.filter((_, j) => j !== i) })
+    }
+
+  return (
+    <div className="tl-eventrow" style={{ left: x, top }}>
+      {timing.isRange && (
+        <span
+          className={`tl-eventbar tl-eventbar--${isDuration ? 'duration' : 'uncertain'}${selected ? ' tl-eventbar--sel' : ''}${
+            drag ? ' tl-eventbar--drag' : ''
+          }${canEdit ? ' tl-eventbar--editable' : ''}`}
+          style={{ width: barW }}
+          title={canEdit ? t('timeline.barMove') : eventTooltip(timing)}
+          onClick={clickSelect}
+          onPointerDown={beginDrag('move', -1)}
+          onDoubleClick={addMarkAt}
+          {...dragProps}
+        >
+          <span className="tl-eventbar__body" style={isDuration ? { background: color } : undefined} />
+          {canEdit && (
+            <>
+              <span
+                className="tl-eventcap tl-eventcap--l tl-eventcap--grip"
+                style={{ background: color }}
+                onPointerDown={beginDrag('l', -1)}
+                {...dragProps}
+              />
+              <span
+                className="tl-eventcap tl-eventcap--r tl-eventcap--grip"
+                style={{ background: color }}
+                onPointerDown={beginDrag('r', -1)}
+                {...dragProps}
+              />
+            </>
+          )}
+          {!canEdit && (
+            <>
+              <span className="tl-eventcap tl-eventcap--l" style={{ background: color }} />
+              <span className="tl-eventcap tl-eventcap--r" style={{ background: color }} />
+            </>
+          )}
+          {pMarks.map((m, i) => (
+            <span
+              key={i}
+              className="tl-eventmark"
+              style={{ left: (m - pStart) * pxPerMs, background: color }}
+              title={canEdit ? t('timeline.markRemove') : fmtBound(m, timing.hasTime)}
+              onPointerDown={canEdit ? beginDrag('mark', i) : undefined}
+              onContextMenu={removeMark(i)}
+              {...(canEdit ? dragProps : {})}
+            />
+          ))}
+        </span>
+      )}
+      {/* La carte (bloc étiqueté) sert aussi de poignée de DÉPLACEMENT : la glisser
+          déplace l'événement dans le temps ; un simple clic ouvre le détail. */}
+      <button
+        className={`tl-item tl-item--event${selected ? ' tl-item--selected' : ''}${canEdit ? ' tl-item--draggable' : ''}`}
+        style={{ borderLeftColor: color }}
+        onClick={clickSelect}
+        onPointerDown={beginDrag('move', -1)}
+        title={canEdit ? `${label}\n${t('timeline.barMoveExact')}` : `${label}\n${eventTooltip(timing)}`}
+        {...dragProps}
+      >
+        <span className="tl-item__ico">
+          <EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} />
+        </span>
+        <span className="tl-item__label">{label}</span>
+        {event.status && event.status !== 'none' && (
+          <span className="tl-item__badge">
+            <StatusBadge status={event.status} size={13} />
+          </span>
+        )}
+      </button>
+    </div>
+  )
+}
+
+/**
+ * §5 v1.8.3 : navigateur de zoom, façon Premiere Pro. La piste représente toute la
+ * plage temporelle ; la poignée (thumb) représente la portion VISIBLE. L'élargir (tirer
+ * un bord vers l'extérieur) dézoome ; la rétrécir (tirer un bord vers l'intérieur)
+ * zoome ; glisser le milieu fait défiler. Bord droit vers la droite = élargir = dézoom ;
+ * bord droit vers la gauche = rétrécir = zoom (et symétriquement pour le bord gauche).
+ */
+interface ZoomBarProps {
+  minDate: number
+  maxDate: number
+  pxPerMs: number
+  scrollLeft: number
+  viewportW: number
+  panPad: number
+  onZoomTo: (startMs: number, endMs: number, anchor: 'left' | 'right') => void
+  onPanTo: (startMs: number) => void
+}
+
+function ZoomBar({
+  minDate,
+  maxDate,
+  pxPerMs,
+  scrollLeft,
+  viewportW,
+  panPad,
+  onZoomTo,
+  onPanTo
+}: ZoomBarProps): JSX.Element {
+  const trackRef = useRef<HTMLDivElement>(null)
+  // Ancres capturées au DÉBUT d'un glisser : bornes visibles figées + domaine temporel
+  // du navigateur figé (sinon le mappage px→temps « glisserait » sous le pointeur, la
+  // borne visible modifiant le domaine à chaque image).
+  const grab = useRef<{
+    mode: 'left' | 'right' | 'body'
+    startMs: number
+    endMs: number
+    grabMs: number
+    navMin: number
+    span: number
+  } | null>(null)
+
+  // Fenêtre temporelle actuellement visible, dérivée du défilement.
+  const visStartMs = minDate + (scrollLeft - panPad) / pxPerMs
+  const visEndMs = minDate + (scrollLeft - panPad + viewportW) / pxPerMs
+  // Étendue du navigateur : contenu élargi à la fenêtre visible pour que le thumb tienne
+  // toujours entièrement dans la piste (marges de pan comprises).
+  const navMin = Math.min(minDate, visStartMs)
+  const navMaxRaw = Math.max(maxDate, visEndMs)
+  const navMax = navMaxRaw > navMin ? navMaxRaw : navMin + DAY_MS
+  const span = navMax - navMin
+  const leftPct = clamp01((visStartMs - navMin) / span) * 100
+  const rightPct = clamp01((visEndMs - navMin) / span) * 100
+  const widthPct = Math.max(rightPct - leftPct, 1.5)
+
+  const msFrom = (clientX: number, base: number, width: number): number => {
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0) return base
+    return base + clamp01((clientX - rect.left) / rect.width) * width
+  }
+
+  const begin =
+    (mode: 'left' | 'right' | 'body') =>
+    (e: ReactPointerEvent): void => {
+      if (e.button !== 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      try {
+        ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+      } catch {
+        /* capture indisponible */
+      }
+      grab.current = {
+        mode,
+        startMs: visStartMs,
+        endMs: visEndMs,
+        grabMs: msFrom(e.clientX, navMin, span),
+        navMin,
+        span
+      }
+    }
+  const move = (e: ReactPointerEvent): void => {
+    const g = grab.current
+    if (!g) return
+    const ms = msFrom(e.clientX, g.navMin, g.span)
+    const minWin = (viewportW / MAX_PX_PER_DAY) * DAY_MS
+    if (g.mode === 'right') onZoomTo(g.startMs, Math.max(ms, g.startMs + minWin), 'right')
+    else if (g.mode === 'left') onZoomTo(Math.min(ms, g.endMs - minWin), g.endMs, 'left')
+    else onPanTo(g.startMs + (ms - g.grabMs))
+  }
+  const end = (e: ReactPointerEvent): void => {
+    try {
+      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    } catch {
+      /* déjà relâché */
+    }
+    grab.current = null
+  }
+
+  return (
+    <div className="tl-zoombar" aria-label={t('timeline.zoomBar')} title={t('timeline.zoomBarHint')}>
+      <div className="tl-zoombar__track" ref={trackRef}>
+        <div
+          className="tl-zoombar__thumb"
+          style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+          onPointerDown={begin('body')}
+          onPointerMove={move}
+          onPointerUp={end}
+          onPointerCancel={end}
+        >
+          <span
+            className="tl-zoombar__handle tl-zoombar__handle--l"
+            onPointerDown={begin('left')}
+            onPointerMove={move}
+            onPointerUp={end}
+            onPointerCancel={end}
+          />
+          <span className="tl-zoombar__grip" />
+          <span
+            className="tl-zoombar__handle tl-zoombar__handle--r"
+            onPointerDown={begin('right')}
+            onPointerMove={move}
+            onPointerUp={end}
+            onPointerCancel={end}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Borne une fraction à [0, 1]. */
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v
 }

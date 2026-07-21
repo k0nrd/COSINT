@@ -46,6 +46,18 @@ export interface EventTiming {
   end: number
   /** true si la fenêtre couvre une plage (start < end) plutôt qu'un point. */
   isRange: boolean
+  /** §1 v1.8.3 : repères posés sur la plage, filtrés à [start, end] et triés. */
+  marks: number[]
+}
+
+/** §1 v1.8.3 : nature de la datation d'un nœud, mutuellement exclusive. */
+export type DatationMode = 'exact' | 'window' | 'duration'
+
+/** §1 v1.8.3 : mode de datation courant d'un nœud (durée > fenêtre > date exacte). */
+export function datationMode(node: BoardNodeData): DatationMode {
+  if (node.eventFrom !== undefined || node.eventTo !== undefined) return 'duration'
+  if (node.eventEarliest !== undefined || node.eventLatest !== undefined) return 'window'
+  return 'exact'
 }
 
 /**
@@ -68,11 +80,23 @@ export function eventTimingOf(node: BoardNodeData): EventTiming | null {
     return null
   }
   const hasTime = node.eventHasTime === true
+  // Repères conservés seulement s'ils tombent dans la plage résolue (§1 v1.8.3).
+  const marksIn = (start: number, end: number): number[] =>
+    (node.eventMarks ?? []).filter((ms) => ms >= start && ms <= end).sort((a, b) => a - b)
   if (isDuration) {
     const known = [eventFrom, eventTo].filter((value): value is number => value !== undefined)
     const start = Math.min(...known)
     const end = Math.max(...known)
-    return { from: eventFrom, to: eventTo, isDuration: true, hasTime, start, end, isRange: end > start }
+    return {
+      from: eventFrom,
+      to: eventTo,
+      isDuration: true,
+      hasTime,
+      start,
+      end,
+      isRange: end > start,
+      marks: marksIn(start, end)
+    }
   }
   const known = [eventEarliest, eventDate, eventLatest].filter(
     (value): value is number => value !== undefined
@@ -87,7 +111,8 @@ export function eventTimingOf(node: BoardNodeData): EventTiming | null {
     hasTime,
     start,
     end,
-    isRange: end > start
+    isRange: end > start,
+    marks: marksIn(start, end)
   }
 }
 

@@ -311,6 +311,16 @@ function readEventMs(value: unknown): number | undefined {
     : undefined
 }
 
+/** §1 v1.8.3 : liste de repères lue défensivement — nombres valides, triés, dédupliqués.
+ *  `undefined` si rien d'exploitable (pour ne jamais poser une clé vide). */
+function readEventMarks(value: unknown): number[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const out = [...new Set(value.map(readEventMs).filter((n): n is number => n !== undefined))].sort(
+    (a, b) => a - b
+  )
+  return out.length > 0 ? out : undefined
+}
+
 const TEXT_SIZES: NodeTextSize[] = ['small', 'normal', 'large']
 
 /** Nettoie une personnalisation visuelle d'entité/source (§4). null si vide.
@@ -384,6 +394,8 @@ export function yMapToNode(id: string, map: YNodeMap): BoardNodeData {
   if (eventFrom !== undefined) node.eventFrom = eventFrom
   const eventTo = readEventMs(map.get('eventTo'))
   if (eventTo !== undefined) node.eventTo = eventTo
+  const eventMarks = readEventMarks(map.get('eventMarks'))
+  if (eventMarks !== undefined) node.eventMarks = eventMarks
   if (map.get('eventHasTime') === true) node.eventHasTime = true
   return node
 }
@@ -408,6 +420,7 @@ export function nodeToYMap(node: BoardNodeData): YNodeMap {
   if (node.eventLatest !== undefined) map.set('eventLatest', node.eventLatest)
   if (node.eventFrom !== undefined) map.set('eventFrom', node.eventFrom)
   if (node.eventTo !== undefined) map.set('eventTo', node.eventTo)
+  if (node.eventMarks && node.eventMarks.length > 0) map.set('eventMarks', [...node.eventMarks])
   if (node.eventHasTime) map.set('eventHasTime', true)
   if (node.entityType) map.set('entityType', node.entityType)
   if (node.kind === 'source') {

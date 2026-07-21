@@ -210,42 +210,56 @@
   gap: 2px;
 }
 
-/* Fenêtre d'événement (barre hachurée) + point de date exacte. */
+/* ——— §1 v1.8.3 : plages d'événement (barres éditables) + repères ——— */
 .tl-eventrow {
   position: absolute;
   height: 30px;
   display: flex;
   align-items: center;
 }
-/* §1 v1.8.2 : plages d'événement — deux natures visuellement DISTINCTES. Le corps porte
-   la couleur (semi-transparente) ; les embouts la reprennent en plein. */
+/* La barre couvre [début, fin]. DURÉE (de/à) = trait plein continu ; FOURCHETTE
+   incertaine = trait continu HACHURÉ de gris (pas de dégradé) ; les deux à embouts. */
 .tl-eventbar {
   position: absolute;
   left: 0;
   top: 50%;
-  height: 12px;
+  height: 14px;
   transform: translateY(-50%);
-  pointer-events: none;
+  border-radius: 3px;
 }
 .tl-eventbar__body {
   position: absolute;
   left: 0;
   right: 0;
   top: 50%;
+  height: 6px;
   transform: translateY(-50%);
   border-radius: 3px;
 }
-/* Durée réelle (de/à) : trait plein net, avec deux embouts marqués. Le fait s'étend
-   franchement d'un bout à l'autre — plus d'extrémité « qui s'arrête brusquement ». */
+/* Durée : ligne pleine et continue (couleur de l'entité, posée en inline). */
 .tl-eventbar--duration .tl-eventbar__body {
-  height: 6px;
-  opacity: 0.45;
+  opacity: 0.9;
 }
+/* Fourchette incertaine : ligne continue hachurée de traits gris. */
+.tl-eventbar--uncertain .tl-eventbar__body {
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--text-mute, #8a94a6) 0,
+    var(--text-mute, #8a94a6) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+}
+/* Embouts nets aux DEUX extrémités (début et fin), pour les deux natures. */
 .tl-eventcap {
   position: absolute;
-  top: 0;
-  width: 2px;
-  height: 12px;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  transform: translateY(-50%);
   border-radius: 1px;
 }
 .tl-eventcap--l {
@@ -254,28 +268,55 @@
 .tl-eventcap--r {
   right: 0;
 }
-/* Incertitude (au plus tôt/tard) : trait estompé aux deux bouts — les bornes sont
-   floues, l'instant se situe « quelque part » à l'intérieur. */
-.tl-eventbar--uncertain .tl-eventbar__body {
-  height: 8px;
-  border-radius: 4px;
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+/* Poignées de redimensionnement du début/de la fin (au-dessus de la carte). */
+.tl-eventcap--grip {
+  width: 9px;
+  cursor: ew-resize;
+  z-index: 4;
 }
-.tl-eventdot {
+.tl-eventcap--grip.tl-eventcap--l {
+  left: -3px;
+}
+.tl-eventcap--grip.tl-eventcap--r {
+  right: -3px;
+}
+/* Contour de survol/sélection : la barre est cliquable ET modifiable au glisser. */
+.tl-eventbar--editable {
+  cursor: grab;
+}
+.tl-eventbar--drag {
+  cursor: grabbing;
+}
+.tl-eventbar:hover,
+.tl-eventbar--sel {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Repères posés sur la plage (glissables ; clic droit pour retirer). */
+.tl-eventmark {
   position: absolute;
   top: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
   border: 2px solid var(--canvas-bg, #0b0d11);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(45deg);
+  cursor: grab;
+  z-index: 5;
+}
+.tl-eventmark:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .tl-item--event {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+}
+.tl-item--draggable {
+  cursor: grab;
+}
+.tl-item--draggable:active {
+  cursor: grabbing;
 }
 
 /* Vue LISTE des événements. */
@@ -366,11 +407,12 @@
 .tl-detail {
   position: absolute;
   right: 14px;
-  bottom: 14px;
+  /* §5 v1.8.3 : au-dessus du navigateur de zoom + de la barre d'outils. */
+  bottom: calc(34px + var(--sp-3));
   z-index: 12;
-  width: 300px;
+  width: 330px;
   max-width: calc(100% - 28px);
-  max-height: 70%;
+  max-height: 74%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -462,7 +504,8 @@
 .tl-toolbar {
   position: absolute;
   left: 50%;
-  bottom: var(--sp-3);
+  /* §5 v1.8.3 : posée AU-DESSUS du navigateur de zoom (barre du bas, ~34 px). */
+  bottom: calc(34px + var(--sp-3));
   transform: translateX(-50%);
   z-index: 14;
   display: flex;
@@ -555,4 +598,74 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* ——— §6 v1.8.3 : éditeur complet (identique au tableau) dans le détail de la frise ——— */
+.tl-detail__editor {
+  margin: 2px -12px 0;
+  border-top: 1px solid var(--border);
+}
+.tl-detail__editor .bd-side__body {
+  flex: initial;
+  overflow: visible;
+  padding: 12px;
+}
+
+/* ——— §5 v1.8.3 : navigateur de zoom (barre du bas, façon Premiere Pro) ——— */
+.tl-zoombar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.tl-zoombar__track {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.tl-zoombar__thumb {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  cursor: grab;
+  box-sizing: border-box;
+  touch-action: none;
+}
+.tl-zoombar__thumb:active {
+  cursor: grabbing;
+}
+/* Les DEUX points de préhension (gauche/droite) : élargir = dézoom, rétrécir = zoom. */
+.tl-zoombar__handle {
+  width: 10px;
+  align-self: stretch;
+  flex: 0 0 auto;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  opacity: 0.9;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.tl-zoombar__handle:hover {
+  opacity: 1;
+}
+.tl-zoombar__grip {
+  flex: 1;
+  height: 4px;
+  margin: 0 5px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.4;
 }

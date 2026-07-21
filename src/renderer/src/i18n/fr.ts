@@ -1022,7 +1022,10 @@ export const fr = {
   'event.clear': 'Effacer la datation',
   'event.badRange': 'La borne « au plus tôt » doit précéder « au plus tard ».',
   'event.modeInstant': 'Instant',
+  'event.modeExact': 'Date précise',
+  'event.modeWindow': 'Fourchette',
   'event.modeDuration': 'Durée',
+  'event.exactModeHint': 'Un instant précis, unique et connu. Exclut toute fourchette.',
   'event.from': 'De',
   'event.to': 'À',
   'event.fromHint': 'Début de la période. Le fait se déroule de cette date à la suivante.',
@@ -1081,5 +1084,15 @@ export const fr = {
   'timeline.detailEventAt': 'Date de l’événement',
   'timeline.detailWindow': 'Fenêtre',
   'timeline.detailInfo': 'Informations',
-  'timeline.detailClickHint': 'Cliquez un élément pour son détail ici.'
+  'timeline.detailClickHint': 'Cliquez un élément pour son détail ici.',
+
+  // ——— v1.8.3 : frise retravaillée (barres, édition, navigateur de zoom) ———
+  'timeline.backBoard': 'Revenir au tableau',
+  'timeline.detailEdit': 'Modifier',
+  'timeline.detailView': 'Aperçu',
+  'timeline.barMove': 'Glissez la barre pour la déplacer · les embouts ajustent le début et la fin · double-clic = repère',
+  'timeline.barMoveExact': 'Glissez le point pour changer la date',
+  'timeline.markRemove': 'Repère — glissez pour déplacer, clic droit pour retirer',
+  'timeline.zoomBarHint': 'Élargissez la barre pour dézoomer, rétrécissez-la pour zoomer · glissez le milieu pour défiler',
+  'timeline.zoomBar': 'Navigateur de zoom'
 } as const

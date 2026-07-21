@@ -322,6 +322,8 @@ export interface EventTimingPatch {
   from?: number | null
   /** Fin de durée de/à (§1 v1.8.2). `null` supprime la clé. */
   to?: number | null
+  /** Repères sur une plage (§1 v1.8.3). Liste = remplace ; `null`/`[]` = supprime la clé. */
+  marks?: number[] | null
   hasTime?: boolean
 }
 
@@ -344,6 +346,13 @@ export function setEventTiming(
     applyDate('eventLatest', patch.latest)
     applyDate('eventFrom', patch.from)
     applyDate('eventTo', patch.to)
+    if (patch.marks !== undefined) {
+      const marks = patch.marks
+        ? [...new Set(patch.marks.filter((n) => Number.isFinite(n)))].sort((a, b) => a - b)
+        : []
+      if (marks.length > 0) map.set('eventMarks', marks)
+      else map.delete('eventMarks')
+    }
     if (patch.hasTime !== undefined) {
       if (patch.hasTime) map.set('eventHasTime', true)
       else map.delete('eventHasTime')

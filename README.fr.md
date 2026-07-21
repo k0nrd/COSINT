@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.2-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.3-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
   <img src="https://img.shields.io/badge/tests-244%20au%20vert-3fbf6a" alt="Tests">
@@ -70,21 +70,24 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.2
+## 🚀 Nouveautés de la 1.8.3
 
-- **🕒 Frises retravaillées** — *Ajouts* place chaque élément à sa **date de création**
-  (jamais sa date d'événement) ; une **barre d'outils horizontale** est en bas de la frise ;
-  on se **déplace librement au-delà du dernier élément** et un bouton **Recentrer** ramène la vue.
-- **➕ Ajout sur la frise, avec une date** — ajouter une entité ou une note depuis la frise
-  demande d'abord une date ; **sans date, rien n'est créé**.
-- **⏱️ Durées précises** — la datation gagne une plage **de → à**, en plus de la fourchette
-  *au plus tôt / au plus tard* (bascule Instant / Durée).
-- **🎨 Plages plus lisibles** — une durée est une barre pleine à embouts nets ; une fenêtre
-  d'incertitude est estompée aux deux bouts. Fini le pointillé qui s'arrête net.
-- **🚀 Fenêtre de mise à jour** — une petite fenêtre annonce une nouvelle version GitHub
-  (numéro + lien).
+- **✏️ Édition directement sur la frise** — cliquer un événement ouvre **le même éditeur que
+  le tableau** (titre, champs, couleur, tags, datation, suppression). Plus d'aller-retour vers
+  le canvas.
+- **🖐️ Glisser pour remodeler une plage** — **glissez une barre** pour la déplacer dans le
+  temps, **attrapez ses embouts** pour ajuster le début/la fin, **double-cliquez** pour poser
+  un repère (glissable, clic droit pour retirer). Chaque geste = une annulation.
+- **📏 Nouvelles barres** — une **durée** est un trait plein continu ; une **fourchette
+  incertaine** est un trait continu **hachuré de gris** (fini le dégradé) — les deux à embouts.
+- **🎚️ Barre de zoom façon Premiere** — la barre du bas a deux poignées : **élargissez pour
+  dézoomer, rétrécissez pour zoomer**, glissez le milieu pour défiler.
+- **🎯 L'un ou l'autre** — une **date précise** et une **fourchette de temps** sont désormais
+  exclusives ; une fourchette peut porter des **repères** posés depuis la frise.
+- **🧹 Frise allégée** — le bandeau descriptif disparaît, et un bouton **Revenir au tableau**
+  s'ajoute à la barre d'outils du bas.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.2.md`](docs/RELEASE_NOTES_v1.8.2.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.3.md`](docs/RELEASE_NOTES_v1.8.3.md).
 
 ---
 

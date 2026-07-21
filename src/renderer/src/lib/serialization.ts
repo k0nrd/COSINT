@@ -185,6 +185,13 @@ export function sanitizeNode(raw: unknown): BoardNodeData | null {
   if (eventFrom !== undefined) node.eventFrom = eventFrom
   const eventTo = eventMs(record.eventTo)
   if (eventTo !== undefined) node.eventTo = eventTo
+  // Repères sur une plage (§1 v1.8.3) — liste de dates valides, triée et dédupliquée.
+  if (Array.isArray(record.eventMarks)) {
+    const marks = [...new Set(record.eventMarks.map(eventMs).filter((n): n is number => n !== undefined))].sort(
+      (a, b) => a - b
+    )
+    if (marks.length > 0) node.eventMarks = marks
+  }
   if (record.eventHasTime === true) node.eventHasTime = true
   return node
 }

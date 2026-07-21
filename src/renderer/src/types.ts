@@ -219,6 +219,12 @@ export interface BoardNodeData {
   eventFrom?: number
   /** §1 v1.8.2 : FIN d'une durée précise (de/à). Epoch ms. */
   eventTo?: number
+  /**
+   * §1 v1.8.3 : repères ponctuels posés SUR une fourchette/durée (epoch ms), depuis la
+   * frise. N'ont de sens que pour une plage (fenêtre d'incertitude ou durée de/à) ; ils
+   * jalonnent des instants remarquables à l'intérieur. Vides/absents par défaut.
+   */
+  eventMarks?: number[]
   /** §1 v1.8 : true si l'heure des dates d'événement est significative (sinon jour seul). */
   eventHasTime?: boolean
   /** Traçabilité (§3) : pseudo de l'auteur + horodatages (epoch ms). */

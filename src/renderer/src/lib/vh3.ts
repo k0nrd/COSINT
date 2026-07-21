@@ -84,15 +84,17 @@ function qa(done: () => void): () => void {
   const CD = 17
   const BR = 0.34
   const WH = 0.72
+  const FL = 0.8
+  const HZ = 0.5
   const pr = (x: number, y: number, z: number): Zy => {
     const dy = y - CY
     const dz2 = z - CZ
     const cp = Math.cos(PT)
     const sp = Math.sin(PT)
-    const ry = dy * cp - dz2 * sp
-    const rz = dy * sp + dz2 * cp
-    const f = (vh * 0.92) / (rz <= 0.05 ? 0.05 : rz)
-    return { x: vw / 2 + x * f, y: vh * 0.46 - ry * f, s: f, d: rz }
+    const ry = dy * cp + dz2 * sp
+    const rz = dz2 * cp - dy * sp
+    const f = (vh * FL) / (rz <= 0.05 ? 0.05 : rz)
+    return { x: vw / 2 + x * f, y: vh * HZ - ry * f, s: f, d: rz }
   }
 
   let wl: Zw[] = []
@@ -219,13 +221,10 @@ function qa(done: () => void): () => void {
 
   const draw = (): void => {
     g.clearRect(0, 0, vw, vh)
-    const sk = g.createLinearGradient(0, 0, 0, vh)
-    sk.addColorStop(0, '#14283a')
-    sk.addColorStop(1, '#0a1a10')
-    g.fillStyle = sk
+    g.fillStyle = '#0d1712'
     g.fillRect(0, 0, vw, vh)
 
-    qd([pr(-CW / 2, 0, 0), pr(CW / 2, 0, 0), pr(CW / 2, 0, CD), pr(-CW / 2, 0, CD)], '#2f7d3f')
+    qd([pr(-CW / 2, 0, -1.6), pr(CW / 2, 0, -1.6), pr(CW / 2, 0, CD), pr(-CW / 2, 0, CD)], '#2f7d3f')
     g.strokeStyle = 'rgba(255,255,255,0.08)'
     g.lineWidth = 1
     for (let i = 1; i < CD; i += 1) {
@@ -281,12 +280,13 @@ function qa(done: () => void): () => void {
     g.fill()
     const bc = pr(bl.x, BR, bl.z)
     const rd = BR * bc.s
-    const gr = g.createRadialGradient(bc.x - rd * 0.35, bc.y - rd * 0.4, rd * 0.2, bc.x, bc.y, rd)
-    gr.addColorStop(0, '#ffffff')
-    gr.addColorStop(1, '#c9ced6')
-    g.fillStyle = gr
+    g.fillStyle = '#eef1f5'
     g.beginPath()
     g.arc(bc.x, bc.y, rd, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = 'rgba(255,255,255,0.9)'
+    g.beginPath()
+    g.arc(bc.x - rd * 0.3, bc.y - rd * 0.3, rd * 0.34, 0, Math.PI * 2)
     g.fill()
 
     if (am) {
