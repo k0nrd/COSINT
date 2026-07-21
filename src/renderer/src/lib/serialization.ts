@@ -19,6 +19,7 @@ import type {
 import { DEFAULT_PARTICIPANT_LIMIT } from '@/types'
 import { colorHex, DEFAULT_EDGE_COLOR, DEFAULT_NODE_COLOR } from '@/lib/colors'
 import { normalizeEntityType } from '@/lib/taxonomy'
+import { sanitizeEventMarks } from '@/lib/timeline'
 import { asStatus, hasStatusBadge } from '@/lib/status'
 import { readFileStatus } from '@/sync/files'
 import {
@@ -185,13 +186,9 @@ export function sanitizeNode(raw: unknown): BoardNodeData | null {
   if (eventFrom !== undefined) node.eventFrom = eventFrom
   const eventTo = eventMs(record.eventTo)
   if (eventTo !== undefined) node.eventTo = eventTo
-  // Repères sur une plage (§1 v1.8.3) — liste de dates valides, triée et dédupliquée.
-  if (Array.isArray(record.eventMarks)) {
-    const marks = [...new Set(record.eventMarks.map(eventMs).filter((n): n is number => n !== undefined))].sort(
-      (a, b) => a - b
-    )
-    if (marks.length > 0) node.eventMarks = marks
-  }
+  // Repères sur une plage (§1 v1.8.3 ; objets §1 v1.8.4) — normalisés/rétro-compatibles.
+  const eventMarks = sanitizeEventMarks(record.eventMarks)
+  if (eventMarks.length > 0) node.eventMarks = eventMarks
   if (record.eventHasTime === true) node.eventHasTime = true
   return node
 }

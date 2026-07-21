@@ -27,6 +27,7 @@ import type {
   EdgeWidth,
   EntityField,
   EntityStyle,
+  EventMark,
   FieldKind,
   NodeKind,
   NodeTextSize
@@ -34,6 +35,7 @@ import type {
 import { DEFAULT_PARTICIPANT_LIMIT, DEFAULT_ROLE, MAX_PARTICIPANT_LIMIT, MIN_PARTICIPANT_LIMIT } from '@/types'
 import { colorHex, DEFAULT_EDGE_COLOR, DEFAULT_NODE_COLOR } from '@/lib/colors'
 import { normalizeEntityType } from '@/lib/taxonomy'
+import { sanitizeEventMarks } from '@/lib/timeline'
 import { asStatus, hasStatusBadge } from '@/lib/status'
 
 export type YNodeMap = Y.Map<unknown>
@@ -311,14 +313,11 @@ function readEventMs(value: unknown): number | undefined {
     : undefined
 }
 
-/** §1 v1.8.3 : liste de repères lue défensivement — nombres valides, triés, dédupliqués.
- *  `undefined` si rien d'exploitable (pour ne jamais poser une clé vide). */
-function readEventMarks(value: unknown): number[] | undefined {
-  if (!Array.isArray(value)) return undefined
-  const out = [...new Set(value.map(readEventMs).filter((n): n is number => n !== undefined))].sort(
-    (a, b) => a - b
-  )
-  return out.length > 0 ? out : undefined
+/** §1 v1.8.3/§1 v1.8.4 : repères lus défensivement (objets titre/couleur/tags, ou nombres
+ *  hérités v1.8.3). `undefined` si rien d'exploitable (pour ne jamais poser une clé vide). */
+function readEventMarks(value: unknown): EventMark[] | undefined {
+  const marks = sanitizeEventMarks(value)
+  return marks.length > 0 ? marks : undefined
 }
 
 const TEXT_SIZES: NodeTextSize[] = ['small', 'normal', 'large']
@@ -420,7 +419,8 @@ export function nodeToYMap(node: BoardNodeData): YNodeMap {
   if (node.eventLatest !== undefined) map.set('eventLatest', node.eventLatest)
   if (node.eventFrom !== undefined) map.set('eventFrom', node.eventFrom)
   if (node.eventTo !== undefined) map.set('eventTo', node.eventTo)
-  if (node.eventMarks && node.eventMarks.length > 0) map.set('eventMarks', [...node.eventMarks])
+  if (node.eventMarks && node.eventMarks.length > 0)
+    map.set('eventMarks', node.eventMarks.map((mark) => ({ ...mark })))
   if (node.eventHasTime) map.set('eventHasTime', true)
   if (node.entityType) map.set('entityType', node.entityType)
   if (node.kind === 'source') {

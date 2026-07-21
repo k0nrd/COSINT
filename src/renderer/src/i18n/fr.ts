@@ -1090,9 +1090,16 @@ export const fr = {
   'timeline.backBoard': 'Revenir au tableau',
   'timeline.detailEdit': 'Modifier',
   'timeline.detailView': 'Aperçu',
-  'timeline.barMove': 'Glissez la barre pour la déplacer · les embouts ajustent le début et la fin · double-clic = repère',
-  'timeline.barMoveExact': 'Glissez le point pour changer la date',
-  'timeline.markRemove': 'Repère — glissez pour déplacer, clic droit pour retirer',
+  'timeline.barMove': 'Ctrl + glisser : déplacer la barre · Ctrl + glisser un embout : début/fin · double-clic : repère',
+  'timeline.barMoveExact': 'Ctrl + glisser pour déplacer la date',
+  'timeline.markRemove': 'Repère — Ctrl + glisser pour déplacer, clic droit pour retirer',
   'timeline.zoomBarHint': 'Élargissez la barre pour dézoomer, rétrécissez-la pour zoomer · glissez le milieu pour défiler',
-  'timeline.zoomBar': 'Navigateur de zoom'
+  'timeline.zoomBar': 'Navigateur de zoom',
+
+  // ——— v1.8.4 : repères éditables (titre/couleur/tags) ———
+  'timeline.markTitle': 'Repère',
+  'timeline.markTitleField': 'Titre',
+  'timeline.markTitlePlaceholder': 'Titre du repère',
+  'timeline.markAt': 'Date',
+  'timeline.markDelete': 'Supprimer le repère'
 } as const

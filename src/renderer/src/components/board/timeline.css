@@ -280,9 +280,9 @@
 .tl-eventcap--grip.tl-eventcap--r {
   right: -3px;
 }
-/* Contour de survol/sélection : la barre est cliquable ET modifiable au glisser. */
+/* Contour de survol/sélection : la barre est cliquable (Ctrl+glisser pour modifier). */
 .tl-eventbar--editable {
-  cursor: grab;
+  cursor: pointer;
 }
 .tl-eventbar--drag {
   cursor: grabbing;
@@ -292,31 +292,48 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* Repères posés sur la plage (glissables ; clic droit pour retirer). */
-.tl-eventmark {
+/* §2 v1.8.4 : repère éditable (titre/couleur/tags) — losange coloré + titre en légende.
+   Clic = sélection/édition ; Ctrl+glisser = déplacer ; clic droit = retirer. */
+.tl-mark {
   position: absolute;
   top: 50%;
-  width: 10px;
-  height: 10px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 6;
+}
+.tl-mark__dot {
+  display: block;
+  width: 11px;
+  height: 11px;
   border-radius: 2px;
   border: 2px solid var(--canvas-bg, #0b0d11);
-  transform: translate(-50%, -50%) rotate(45deg);
-  cursor: grab;
-  z-index: 5;
+  transform: rotate(45deg);
 }
-.tl-eventmark:hover {
+.tl-mark:hover .tl-mark__dot,
+.tl-mark--sel .tl-mark__dot {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+.tl-mark__lbl {
+  position: absolute;
+  left: 50%;
+  top: 13px;
+  transform: translateX(-50%);
+  max-width: 120px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 .tl-item--event {
   position: relative;
   z-index: 2;
-}
-.tl-item--draggable {
-  cursor: grab;
-}
-.tl-item--draggable:active {
-  cursor: grabbing;
 }
 
 /* Vue LISTE des événements. */
@@ -407,16 +424,17 @@
 .tl-detail {
   position: absolute;
   right: 14px;
-  /* §5 v1.8.3 : au-dessus du navigateur de zoom + de la barre d'outils. */
-  bottom: calc(34px + var(--sp-3));
+  /* §3 v1.8.4 : au-dessus du navigateur de zoom (compact) + de la barre d'outils. */
+  bottom: calc(22px + var(--sp-2));
   z-index: 12;
   width: 330px;
   max-width: calc(100% - 28px);
-  max-height: 74%;
+  max-height: 78%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  /* §3 v1.8.4 : contenu compact, collé en haut (plus d'espace vide au-dessus). */
+  gap: 6px;
+  padding: 10px;
   background: var(--panel);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-md);
@@ -504,8 +522,8 @@
 .tl-toolbar {
   position: absolute;
   left: 50%;
-  /* §5 v1.8.3 : posée AU-DESSUS du navigateur de zoom (barre du bas, ~34 px). */
-  bottom: calc(34px + var(--sp-3));
+  /* §3 v1.8.4 : posée AU-DESSUS du navigateur de zoom (barre du bas compacte, ~22 px). */
+  bottom: calc(22px + var(--sp-2));
   transform: translateX(-50%);
   z-index: 14;
   display: flex;
@@ -600,31 +618,39 @@
   gap: 8px;
 }
 
-/* ——— §6 v1.8.3 : éditeur complet (identique au tableau) dans le détail de la frise ——— */
+/* ——— §6 v1.8.3 (§3 v1.8.4) : éditeur complet (identique au tableau) dans le détail ——— */
+/* Collé sous l'en-tête, sans marge ni bordure superflue → pas d'espace vide au-dessus. */
 .tl-detail__editor {
-  margin: 2px -12px 0;
-  border-top: 1px solid var(--border);
+  margin: 0;
 }
 .tl-detail__editor .bd-side__body {
   flex: initial;
   overflow: visible;
-  padding: 12px;
+  padding: 2px 0 0;
+}
+.tl-detail__editor .bd-details-head {
+  margin-bottom: 8px;
+}
+.tl-mark-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-/* ——— §5 v1.8.3 : navigateur de zoom (barre du bas, façon Premiere Pro) ——— */
+/* ——— §5 v1.8.3 (compacte §3 v1.8.4) : navigateur de zoom (barre du bas, Premiere Pro) ——— */
 .tl-zoombar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  height: 34px;
-  padding: 6px 12px;
+  height: 22px;
+  padding: 4px 12px;
   border-top: 1px solid var(--border);
   background: var(--panel-2);
 }
 .tl-zoombar__track {
   position: relative;
   flex: 1;
-  height: 16px;
+  height: 12px;
   border-radius: var(--r-pill);
   background: var(--bg-elev);
   border: 1px solid var(--border);
@@ -633,7 +659,7 @@
   position: absolute;
   top: -1px;
   bottom: -1px;
-  min-width: 28px;
+  min-width: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -649,7 +675,7 @@
 }
 /* Les DEUX points de préhension (gauche/droite) : élargir = dézoom, rétrécir = zoom. */
 .tl-zoombar__handle {
-  width: 10px;
+  width: 9px;
   align-self: stretch;
   flex: 0 0 auto;
   border-radius: var(--r-pill);
@@ -663,8 +689,8 @@
 }
 .tl-zoombar__grip {
   flex: 1;
-  height: 4px;
-  margin: 0 5px;
+  height: 3px;
+  margin: 0 4px;
   border-radius: 2px;
   background: var(--accent);
   opacity: 0.4;

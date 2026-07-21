@@ -122,6 +122,23 @@ export interface EntityField {
   updatedAt: number
 }
 
+/**
+ * §1 v1.8.4 : repère posé sur une plage d'événement (fourchette / durée), depuis la
+ * frise. Contrairement à v1.8.3 (simple horodatage), un repère est désormais un objet
+ * ÉDITABLE : titre, couleur et tags, comme un mini-élément jalonnant la plage.
+ */
+export interface EventMark {
+  id: string
+  /** Instant du repère (epoch ms), à l'intérieur de la plage. */
+  at: number
+  /** Titre libre du repère. */
+  label?: string
+  /** Couleur (jeton ou hex) ; à défaut, celle de la barre. */
+  color?: string
+  /** Étiquettes libres. */
+  tags?: string[]
+}
+
 /** Taille de texte d'un nœud entité/source (§4 v1.4). */
 export type NodeTextSize = 'small' | 'normal' | 'large'
 
@@ -220,11 +237,11 @@ export interface BoardNodeData {
   /** §1 v1.8.2 : FIN d'une durée précise (de/à). Epoch ms. */
   eventTo?: number
   /**
-   * §1 v1.8.3 : repères ponctuels posés SUR une fourchette/durée (epoch ms), depuis la
-   * frise. N'ont de sens que pour une plage (fenêtre d'incertitude ou durée de/à) ; ils
-   * jalonnent des instants remarquables à l'intérieur. Vides/absents par défaut.
+   * §1 v1.8.3 (objets §1 v1.8.4) : repères posés SUR une fourchette/durée, depuis la
+   * frise. N'ont de sens que pour une plage ; ils jalonnent des instants remarquables à
+   * l'intérieur, chacun avec titre/couleur/tags. Vides/absents par défaut.
    */
-  eventMarks?: number[]
+  eventMarks?: EventMark[]
   /** §1 v1.8 : true si l'heure des dates d'événement est significative (sinon jour seul). */
   eventHasTime?: boolean
   /** Traçabilité (§3) : pseudo de l'auteur + horodatages (epoch ms). */

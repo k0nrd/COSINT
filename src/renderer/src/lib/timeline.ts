@@ -9,9 +9,42 @@
  *  - « Événements » : QUAND LE FAIT s'est déroulé → datation d'événement résolue
  *                     (`eventTimingOf` : date exacte, fenêtre, ou durée de/à).
  */
-import type { BoardNodeData, ElementStatus, NodeKind } from '@/types'
+import type { BoardNodeData, ElementStatus, EventMark, NodeKind } from '@/types'
+import { newId } from '@/lib/id'
 
 export const DAY_MS = 86_400_000
+
+/** Borne de date valide (epoch ms) partagée par les lectures d'événement. */
+const MAX_EVENT_MS = 8.64e15
+
+/**
+ * §1 v1.8.4 : normalise une liste de repères lue depuis une source non sûre (CRDT,
+ * fichier, presse-papiers). Rétro-compatible v1.8.3 : un simple nombre devient un repère
+ * `{ at }` doté d'un id. Les entrées invalides sont écartées ; le résultat est trié.
+ */
+export function sanitizeEventMarks(value: unknown): EventMark[] {
+  if (!Array.isArray(value)) return []
+  const out: EventMark[] = []
+  for (const raw of value) {
+    if (typeof raw === 'number') {
+      if (Number.isFinite(raw) && Math.abs(raw) <= MAX_EVENT_MS) out.push({ id: newId(), at: raw })
+      continue
+    }
+    if (!raw || typeof raw !== 'object') continue
+    const r = raw as Record<string, unknown>
+    const at = r.at
+    if (typeof at !== 'number' || !Number.isFinite(at) || Math.abs(at) > MAX_EVENT_MS) continue
+    const mark: EventMark = { id: typeof r.id === 'string' && r.id ? r.id : newId(), at }
+    if (typeof r.label === 'string' && r.label.trim() !== '') mark.label = r.label
+    if (typeof r.color === 'string' && r.color !== '') mark.color = r.color
+    if (Array.isArray(r.tags)) {
+      const tags = r.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim() !== '')
+      if (tags.length > 0) mark.tags = tags
+    }
+    out.push(mark)
+  }
+  return out.sort((a, b) => a.at - b.at)
+}
 
 /** Date à placer sur la frise : eventDate en priorité, sinon createdAt. */
 export function timelineDate(node: BoardNodeData): number {
@@ -46,8 +79,8 @@ export interface EventTiming {
   end: number
   /** true si la fenêtre couvre une plage (start < end) plutôt qu'un point. */
   isRange: boolean
-  /** §1 v1.8.3 : repères posés sur la plage, filtrés à [start, end] et triés. */
-  marks: number[]
+  /** §1 v1.8.3/§1 v1.8.4 : repères (objets) posés sur la plage, filtrés à [start, end]. */
+  marks: EventMark[]
 }
 
 /** §1 v1.8.3 : nature de la datation d'un nœud, mutuellement exclusive. */
@@ -80,9 +113,9 @@ export function eventTimingOf(node: BoardNodeData): EventTiming | null {
     return null
   }
   const hasTime = node.eventHasTime === true
-  // Repères conservés seulement s'ils tombent dans la plage résolue (§1 v1.8.3).
-  const marksIn = (start: number, end: number): number[] =>
-    (node.eventMarks ?? []).filter((ms) => ms >= start && ms <= end).sort((a, b) => a - b)
+  // Repères conservés seulement s'ils tombent dans la plage résolue (§1 v1.8.3/§1 v1.8.4).
+  const marksIn = (start: number, end: number): EventMark[] =>
+    (node.eventMarks ?? []).filter((m) => m.at >= start && m.at <= end).sort((a, b) => a.at - b.at)
   if (isDuration) {
     const known = [eventFrom, eventTo].filter((value): value is number => value !== undefined)
     const start = Math.min(...known)

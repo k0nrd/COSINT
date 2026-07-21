@@ -1,6 +1,5 @@
 type Zx = { x: number; y: number }
-type Zy = { x: number; y: number; s: number; d: number }
-type Zw = { a: number; b: number; c: number; d: number; h: number }
+type Zw = { x: number; y: number; w: number; h: number }
 
 function qb(done: () => void): () => void {
   let dz = false
@@ -46,7 +45,7 @@ function qb(done: () => void): () => void {
 function qa(done: () => void): () => void {
   let dz = false
   const rt = document.createElement('div')
-  rt.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0a1a10;overflow:hidden'
+  rt.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0d1712;overflow:hidden'
   const cv = document.createElement('canvas')
   cv.style.cssText = 'display:block;width:100%;height:100%;touch-action:none'
   rt.appendChild(cv)
@@ -64,8 +63,15 @@ function qa(done: () => void): () => void {
   }
   const g = c2
 
+  const LW = 200
+  const LH = 300
+  const BR = 5.2
+  const HR = 8
   let vw = 0
   let vh = 0
+  let ox = 0
+  let oy = 0
+  let uc = 1
   const rs = (): void => {
     const dp = window.devicePixelRatio || 1
     vw = rt.clientWidth
@@ -73,105 +79,97 @@ function qa(done: () => void): () => void {
     cv.width = Math.round(vw * dp)
     cv.height = Math.round(vh * dp)
     g.setTransform(dp, 0, 0, dp, 0, 0)
+    uc = Math.max(0.4, Math.min((vw - 90) / LW, (vh - 130) / LH))
+    ox = (vw - LW * uc) / 2
+    oy = (vh - LH * uc) / 2
   }
   rs()
   window.addEventListener('resize', rs)
-
-  const PT = 0.62
-  const CY = 7.4
-  const CZ = -7
-  const CW = 10
-  const CD = 17
-  const BR = 0.34
-  const WH = 0.72
-  const FL = 0.8
-  const HZ = 0.5
-  const pr = (x: number, y: number, z: number): Zy => {
-    const dy = y - CY
-    const dz2 = z - CZ
-    const cp = Math.cos(PT)
-    const sp = Math.sin(PT)
-    const ry = dy * cp + dz2 * sp
-    const rz = dz2 * cp - dy * sp
-    const f = (vh * FL) / (rz <= 0.05 ? 0.05 : rz)
-    return { x: vw / 2 + x * f, y: vh * HZ - ry * f, s: f, d: rz }
-  }
+  const sx = (x: number): number => ox + x * uc
+  const sy = (y: number): number => oy + y * uc
 
   let wl: Zw[] = []
-  let hx = 0
-  let hz = 0
-  const bl = { x: 0, z: 1.6, vx: 0, vz: 0 }
+  const qz = { x: 0, y: 0 }
+  const bl = { x: 0, y: 0, vx: 0, vy: 0 }
   let sc = 0
   let fl = 0
 
   const rnd = (lo: number, hi: number): number => lo + Math.random() * (hi - lo)
-  const bd = (): Zw[] => {
-    const t = 0.4
-    return [
-      { a: -CW / 2, b: CW / 2, c: -t, d: 0, h: WH },
-      { a: -CW / 2, b: CW / 2, c: CD, d: CD + t, h: WH },
-      { a: -CW / 2 - t, b: -CW / 2, c: -t, d: CD + t, h: WH },
-      { a: CW / 2, b: CW / 2 + t, c: -t, d: CD + t, h: WH }
-    ]
-  }
   const gn = (): void => {
-    hx = rnd(-CW / 2 + 1.2, CW / 2 - 1.2)
-    hz = rnd(CD * 0.55, CD - 1.4)
+    qz.x = rnd(26, LW - 26)
+    qz.y = rnd(22, LH * 0.4)
     const n = 2 + Math.floor(Math.random() * 3)
     const ob: Zw[] = []
     let gd = 0
-    while (ob.length < n && gd < 60) {
+    while (ob.length < n && gd < 80) {
       gd += 1
-      const w = rnd(1.2, 3.2)
-      const x0 = rnd(-CW / 2 + 0.6, CW / 2 - 0.6 - w)
-      const z0 = rnd(2.8, CD - 2)
-      const bxx: Zw = { a: x0, b: x0 + w, c: z0, d: z0 + rnd(0.5, 1.1), h: WH }
-      if (hx > bxx.a - 0.8 && hx < bxx.b + 0.8 && hz > bxx.c - 0.8 && hz < bxx.d + 0.8) continue
-      ob.push(bxx)
+      const w = rnd(24, 62)
+      const h = rnd(10, 20)
+      const r: Zw = { x: rnd(14, LW - 14 - w), y: rnd(LH * 0.16, LH * 0.8 - h), w, h }
+      const nq = qz.x > r.x - 15 && qz.x < r.x + r.w + 15 && qz.y > r.y - 15 && qz.y < r.y + r.h + 15
+      const nb = LW / 2 > r.x - 16 && LW / 2 < r.x + r.w + 16 && LH - 30 > r.y - 16 && LH - 30 < r.y + r.h + 16
+      if (nq || nb) continue
+      ob.push(r)
     }
-    wl = bd().concat(ob)
-    bl.x = 0
-    bl.z = 1.6
+    wl = ob
+    bl.x = LW / 2
+    bl.y = LH - 30
     bl.vx = 0
-    bl.vz = 0
+    bl.vy = 0
   }
   gn()
 
-  const rest = (): boolean => Math.hypot(bl.vx, bl.vz) < 0.001
+  const rest = (): boolean => Math.hypot(bl.vx, bl.vy) < 6
 
   const step = (dt: number): void => {
     if (!rest()) {
       bl.x += bl.vx * dt
-      bl.z += bl.vz * dt
-      const k = Math.exp(-1.7 * dt)
+      bl.y += bl.vy * dt
+      const k = Math.exp(-1.55 * dt)
       bl.vx *= k
-      bl.vz *= k
+      bl.vy *= k
+      if (bl.x < BR) {
+        bl.x = BR
+        bl.vx = -bl.vx * 0.6
+      }
+      if (bl.x > LW - BR) {
+        bl.x = LW - BR
+        bl.vx = -bl.vx * 0.6
+      }
+      if (bl.y < BR) {
+        bl.y = BR
+        bl.vy = -bl.vy * 0.6
+      }
+      if (bl.y > LH - BR) {
+        bl.y = LH - BR
+        bl.vy = -bl.vy * 0.6
+      }
       for (const w of wl) {
-        const nx = Math.max(w.a, Math.min(bl.x, w.b))
-        const nz = Math.max(w.c, Math.min(bl.z, w.d))
+        const nx = Math.max(w.x, Math.min(bl.x, w.x + w.w))
+        const ny = Math.max(w.y, Math.min(bl.y, w.y + w.h))
         const ex = bl.x - nx
-        const ez = bl.z - nz
-        if (ex * ex + ez * ez < BR * BR) {
-          if (Math.abs(ex) > Math.abs(ez)) {
+        const ey = bl.y - ny
+        if (ex * ex + ey * ey < BR * BR) {
+          if (Math.abs(ex) > Math.abs(ey)) {
             bl.x = ex > 0 ? nx + BR : nx - BR
-            bl.vx = -bl.vx * 0.62
+            bl.vx = -bl.vx * 0.6
           } else {
-            bl.z = ez > 0 ? nz + BR : nz - BR
-            bl.vz = -bl.vz * 0.62
+            bl.y = ey > 0 ? ny + BR : ny - BR
+            bl.vy = -bl.vy * 0.6
           }
         }
       }
-      if (Math.hypot(bl.vx, bl.vz) < 0.06) {
+      if (Math.hypot(bl.vx, bl.vy) < 6) {
         bl.vx = 0
-        bl.vz = 0
+        bl.vy = 0
       }
     }
     if (fl > 0) {
       fl -= dt
       if (fl < 0) fl = 0
     }
-    const hd = (bl.x - hx) * (bl.x - hx) + (bl.z - hz) * (bl.z - hz)
-    if (fl === 0 && hd < 0.16 && Math.hypot(bl.vx, bl.vz) < 3.2) {
+    const hd = (bl.x - qz.x) * (bl.x - qz.x) + (bl.y - qz.y) * (bl.y - qz.y)
+    if (fl === 0 && hd < HR * HR && Math.hypot(bl.vx, bl.vy) < 150) {
       sc += 1
       fl = 0.9
       gn()
@@ -189,14 +187,13 @@ function qa(done: () => void): () => void {
   }
   const pu = (e: PointerEvent): void => {
     if (am) {
-      const bp = pr(bl.x, 0, bl.z)
-      const ax = bp.x - am.x
-      const ay = bp.y - am.y
+      const ax = sx(bl.x) - am.x
+      const ay = sy(bl.y) - am.y
       const ln = Math.hypot(ax, ay)
       if (ln > 6 && rest()) {
-        const pw = Math.min(ln, 240) / 240
-        bl.vx = (ax / ln) * 9.5 * pw
-        bl.vz = (-ay / ln) * 9.5 * pw
+        const sp = 430 * (Math.min(ln, 220) / 220)
+        bl.vx = (ax / ln) * sp
+        bl.vy = (ay / ln) * sp
       }
       am = null
       try {
@@ -210,98 +207,80 @@ function qa(done: () => void): () => void {
   cv.addEventListener('pointermove', pm)
   cv.addEventListener('pointerup', pu)
 
-  const qd = (p: Zx[], fill: string): void => {
-    g.beginPath()
-    g.moveTo(p[0].x, p[0].y)
-    for (let i = 1; i < p.length; i += 1) g.lineTo(p[i].x, p[i].y)
-    g.closePath()
-    g.fillStyle = fill
-    g.fill()
-  }
-
   const draw = (): void => {
     g.clearRect(0, 0, vw, vh)
     g.fillStyle = '#0d1712'
     g.fillRect(0, 0, vw, vh)
 
-    qd([pr(-CW / 2, 0, -1.6), pr(CW / 2, 0, -1.6), pr(CW / 2, 0, CD), pr(-CW / 2, 0, CD)], '#2f7d3f')
-    g.strokeStyle = 'rgba(255,255,255,0.08)'
-    g.lineWidth = 1
-    for (let i = 1; i < CD; i += 1) {
-      const a = pr(-CW / 2, 0, i)
-      const b = pr(CW / 2, 0, i)
-      g.beginPath()
-      g.moveTo(a.x, a.y)
-      g.lineTo(b.x, b.y)
-      g.stroke()
+    const fx = sx(0)
+    const fy = sy(0)
+    const fw = LW * uc
+    const fh = LH * uc
+    g.fillStyle = '#2f7d3f'
+    g.fillRect(fx, fy, fw, fh)
+    g.fillStyle = '#2b7137'
+    for (let i = 0; i < 6; i += 1) {
+      if (i % 2 === 0) g.fillRect(fx, fy + (fh * i) / 6, fw, fh / 6)
+    }
+    g.strokeStyle = '#22562d'
+    g.lineWidth = 4
+    g.strokeRect(fx + 2, fy + 2, fw - 4, fh - 4)
+
+    for (const w of wl) {
+      g.fillStyle = '#5b6472'
+      g.fillRect(sx(w.x), sy(w.y), w.w * uc, w.h * uc)
+      g.fillStyle = '#3d4450'
+      g.fillRect(sx(w.x), sy(w.y) + w.h * uc - 3, w.w * uc, 3)
     }
 
-    const hp = pr(hx, 0, hz)
-    g.fillStyle = '#08120a'
+    const hxs = sx(qz.x)
+    const hys = sy(qz.y)
+    g.fillStyle = '#0a1410'
     g.beginPath()
-    g.ellipse(hp.x, hp.y, 0.34 * hp.s, 0.34 * hp.s * 0.5, 0, 0, Math.PI * 2)
+    g.arc(hxs, hys, HR * uc, 0, Math.PI * 2)
     g.fill()
-    const ft = pr(hx, 1.1, hz)
     g.strokeStyle = '#e5e7eb'
     g.lineWidth = 2
     g.beginPath()
-    g.moveTo(hp.x, hp.y)
-    g.lineTo(ft.x, ft.y)
+    g.moveTo(hxs, hys)
+    g.lineTo(hxs, hys - 27)
     g.stroke()
-    g.beginPath()
-    g.moveTo(ft.x, ft.y)
-    g.lineTo(ft.x + 0.5 * ft.s, ft.y + 0.12 * ft.s)
-    g.lineTo(ft.x, ft.y + 0.26 * ft.s)
-    g.closePath()
     g.fillStyle = fl > 0 ? '#22c55e' : '#ef4444'
-    g.fill()
-
-    const so = wl.slice().sort((p, q) => pr((q.a + q.b) / 2, 0, (q.c + q.d) / 2).d - pr((p.a + p.b) / 2, 0, (p.c + p.d) / 2).d)
-    for (const w of so) {
-      const b00 = pr(w.a, 0, w.c)
-      const b10 = pr(w.b, 0, w.c)
-      const b11 = pr(w.b, 0, w.d)
-      const b01 = pr(w.a, 0, w.d)
-      const u00 = pr(w.a, w.h, w.c)
-      const u10 = pr(w.b, w.h, w.c)
-      const u11 = pr(w.b, w.h, w.d)
-      const u01 = pr(w.a, w.h, w.d)
-      qd([b00, b10, u10, u00], '#4b5563')
-      qd([b01, b11, u11, u01], '#3b424c')
-      qd([b00, b01, u01, u00], '#434b56')
-      qd([b10, b11, u11, u10], '#434b56')
-      qd([u00, u10, u11, u01], '#7c8797')
-    }
-
-    const bp = pr(bl.x, 0, bl.z)
-    g.fillStyle = 'rgba(0,0,0,0.28)'
     g.beginPath()
-    g.ellipse(bp.x, bp.y, BR * bp.s, BR * bp.s * 0.45, 0, 0, Math.PI * 2)
+    g.moveTo(hxs, hys - 27)
+    g.lineTo(hxs + 16, hys - 22)
+    g.lineTo(hxs, hys - 17)
+    g.closePath()
     g.fill()
-    const bc = pr(bl.x, BR, bl.z)
-    const rd = BR * bc.s
+
+    const bxs = sx(bl.x)
+    const bys = sy(bl.y)
+    const rd = BR * uc
+    g.fillStyle = 'rgba(0,0,0,0.22)'
+    g.beginPath()
+    g.arc(bxs + 1.5, bys + 2, rd, 0, Math.PI * 2)
+    g.fill()
     g.fillStyle = '#eef1f5'
     g.beginPath()
-    g.arc(bc.x, bc.y, rd, 0, Math.PI * 2)
+    g.arc(bxs, bys, rd, 0, Math.PI * 2)
     g.fill()
     g.fillStyle = 'rgba(255,255,255,0.9)'
     g.beginPath()
-    g.arc(bc.x - rd * 0.3, bc.y - rd * 0.3, rd * 0.34, 0, Math.PI * 2)
+    g.arc(bxs - rd * 0.3, bys - rd * 0.3, rd * 0.34, 0, Math.PI * 2)
     g.fill()
 
     if (am) {
-      const ax = bp.x - am.x
-      const ay = bp.y - am.y
+      const ax = bxs - am.x
+      const ay = bys - am.y
       const ln = Math.hypot(ax, ay)
       if (ln > 6) {
-        const pw = Math.min(ln, 240) / 240
-        const ll = 36 + 130 * pw
+        const ll = 30 + 130 * (Math.min(ln, 220) / 220)
         g.strokeStyle = 'rgba(255,255,255,0.85)'
         g.lineWidth = 3
         g.setLineDash([7, 6])
         g.beginPath()
-        g.moveTo(bp.x, bp.y)
-        g.lineTo(bp.x + (ax / ln) * ll, bp.y + (ay / ln) * ll)
+        g.moveTo(bxs, bys)
+        g.lineTo(bxs + (ax / ln) * ll, bys + (ay / ln) * ll)
         g.stroke()
         g.setLineDash([])
       }

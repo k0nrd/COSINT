@@ -6,6 +6,7 @@ import {
   datationMode,
   DAY_MS,
   eventTimingOf,
+  sanitizeEventMarks,
   timelineDate,
   toTimelineItems
 } from '@/lib/timeline'
@@ -141,16 +142,46 @@ describe('lib/timeline — mode de datation & repères (§1 v1.8.3)', () => {
     expect(datationMode(node({ eventFrom: 1, eventEarliest: 2, eventDate: 3 }))).toBe('duration')
   })
 
-  it('eventTimingOf : repères filtrés à la plage résolue et triés', () => {
+  it('eventTimingOf : repères (objets) filtrés à la plage résolue et triés', () => {
     const timing = eventTimingOf(
-      node({ eventFrom: 100, eventTo: 500, eventMarks: [400, 50, 300, 900] })
+      node({
+        eventFrom: 100,
+        eventTo: 500,
+        eventMarks: [
+          { id: 'a', at: 400 },
+          { id: 'b', at: 50 },
+          { id: 'c', at: 300, label: 'jalon' },
+          { id: 'd', at: 900 }
+        ]
+      })
     )!
-    // 50 (avant le début) et 900 (après la fin) sont écartés ; le reste est trié.
-    expect(timing.marks).toEqual([300, 400])
+    // 50 (avant le début) et 900 (après la fin) sont écartés ; le reste est trié par `at`.
+    expect(timing.marks.map((m) => m.at)).toEqual([300, 400])
+    expect(timing.marks[0].label).toBe('jalon')
   })
 
   it('eventTimingOf : aucun repère hors plage → tableau vide, jamais indéfini', () => {
     const timing = eventTimingOf(node({ eventDate: 500 }))!
     expect(timing.marks).toEqual([])
+  })
+})
+
+describe('lib/timeline — sanitizeEventMarks (§1 v1.8.4)', () => {
+  it('normalise objets et nombres hérités (v1.8.3), rejette l’invalide, trie', () => {
+    const marks = sanitizeEventMarks([
+      500, // nombre hérité → { at: 500 } avec id généré
+      { at: 100, label: 'a', color: '#fff', tags: ['x', '', 2] },
+      { at: 'nope' }, // rejeté (at invalide)
+      { id: 'keep', at: 300 }
+    ])
+    expect(marks.map((m) => m.at)).toEqual([100, 300, 500])
+    expect(marks.every((m) => typeof m.id === 'string' && m.id !== '')).toBe(true)
+    expect(marks.find((m) => m.id === 'keep')).toBeTruthy()
+    expect(marks[0].tags).toEqual(['x']) // tags non-chaînes/vides écartés
+  })
+
+  it('non-tableau → liste vide', () => {
+    expect(sanitizeEventMarks(undefined)).toEqual([])
+    expect(sanitizeEventMarks('x')).toEqual([])
   })
 })

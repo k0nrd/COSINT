@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.3-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.4-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
   <img src="https://img.shields.io/badge/tests-244%20passing-3fbf6a" alt="Tests">
@@ -72,23 +72,18 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.3
+## 🚀 What's new in 1.8.4
 
-- **✏️ Edit right on the timeline** — click an event to open the **exact same editor as
-  the board** (title, fields, colour, tags, dating, delete). No round-trip to the canvas.
-- **🖐️ Drag to reshape a range** — **slide a bar** to move it in time, **grab its end
-  caps** to adjust the start/finish, **double-click** to drop a marker (drag it, right-click
-  to remove). Every gesture is one undo step.
-- **📏 New bar styles** — a **duration** is a solid continuous line; an **uncertain range**
-  is a continuous line **hatched in grey** (no more gradient) — both with clear end caps.
-- **🎚️ Premiere-style zoom bar** — the bottom scrollbar now has two handles: **widen it to
-  zoom out, narrow it to zoom in**, drag the middle to scroll.
-- **🎯 One dating or the other** — a **precise date** and a **time range** are now mutually
-  exclusive; a range can carry **markers** placed from the timeline.
-- **🧹 Lighter timeline** — the descriptive banner is gone, and a **Return to board** button
-  sits in the bottom toolbar.
+- **🎨 Graphical edits show on the timeline** — recolour an element in the editor and its
+  **bar/card updates live** on the frise.
+- **🏷️ Editable markers** — the markers you drop on a range now take a **title, colour and
+  tags** (click one to edit it on the right, right-click to remove).
+- **⌨️ Ctrl + drag to move** — bars/caps now move **only with Ctrl (⌘) held** — a plain
+  click just selects (no more accidental moves). **Click empty space to deselect.**
+- **📏 Slimmer zoom bar** — the bottom zoom navigator is now much more compact.
+- **🧹 Tighter detail panel** — no more empty space above the details on the right.
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.3.md`](docs/RELEASE_NOTES_v1.8.3.md).
+Full notes: [`docs/RELEASE_NOTES_v1.8.4.md`](docs/RELEASE_NOTES_v1.8.4.md).
 
 ---
 

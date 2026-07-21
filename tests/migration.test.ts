@@ -342,17 +342,45 @@ describe('parseTrace — migration v1.6 (v4) → v1.7 (v5) : date d’événemen
     expect(parseTrace(bad).nodes[0].eventDate).toBeUndefined()
   })
 
-  it('aller-retour : repères d’événement (§1 v1.8.3) triés/dédupliqués, valeurs sales écartées', () => {
+  it('aller-retour : repères d’événement (objets §1 v1.8.4) — titre/couleur préservés, invalides écartés, triés', () => {
     const bad = JSON.stringify({
       format: TRACE_FORMAT,
       version: TRACE_VERSION,
       exportedAt: 0,
       meta: { title: 'x', createdAt: 0, createdBy: 'a', accessMode: 'open' },
-      nodes: [{ ...makeNode({ eventFrom: 100, eventTo: 900 }), eventMarks: [300, 'x', 300, 200] }],
+      nodes: [
+        {
+          ...makeNode({ eventFrom: 100, eventTo: 900 }),
+          eventMarks: [
+            { id: 'm1', at: 300, label: 'jalon', color: '#f00', tags: ['t'] },
+            { at: 'nope' },
+            { id: 'm2', at: 200 }
+          ]
+        }
+      ],
       edges: [],
       comments: []
     })
-    expect(parseTrace(bad).nodes[0].eventMarks).toEqual([200, 300])
+    const marks = parseTrace(bad).nodes[0].eventMarks!
+    expect(marks.map((m) => m.at)).toEqual([200, 300])
+    const m1 = marks.find((m) => m.id === 'm1')!
+    expect(m1.label).toBe('jalon')
+    expect(m1.color).toBe('#f00')
+  })
+
+  it('rétro-compat : repères hérités v1.8.3 (nombres) → objets avec id généré', () => {
+    const legacy = JSON.stringify({
+      format: TRACE_FORMAT,
+      version: TRACE_VERSION,
+      exportedAt: 0,
+      meta: { title: 'x', createdAt: 0, createdBy: 'a', accessMode: 'open' },
+      nodes: [{ ...makeNode({ eventFrom: 100, eventTo: 900 }), eventMarks: [300, 200] }],
+      edges: [],
+      comments: []
+    })
+    const marks = parseTrace(legacy).nodes[0].eventMarks!
+    expect(marks.map((m) => m.at)).toEqual([200, 300])
+    expect(marks.every((m) => typeof m.id === 'string' && m.id !== '')).toBe(true)
   })
 })
 

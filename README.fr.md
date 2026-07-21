@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.3-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.4-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
   <img src="https://img.shields.io/badge/tests-244%20au%20vert-3fbf6a" alt="Tests">
@@ -70,24 +70,19 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.3
+## 🚀 Nouveautés de la 1.8.4
 
-- **✏️ Édition directement sur la frise** — cliquer un événement ouvre **le même éditeur que
-  le tableau** (titre, champs, couleur, tags, datation, suppression). Plus d'aller-retour vers
-  le canvas.
-- **🖐️ Glisser pour remodeler une plage** — **glissez une barre** pour la déplacer dans le
-  temps, **attrapez ses embouts** pour ajuster le début/la fin, **double-cliquez** pour poser
-  un repère (glissable, clic droit pour retirer). Chaque geste = une annulation.
-- **📏 Nouvelles barres** — une **durée** est un trait plein continu ; une **fourchette
-  incertaine** est un trait continu **hachuré de gris** (fini le dégradé) — les deux à embouts.
-- **🎚️ Barre de zoom façon Premiere** — la barre du bas a deux poignées : **élargissez pour
-  dézoomer, rétrécissez pour zoomer**, glissez le milieu pour défiler.
-- **🎯 L'un ou l'autre** — une **date précise** et une **fourchette de temps** sont désormais
-  exclusives ; une fourchette peut porter des **repères** posés depuis la frise.
-- **🧹 Frise allégée** — le bandeau descriptif disparaît, et un bouton **Revenir au tableau**
-  s'ajoute à la barre d'outils du bas.
+- **🎨 Les modifications graphiques s'appliquent sur la frise** — recolorez un élément dans
+  l'éditeur et sa **barre/carte se met à jour en direct** sur la frise.
+- **🏷️ Repères éditables** — les repères posés sur une plage prennent un **titre, une couleur
+  et des tags** (cliquez-en un pour l'éditer à droite, clic droit pour le retirer).
+- **⌨️ Ctrl + glisser pour déplacer** — les barres/embouts ne bougent **qu'avec Ctrl (⌘)
+  maintenu** — un simple clic sélectionne (fini les déplacements accidentels). **Cliquez dans
+  le vide pour désélectionner.**
+- **📏 Barre de zoom affinée** — le navigateur de zoom du bas est bien plus compact.
+- **🧹 Panneau de détail resserré** — plus d'espace vide au-dessus des détails, à droite.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.3.md`](docs/RELEASE_NOTES_v1.8.3.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.4.md`](docs/RELEASE_NOTES_v1.8.4.md).
 
 ---
 

@@ -25,6 +25,7 @@ import {
   Code2,
   Contact,
   Crosshair,
+  Diamond,
   FileText,
   Image as ImageIcon,
   LayoutGrid,
@@ -35,10 +36,11 @@ import {
   Plus,
   Square,
   StickyNote,
+  Trash2,
   X,
   type LucideIcon
 } from 'lucide-react'
-import type { BoardNodeData, ElementStatus, NodeKind } from '@/types'
+import type { BoardNodeData, ElementStatus, EventMark, NodeKind } from '@/types'
 import { t, type MessageKey } from '@/i18n'
 import {
   taxonomyCategory,
@@ -50,8 +52,12 @@ import { resolveType, type CustomTypeMap } from '@/lib/entityTypes'
 import { EntityIcon } from '@/components/nodes/entityIcons'
 import { StatusBadge } from '@/components/board/StatusBadge'
 import { NodeDetails } from '@/components/board/SidePanel'
+import { ColorField } from '@/components/common/ColorPicker'
+import { TagInput } from '@/components/common/TagInput'
 import { useBoardContext } from '@/flow/BoardContext'
 import { setEventTiming, type EventTimingPatch } from '@/sync/boardOps'
+import { colorHex } from '@/lib/colors'
+import { newId } from '@/lib/id'
 import { stringifyCsv } from '@/lib/csv'
 import {
   assignLanes,
@@ -158,6 +164,21 @@ export function TimelinePanel({
   // §1 v1.8.1 : élément dont le détail est affiché SUR la frise (un clic n'emmène
   // plus directement au tableau ; le détail propose ensuite « Voir sur le tableau »).
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // §2 v1.8.4 : repère sélectionné (édition titre/couleur/tags). Nœud et repère sont
+  // mutuellement exclusifs ; cliquer dans le vide désélectionne les deux.
+  const [selectedMark, setSelectedMark] = useState<{ nodeId: string; markId: string } | null>(null)
+  const selectNode = (id: string): void => {
+    setSelectedId(id)
+    setSelectedMark(null)
+  }
+  const selectMark = (nodeId: string, markId: string): void => {
+    setSelectedMark({ nodeId, markId })
+    setSelectedId(null)
+  }
+  const deselect = (): void => {
+    setSelectedId(null)
+    setSelectedMark(null)
+  }
   // §2 v1.8.2 : ajout d'un élément DATÉ depuis la barre d'outils de la frise. Cliquer
   // un outil ouvre le sélecteur de date ; sans date validée, RIEN n'est créé.
   const [addKind, setAddKind] = useState<NodeKind | null>(null)
@@ -264,10 +285,15 @@ export function TimelinePanel({
   }, [tab, eventView])
   // Le détail affiché se referme si l'on change d'onglet/vue (l'élément peut ne pas
   // figurer dans l'autre frise).
-  useEffect(() => setSelectedId(null), [tab, eventView])
+  useEffect(() => {
+    setSelectedId(null)
+    setSelectedMark(null)
+  }, [tab, eventView])
 
   // ——— §1 v1.8.1 : déplacement au glisser (les deux frises se parcourent) ———
-  const panRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null)
+  const panRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number; moved: boolean } | null>(
+    null
+  )
   const onPanPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (event.button !== 0) return
     // On ne démarre PAS un déplacement depuis un élément interactif (carte, bouton,
@@ -281,7 +307,13 @@ export function TimelinePanel({
     }
     const el = scrollRef.current
     if (!el) return
-    panRef.current = { x: event.clientX, y: event.clientY, scrollLeft: el.scrollLeft, scrollTop: el.scrollTop }
+    panRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      scrollLeft: el.scrollLeft,
+      scrollTop: el.scrollTop,
+      moved: false
+    }
     el.setPointerCapture(event.pointerId)
     el.classList.add('tl-scroll--panning')
   }
@@ -289,18 +321,22 @@ export function TimelinePanel({
     const pan = panRef.current
     const el = scrollRef.current
     if (!pan || !el) return
+    if (Math.abs(event.clientX - pan.x) > 3 || Math.abs(event.clientY - pan.y) > 3) pan.moved = true
     el.scrollLeft = pan.scrollLeft - (event.clientX - pan.x)
     el.scrollTop = pan.scrollTop - (event.clientY - pan.y)
   }
   const onPanPointerEnd = (event: ReactPointerEvent<HTMLDivElement>): void => {
     const el = scrollRef.current
-    if (panRef.current && el) {
+    const pan = panRef.current
+    if (pan && el) {
       try {
         el.releasePointerCapture(event.pointerId)
       } catch {
         /* pointeur déjà relâché */
       }
       el.classList.remove('tl-scroll--panning')
+      // §2 v1.8.4 : un CLIC dans le vide (sans déplacement) désélectionne.
+      if (!pan.moved) deselect()
     }
     panRef.current = null
   }
@@ -467,6 +503,33 @@ export function TimelinePanel({
   const editTiming = (id: string, patch: EventTimingPatch): void => {
     if (canEdit) setEventTiming(handle, id, patch, author)
   }
+
+  // §2 v1.8.4 : repères éditables (titre/couleur/tags). Les opérations portent sur la
+  // liste COMPLÈTE du nœud (pas seulement les repères visibles), pour ne rien perdre.
+  const addMark = (nodeId: string, at: number): void => {
+    const node = nodeById.get(nodeId)
+    if (!node) return
+    const mark: EventMark = { id: newId(), at }
+    editTiming(nodeId, { marks: [...(node.eventMarks ?? []), mark] })
+    selectMark(nodeId, mark.id)
+  }
+  const updateMark = (nodeId: string, markId: string, patch: Partial<EventMark>): void => {
+    const node = nodeById.get(nodeId)
+    if (!node?.eventMarks) return
+    editTiming(nodeId, {
+      marks: node.eventMarks.map((mark) => (mark.id === markId ? { ...mark, ...patch } : mark))
+    })
+  }
+  const removeMark = (nodeId: string, markId: string): void => {
+    const node = nodeById.get(nodeId)
+    if (!node?.eventMarks) return
+    editTiming(nodeId, { marks: node.eventMarks.filter((mark) => mark.id !== markId) })
+    setSelectedMark((cur) => (cur?.markId === markId ? null : cur))
+  }
+
+  // Repère actuellement sélectionné (résolu depuis les données vivantes).
+  const markNode = selectedMark ? (nodeById.get(selectedMark.nodeId) ?? null) : null
+  const selectedMarkObj = markNode?.eventMarks?.find((m) => m.id === selectedMark?.markId) ?? null
 
   const exportPng = async (): Promise<void> => {
     if (!contentRef.current || !hasContent) {
@@ -679,7 +742,7 @@ export function TimelinePanel({
                     <tr
                       key={event.id}
                       className={`tl-list__row${selectedId === event.id ? ' tl-list__row--selected' : ''}`}
-                      onClick={() => setSelectedId(event.id)}
+                      onClick={() => selectNode(event.id)}
                     >
                       <td className="tl-list__name">
                         <EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} />
@@ -725,13 +788,14 @@ export function TimelinePanel({
                     const x = (item.date - minDate) * pxPerMs
                     const top = TOP_PAD + AXIS_H + lanes[i] * LANE_H
                     const label = item.label || typeLabelOf(item)
-                    const color = item.kind === 'entity' && item.entityType ? resolveType(item.entityType, customTypeMap).color : 'var(--accent)'
+                    const itemNode = nodeById.get(item.id)
+                    const color = itemNode ? colorHex(itemNode.color) : 'var(--accent)'
                     return (
                       <button
                         key={item.id}
                         className={`tl-item${selectedId === item.id ? ' tl-item--selected' : ''}`}
                         style={{ left: x, top, borderLeftColor: color }}
-                        onClick={() => setSelectedId(item.id)}
+                        onClick={() => selectNode(item.id)}
                         title={`${label}\n${typeLabelOf(item)} · ${item.author}\n${fullFmt.format(new Date(item.date))}${item.isEventDate ? ` (${t('timeline.eventDate')})` : ''}`}
                       >
                         <span className="tl-item__ico"><EventItemIcon entityType={item.entityType} kind={item.kind} customTypeMap={customTypeMap} /></span>
@@ -744,8 +808,11 @@ export function TimelinePanel({
                   })
                 : eventItems.map((event, i) => {
                     const top = TOP_PAD + AXIS_H + lanes[i] * LANE_H
-                    const label = event.label || (nodeById.get(event.id) ? typeLabelOfNode(nodeById.get(event.id)!) : '')
-                    const color = event.entityType ? resolveType(event.entityType, customTypeMap).color : 'var(--accent)'
+                    const node = nodeById.get(event.id)
+                    const label = event.label || (node ? typeLabelOfNode(node) : '')
+                    // §1 v1.8.4 : couleur = celle du nœud (reflète les changements
+                    // graphiques faits dans l'éditeur), repli sur l'accent.
+                    const color = node ? colorHex(node.color) : 'var(--accent)'
                     return (
                       <EventRow
                         key={event.id}
@@ -756,10 +823,16 @@ export function TimelinePanel({
                         minDate={minDate}
                         pxPerMs={pxPerMs}
                         selected={selectedId === event.id}
+                        selectedMarkId={selectedMark?.nodeId === event.id ? selectedMark.markId : null}
                         canEdit={canEdit}
                         customTypeMap={customTypeMap}
-                        onSelect={() => setSelectedId(event.id)}
+                        allMarks={node?.eventMarks ?? []}
+                        onSelect={() => selectNode(event.id)}
                         onCommit={(patch) => editTiming(event.id, patch)}
+                        onSelectMark={(markId) => selectMark(event.id, markId)}
+                        onMoveMark={(markId, at) => updateMark(event.id, markId, { at })}
+                        onRemoveMark={(markId) => removeMark(event.id, markId)}
+                        onAddMark={(at) => addMark(event.id, at)}
                       />
                     )
                   })}
@@ -865,15 +938,24 @@ export function TimelinePanel({
 
       {/* §1 v1.8.1 : détail de l'élément cliqué — affiché SUR la frise. Le bouton
           « Voir sur le tableau » est le SEUL à emmener au canvas (plus de navigation
-          au simple clic). */}
-      {selectedNode && (
+          au simple clic). Un repère sélectionné ouvre plutôt son mini-éditeur (§2 v1.8.4). */}
+      {selectedMark && selectedMarkObj && markNode ? (
+        <MarkEditor
+          mark={selectedMarkObj}
+          hasTime={markNode.eventHasTime === true}
+          canEdit={canEdit}
+          onChange={(patch) => updateMark(selectedMark.nodeId, selectedMark.markId, patch)}
+          onDelete={() => removeMark(selectedMark.nodeId, selectedMark.markId)}
+          onClose={() => setSelectedMark(null)}
+        />
+      ) : selectedNode ? (
         <TimelineDetail
           node={selectedNode}
           customTypeMap={customTypeMap}
           onLocate={() => onLocate(selectedNode.id)}
-          onClose={() => setSelectedId(null)}
+          onClose={deselect}
         />
-      )}
+      ) : null}
     </div>
   )
 }
@@ -967,11 +1049,12 @@ function eventTooltip(timing: EventTiming): string {
 }
 
 /**
- * §6 v1.8.3 : ligne d'un événement sur la piste — carte + barre de plage éditable
- * VISUELLEMENT. La barre se glisse (déplacer la plage), ses embouts ajustent le début
- * et la fin, un double-clic pose un repère (glissable, clic droit pour retirer). Chaque
- * geste = une seule op annulable (commit au relâcher). Une DURÉE (de/à) est un trait
- * plein ; une FOURCHETTE incertaine est un trait hachuré gris ; toutes deux à embouts.
+ * §6 v1.8.3 (§7 v1.8.4) : ligne d'un événement sur la piste — carte + barre de plage
+ * éditable VISUELLEMENT. L'édition ne démarre qu'avec **Ctrl (⌘) enfoncé** : Ctrl+glisser
+ * la barre la déplace, Ctrl+glisser un embout ajuste début/fin ; sinon un simple clic
+ * sélectionne. Double-clic = pose un repère (éditable : titre/couleur/tags, glissable en
+ * Ctrl, clic droit pour retirer). Une DURÉE (de/à) est un trait plein ; une FOURCHETTE
+ * incertaine est un trait hachuré gris ; toutes deux à embouts.
  */
 interface EventRowProps {
   event: TimelineEvent
@@ -981,16 +1064,23 @@ interface EventRowProps {
   minDate: number
   pxPerMs: number
   selected: boolean
+  selectedMarkId: string | null
   canEdit: boolean
   customTypeMap: CustomTypeMap
+  /** Liste COMPLÈTE des repères du nœud (pour un déplacement d'ensemble sans perte). */
+  allMarks: EventMark[]
   onSelect: () => void
   onCommit: (patch: EventTimingPatch) => void
+  onSelectMark: (markId: string) => void
+  onMoveMark: (markId: string, at: number) => void
+  onRemoveMark: (markId: string) => void
+  onAddMark: (at: number) => void
 }
 
 type TlDragKind = 'move' | 'l' | 'r' | 'mark'
 interface TlDragState {
   kind: TlDragKind
-  idx: number
+  markId: string | null
   originX: number
   deltaMs: number
   moved: boolean
@@ -1004,10 +1094,16 @@ function EventRow({
   minDate,
   pxPerMs,
   selected,
+  selectedMarkId,
   canEdit,
   customTypeMap,
+  allMarks,
   onSelect,
-  onCommit
+  onCommit,
+  onSelectMark,
+  onMoveMark,
+  onRemoveMark,
+  onAddMark
 }: EventRowProps): JSX.Element {
   const { timing } = event
   const [drag, setDrag] = useState<TlDragState | null>(null)
@@ -1028,35 +1124,41 @@ function EventRow({
   const d = drag ? snap(drag.deltaMs) : 0
   let pStart = timing.start
   let pEnd = timing.end
-  let pMarks = timing.marks
   if (drag) {
     if (drag.kind === 'move') {
       pStart += d
       pEnd += d
-      pMarks = pMarks.map((m) => m + d)
     } else if (drag.kind === 'l') {
       pStart = Math.min(timing.start + d, timing.end)
     } else if (drag.kind === 'r') {
       pEnd = Math.max(timing.end + d, timing.start)
-    } else if (drag.kind === 'mark') {
-      pMarks = pMarks.map((m, i) => (i === drag.idx ? clampMs(m + d, timing.start, timing.end) : m))
     }
   }
   const x = (pStart - minDate) * pxPerMs
   const barW = Math.max(0, (pEnd - pStart) * pxPerMs)
 
+  // Position d'aperçu d'un repère pendant un glisser.
+  const markAt = (mark: EventMark): number => {
+    if (!drag) return mark.at
+    if (drag.kind === 'move') return mark.at + d
+    if (drag.kind === 'mark' && drag.markId === mark.id) return clampMs(mark.at + d, timing.start, timing.end)
+    return mark.at
+  }
+
   const beginDrag =
-    (kind: TlDragKind, idx: number) =>
+    (kind: TlDragKind, markId: string | null) =>
     (e: ReactPointerEvent): void => {
-      if (!canEdit || e.button !== 0) return
+      // §7 v1.8.4 : l'édition visuelle exige Ctrl (⌘) — sinon un clic sélectionne (plus
+      // de déplacement accidentel).
+      if (!canEdit || e.button !== 0 || !(e.ctrlKey || e.metaKey)) return
       e.stopPropagation()
-      if (kind !== 'move') e.preventDefault()
+      e.preventDefault()
       try {
         ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
       } catch {
         /* capture indisponible */
       }
-      setDrag({ kind, idx, originX: e.clientX, deltaMs: 0, moved: false })
+      setDrag({ kind, markId, originX: e.clientX, deltaMs: 0, moved: false })
     }
   const moveDrag = (e: ReactPointerEvent): void =>
     setDrag((cur) =>
@@ -1075,10 +1177,13 @@ function EventRow({
       const dd = snap(cur.deltaMs)
       if (!cur.moved || dd === 0) return null // simple clic → laissé à onClick (sélection)
       suppressClick.current = true
+      if (cur.kind === 'mark' && cur.markId) {
+        const mark = timing.marks.find((m) => m.id === cur.markId)
+        if (mark) onMoveMark(cur.markId, clampMs(mark.at + dd, timing.start, timing.end))
+        return null
+      }
       const patch: EventTimingPatch = {}
-      if (cur.kind === 'mark') {
-        patch.marks = timing.marks.map((m, i) => (i === cur.idx ? clampMs(m + dd, timing.start, timing.end) : m))
-      } else if (!timing.isRange) {
+      if (!timing.isRange) {
         // Point unique : on déplace la seule borne renseignée.
         if (timing.exact !== undefined) patch.exact = timing.exact + dd
         else if (origLow !== undefined) patch[lowKey] = origLow + dd
@@ -1090,7 +1195,8 @@ function EventRow({
       } else if (cur.kind === 'move') {
         if (origLow !== undefined) patch[lowKey] = origLow + dd
         if (origHigh !== undefined) patch[highKey] = origHigh + dd
-        if (timing.marks.length > 0) patch.marks = timing.marks.map((m) => m + dd)
+        // Les repères suivent le déplacement d'ensemble (liste complète → aucune perte).
+        if (allMarks.length > 0) patch.marks = allMarks.map((m) => ({ ...m, at: m.at + dd }))
       }
       onCommit(patch)
       return null
@@ -1108,16 +1214,8 @@ function EventRow({
   const addMarkAt = (e: ReactMouseEvent): void => {
     if (!canEdit || !timing.isRange) return
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const ms = clampMs(snap(timing.start + (e.clientX - rect.left) / pxPerMs), timing.start, timing.end)
-    onCommit({ marks: [...timing.marks, ms] })
+    onAddMark(clampMs(snap(timing.start + (e.clientX - rect.left) / pxPerMs), timing.start, timing.end))
   }
-  const removeMark =
-    (i: number) =>
-    (e: ReactMouseEvent): void => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (canEdit) onCommit({ marks: timing.marks.filter((_, j) => j !== i) })
-    }
 
   return (
     <div className="tl-eventrow" style={{ left: x, top }}>
@@ -1129,53 +1227,60 @@ function EventRow({
           style={{ width: barW }}
           title={canEdit ? t('timeline.barMove') : eventTooltip(timing)}
           onClick={clickSelect}
-          onPointerDown={beginDrag('move', -1)}
+          onPointerDown={beginDrag('move', null)}
           onDoubleClick={addMarkAt}
           {...dragProps}
         >
           <span className="tl-eventbar__body" style={isDuration ? { background: color } : undefined} />
-          {canEdit && (
-            <>
+          <span
+            className={`tl-eventcap tl-eventcap--l${canEdit ? ' tl-eventcap--grip' : ''}`}
+            style={{ background: color }}
+            onPointerDown={canEdit ? beginDrag('l', null) : undefined}
+            {...(canEdit ? dragProps : {})}
+          />
+          <span
+            className={`tl-eventcap tl-eventcap--r${canEdit ? ' tl-eventcap--grip' : ''}`}
+            style={{ background: color }}
+            onPointerDown={canEdit ? beginDrag('r', null) : undefined}
+            {...(canEdit ? dragProps : {})}
+          />
+          {timing.marks.map((mark) => {
+            const mc = mark.color ? colorHex(mark.color) : color
+            return (
               <span
-                className="tl-eventcap tl-eventcap--l tl-eventcap--grip"
-                style={{ background: color }}
-                onPointerDown={beginDrag('l', -1)}
-                {...dragProps}
-              />
-              <span
-                className="tl-eventcap tl-eventcap--r tl-eventcap--grip"
-                style={{ background: color }}
-                onPointerDown={beginDrag('r', -1)}
-                {...dragProps}
-              />
-            </>
-          )}
-          {!canEdit && (
-            <>
-              <span className="tl-eventcap tl-eventcap--l" style={{ background: color }} />
-              <span className="tl-eventcap tl-eventcap--r" style={{ background: color }} />
-            </>
-          )}
-          {pMarks.map((m, i) => (
-            <span
-              key={i}
-              className="tl-eventmark"
-              style={{ left: (m - pStart) * pxPerMs, background: color }}
-              title={canEdit ? t('timeline.markRemove') : fmtBound(m, timing.hasTime)}
-              onPointerDown={canEdit ? beginDrag('mark', i) : undefined}
-              onContextMenu={removeMark(i)}
-              {...(canEdit ? dragProps : {})}
-            />
-          ))}
+                key={mark.id}
+                className={`tl-mark${selectedMarkId === mark.id ? ' tl-mark--sel' : ''}`}
+                style={{ left: (markAt(mark) - pStart) * pxPerMs }}
+                title={mark.label || fmtBound(mark.at, timing.hasTime)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (suppressClick.current) {
+                    suppressClick.current = false
+                    return
+                  }
+                  onSelectMark(mark.id)
+                }}
+                onPointerDown={canEdit ? beginDrag('mark', mark.id) : undefined}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (canEdit) onRemoveMark(mark.id)
+                }}
+                {...(canEdit ? dragProps : {})}
+              >
+                <span className="tl-mark__dot" style={{ background: mc }} />
+                {mark.label && <span className="tl-mark__lbl">{mark.label}</span>}
+              </span>
+            )
+          })}
         </span>
       )}
-      {/* La carte (bloc étiqueté) sert aussi de poignée de DÉPLACEMENT : la glisser
-          déplace l'événement dans le temps ; un simple clic ouvre le détail. */}
+      {/* La carte (bloc étiqueté) : clic = sélection ; Ctrl+glisser = déplacer la date. */}
       <button
-        className={`tl-item tl-item--event${selected ? ' tl-item--selected' : ''}${canEdit ? ' tl-item--draggable' : ''}`}
+        className={`tl-item tl-item--event${selected ? ' tl-item--selected' : ''}`}
         style={{ borderLeftColor: color }}
         onClick={clickSelect}
-        onPointerDown={beginDrag('move', -1)}
+        onPointerDown={beginDrag('move', null)}
         title={canEdit ? `${label}\n${t('timeline.barMoveExact')}` : `${label}\n${eventTooltip(timing)}`}
         {...dragProps}
       >
@@ -1189,6 +1294,87 @@ function EventRow({
           </span>
         )}
       </button>
+    </div>
+  )
+}
+
+/**
+ * §2 v1.8.4 : mini-éditeur d'un repère (titre, couleur, tags), affiché à droite comme
+ * le détail d'un élément. Le titre s'écrit au blur (une op) ; couleur/tags sont directs.
+ */
+function MarkEditor({
+  mark,
+  hasTime,
+  canEdit,
+  onChange,
+  onDelete,
+  onClose
+}: {
+  mark: EventMark
+  hasTime: boolean
+  canEdit: boolean
+  onChange: (patch: Partial<EventMark>) => void
+  onDelete: () => void
+  onClose: () => void
+}): JSX.Element {
+  const [labelDraft, setLabelDraft] = useState(mark.label ?? '')
+  useEffect(() => setLabelDraft(mark.label ?? ''), [mark.id, mark.label])
+
+  return (
+    <div className="tl-detail tl-detail--mark" role="dialog" aria-label={mark.label || t('timeline.markTitle')}>
+      <div className="tl-detail__head">
+        <span className="tl-detail__ico" style={{ color: mark.color ? colorHex(mark.color) : 'var(--accent)' }}>
+          <Diamond size={14} />
+        </span>
+        <span className="tl-detail__title" title={mark.label || t('timeline.markTitle')}>
+          {mark.label || t('timeline.markTitle')}
+        </span>
+        <button
+          className="cm-btn cm-btn--ghost cm-btn--icon"
+          onClick={onClose}
+          title={t('timeline.detailClose')}
+          aria-label={t('timeline.detailClose')}
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="tl-detail__editor tl-mark-edit">
+        <div className="tl-detail__row">
+          <span className="tl-detail__key">{t('timeline.markAt')}</span>
+          <span className="tl-detail__val">{fmtBound(mark.at, hasTime)}</span>
+        </div>
+
+        <label className="cm-label">{t('timeline.markTitleField')}</label>
+        <input
+          className="cm-input"
+          value={labelDraft}
+          disabled={!canEdit}
+          placeholder={t('timeline.markTitlePlaceholder')}
+          onChange={(e) => setLabelDraft(e.target.value)}
+          onBlur={() => {
+            if (labelDraft !== (mark.label ?? '')) onChange({ label: labelDraft })
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+          }}
+        />
+
+        <label className="cm-label">{t('details.color')}</label>
+        <ColorField value={mark.color ?? ''} onChange={(color) => onChange({ color })} />
+
+        <label className="cm-label">{t('details.tags')}</label>
+        <TagInput tags={mark.tags ?? []} onChange={(tags) => onChange({ tags })} />
+
+        {canEdit && (
+          <div className="bd-side__danger">
+            <button className="cm-btn cm-btn--danger" onClick={onDelete}>
+              <Trash2 size={14} />
+              {t('timeline.markDelete')}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

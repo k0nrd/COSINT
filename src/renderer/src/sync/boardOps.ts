@@ -18,9 +18,11 @@ import type {
   EntityField,
   EntityStyle,
   EntityType,
+  EventMark,
   NodeKind
 } from '@/types'
 import { hasStatusBadge } from '@/lib/status'
+import { sanitizeEventMarks } from '@/lib/timeline'
 import { DEFAULT_PARTICIPANT_LIMIT } from '@/types'
 import { newId } from '@/lib/id'
 import {
@@ -322,8 +324,8 @@ export interface EventTimingPatch {
   from?: number | null
   /** Fin de durée de/à (§1 v1.8.2). `null` supprime la clé. */
   to?: number | null
-  /** Repères sur une plage (§1 v1.8.3). Liste = remplace ; `null`/`[]` = supprime la clé. */
-  marks?: number[] | null
+  /** Repères sur une plage (§1 v1.8.3/§1 v1.8.4). Liste = remplace ; `null`/`[]` = supprime. */
+  marks?: EventMark[] | null
   hasTime?: boolean
 }
 
@@ -347,10 +349,8 @@ export function setEventTiming(
     applyDate('eventFrom', patch.from)
     applyDate('eventTo', patch.to)
     if (patch.marks !== undefined) {
-      const marks = patch.marks
-        ? [...new Set(patch.marks.filter((n) => Number.isFinite(n)))].sort((a, b) => a - b)
-        : []
-      if (marks.length > 0) map.set('eventMarks', marks)
+      const marks = patch.marks ? sanitizeEventMarks(patch.marks) : []
+      if (marks.length > 0) map.set('eventMarks', marks.map((mark) => ({ ...mark })))
       else map.delete('eventMarks')
     }
     if (patch.hasTime !== undefined) {
