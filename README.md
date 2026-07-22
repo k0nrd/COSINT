@@ -157,10 +157,33 @@ Grab the latest build from **[Releases](../../releases)**:
 | `COSINT-x.y.z-x86_64.AppImage` | Linux portable |
 | `COSINT-x.y.z-amd64.deb` | Debian/Ubuntu package |
 
-> **SmartScreen note:** binaries aren't code-signed yet. On first launch Windows may show
-> *"Windows protected your PC"* → **More info** → **Run anyway**.
+### Launching what you downloaded
 
-Your data (boards, profile) lives in `%APPDATA%/COSINT` and survives updates and reinstalls.
+**Windows**
+- **Installer** — run `COSINT-Setup-x.y.z.exe`, choose a folder, then start COSINT from the
+  Start menu (or its desktop shortcut). Later updates install themselves.
+- **Portable** — just double-click `COSINT-Portable-x.y.z.exe`; nothing gets installed.
+- Not code-signed yet, so SmartScreen may warn *"Windows protected your PC"* →
+  **More info** → **Run anyway** (first launch only).
+
+**Linux**
+- **AppImage** (portable, no install) — make it executable, then run it:
+  ```bash
+  chmod +x COSINT-x.y.z-x86_64.AppImage
+  ./COSINT-x.y.z-x86_64.AppImage
+  ```
+  On a `libfuse.so.2` error, install FUSE (`sudo apt install libfuse2`) or run it with
+  `--appimage-extract-and-run`.
+- **Debian/Ubuntu** — install with apt (it pulls any dependency), then launch from your
+  applications menu or the `cosint` command:
+  ```bash
+  sudo apt install ./COSINT-x.y.z-amd64.deb
+  cosint
+  ```
+  Remove it later with `sudo apt remove cosint`.
+
+Your data (boards, profile) lives in `%APPDATA%/COSINT` on Windows and `~/.config/COSINT`
+on Linux — it survives updates and reinstalls.
 
 ## 🖧 Self-hosting the signaling server
 

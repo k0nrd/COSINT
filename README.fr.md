@@ -158,12 +158,34 @@ Récupérez la dernière version dans **[Releases](../../releases)** :
 | `COSINT-x.y.z-x86_64.AppImage` | Linux portable |
 | `COSINT-x.y.z-amd64.deb` | Paquet Debian/Ubuntu |
 
-> **Note SmartScreen :** les binaires ne sont pas encore signés. Au premier lancement,
-> Windows peut afficher *« Windows a protégé votre PC »* → **Informations complémentaires**
-> → **Exécuter quand même**.
+### Lancer ce que vous avez téléchargé
 
-Vos données (tableaux, profil) vivent dans `%APPDATA%/COSINT` et survivent aux mises à jour
-comme aux réinstallations.
+**Windows**
+- **Installeur** — lancez `COSINT-Setup-x.y.z.exe`, choisissez un dossier, puis démarrez
+  COSINT depuis le menu Démarrer (ou le raccourci bureau). Les mises à jour s'installent
+  ensuite toutes seules.
+- **Portable** — double-cliquez simplement `COSINT-Portable-x.y.z.exe` ; rien n'est installé.
+- Pas encore signé : SmartScreen peut afficher *« Windows a protégé votre PC »* →
+  **Informations complémentaires** → **Exécuter quand même** (au premier lancement).
+
+**Linux**
+- **AppImage** (portable, sans installation) — rendez-le exécutable, puis lancez-le :
+  ```bash
+  chmod +x COSINT-x.y.z-x86_64.AppImage
+  ./COSINT-x.y.z-x86_64.AppImage
+  ```
+  En cas d'erreur `libfuse.so.2`, installez FUSE (`sudo apt install libfuse2`) ou lancez-le
+  avec `--appimage-extract-and-run`.
+- **Debian/Ubuntu** — installez avec apt (il tire les dépendances), puis lancez depuis le
+  menu Applications ou la commande `cosint` :
+  ```bash
+  sudo apt install ./COSINT-x.y.z-amd64.deb
+  cosint
+  ```
+  Pour désinstaller plus tard : `sudo apt remove cosint`.
+
+Vos données (tableaux, profil) vivent dans `%APPDATA%/COSINT` sous Windows et
+`~/.config/COSINT` sous Linux — elles survivent aux mises à jour comme aux réinstallations.
 
 ## 🖧 Auto-héberger la signalisation
 
