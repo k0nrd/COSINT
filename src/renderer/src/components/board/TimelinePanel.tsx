@@ -16,6 +16,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent
 } from 'react'
@@ -56,7 +57,7 @@ import { ColorField } from '@/components/common/ColorPicker'
 import { TagInput } from '@/components/common/TagInput'
 import { useBoardContext } from '@/flow/BoardContext'
 import { setEventTiming, type EventTimingPatch } from '@/sync/boardOps'
-import { colorHex } from '@/lib/colors'
+import { colorHex, withAlpha } from '@/lib/colors'
 import { newId } from '@/lib/id'
 import { stringifyCsv } from '@/lib/csv'
 import {
@@ -794,10 +795,12 @@ export function TimelinePanel({
                       <button
                         key={item.id}
                         className={`tl-item${selectedId === item.id ? ' tl-item--selected' : ''}`}
-                        style={{ left: x, top, borderLeftColor: color }}
+                        style={{ left: x, top }}
                         onClick={() => selectNode(item.id)}
                         title={`${label}\n${typeLabelOf(item)} · ${item.author}\n${fullFmt.format(new Date(item.date))}${item.isEventDate ? ` (${t('timeline.eventDate')})` : ''}`}
                       >
+                        {/* §2 v1.8.5 : repère coloré marquant la date exacte (bord gauche = date). */}
+                        <span className="tl-item__pin" style={{ background: color }} />
                         <span className="tl-item__ico"><EventItemIcon entityType={item.entityType} kind={item.kind} customTypeMap={customTypeMap} /></span>
                         <span className="tl-item__label">{label}</span>
                         {item.status && item.status !== 'none' && (
@@ -1224,23 +1227,30 @@ function EventRow({
           className={`tl-eventbar tl-eventbar--${isDuration ? 'duration' : 'uncertain'}${selected ? ' tl-eventbar--sel' : ''}${
             drag ? ' tl-eventbar--drag' : ''
           }${canEdit ? ' tl-eventbar--editable' : ''}`}
-          style={{ width: barW }}
+          // §3 v1.8.5 : couleur de l'élément propagée par variables CSS — trait plein
+          // (durée), hachures colorées + fond teinté (fourchette), et embouts assortis.
+          style={
+            {
+              width: barW,
+              '--evt': color,
+              '--evt-soft': withAlpha(color, 0.16),
+              '--evt-line': withAlpha(color, 0.5)
+            } as CSSProperties
+          }
           title={canEdit ? t('timeline.barMove') : eventTooltip(timing)}
           onClick={clickSelect}
           onPointerDown={beginDrag('move', null)}
           onDoubleClick={addMarkAt}
           {...dragProps}
         >
-          <span className="tl-eventbar__body" style={isDuration ? { background: color } : undefined} />
+          <span className="tl-eventbar__body" />
           <span
             className={`tl-eventcap tl-eventcap--l${canEdit ? ' tl-eventcap--grip' : ''}`}
-            style={{ background: color }}
             onPointerDown={canEdit ? beginDrag('l', null) : undefined}
             {...(canEdit ? dragProps : {})}
           />
           <span
             className={`tl-eventcap tl-eventcap--r${canEdit ? ' tl-eventcap--grip' : ''}`}
-            style={{ background: color }}
             onPointerDown={canEdit ? beginDrag('r', null) : undefined}
             {...(canEdit ? dragProps : {})}
           />
@@ -1278,12 +1288,14 @@ function EventRow({
       {/* La carte (bloc étiqueté) : clic = sélection ; Ctrl+glisser = déplacer la date. */}
       <button
         className={`tl-item tl-item--event${selected ? ' tl-item--selected' : ''}`}
-        style={{ borderLeftColor: color }}
         onClick={clickSelect}
         onPointerDown={beginDrag('move', null)}
         title={canEdit ? `${label}\n${t('timeline.barMoveExact')}` : `${label}\n${eventTooltip(timing)}`}
         {...dragProps}
       >
+        {/* §2 v1.8.5 : DATE PRÉCISE (pas de barre de plage) → repère coloré à la position
+            exacte ; une plage affiche déjà sa couleur sur la barre, donc pas de repère. */}
+        {!timing.isRange && <span className="tl-item__pin" style={{ background: color }} />}
         <span className="tl-item__ico">
           <EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} />
         </span>

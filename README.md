@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.4-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.5-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-244%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-251%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -72,34 +72,17 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.4
+## 🚀 What's new in 1.8.5
 
-- **🎨 Graphical edits show on the timeline** — recolour an element in the editor and its
-  **bar/card updates live** on the frise.
-- **🏷️ Editable markers** — the markers you drop on a range now take a **title, colour and
-  tags** (click one to edit it on the right, right-click to remove).
-- **⌨️ Ctrl + drag to move** — bars/caps now move **only with Ctrl (⌘) held** — a plain
-  click just selects (no more accidental moves). **Click empty space to deselect.**
-- **📏 Slimmer zoom bar** — the bottom zoom navigator is now much more compact.
-- **🧹 Tighter detail panel** — no more empty space above the details on the right.
+- **🎚️ Neutral zoom navigator** — the bottom widen/thin bar is now **grey** (dark in dark
+  mode, light in light mode) instead of blue, so it no longer looks permanently selected.
+- **🏷️ Cleaner event labels** — dropped the coloured left stripe on event cards (the colour
+  already lives on the range bar). Precise-date events keep a slim coloured position marker.
+- **🎨 Coloured uncertainty bars** — hatched *fork* ranges now use the **event's colour**
+  (a red event → red hatching) instead of always grey.
+- **🐧 Linux builds** — AppImage + `.deb` now ship alongside the Windows installer/portable.
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.4.md`](docs/RELEASE_NOTES_v1.8.4.md).
-
----
-
-## 📸 Screenshots
-
-The interface in action — drop your own captures into `docs/assets/` (`board.png`,
-`timeline.png`, `entity.png`) and uncomment the block below to show them here.
-
-<!--
-<table>
-  <tr>
-    <td><img src="docs/assets/board.png"    alt="Investigation board"></td>
-    <td><img src="docs/assets/timeline.png" alt="Event timeline"></td>
-  </tr>
-</table>
--->
+Full notes: [`docs/RELEASE_NOTES_v1.8.5.md`](docs/RELEASE_NOTES_v1.8.5.md).
 
 ---
 
@@ -138,10 +121,6 @@ The interface in action — drop your own captures into `docs/assets/` (`board.p
 ---
 
 ## 🛡️ Privacy & security model
-
-<p align="center">
-  <img src="docs/assets/architecture.svg" alt="COSINT privacy architecture: board content peer-to-peer end-to-end encrypted; signaling only sees opaque handshakes; no TURN relay" width="92%">
-</p>
 
 | What | Where it goes | Third party sees content? |
 |---|---|---|
@@ -182,14 +161,6 @@ Grab the latest build from **[Releases](../../releases)**:
 > *"Windows protected your PC"* → **More info** → **Run anyway**.
 
 Your data (boards, profile) lives in `%APPDATA%/COSINT` and survives updates and reinstalls.
-
-## 🏁 Quick start
-
-1. **Create a board**, add entities from the toolbar or by double-clicking the canvas.
-2. **Share → Generate a code** (open / approval / private).
-3. A colleague picks **Join with a code** and lands in the waiting room.
-4. Approve them — the board syncs both ways in under 2 seconds, end-to-end encrypted,
-   directly between your machines.
 
 ## 🖧 Self-hosting the signaling server
 

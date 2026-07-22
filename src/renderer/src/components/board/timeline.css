@@ -127,7 +127,8 @@
   white-space: nowrap;
 }
 
-/* Cartes d'éléments. */
+/* Cartes d'éléments. §2 v1.8.5 : bordure uniforme (plus de liseré coloré à gauche — la
+   couleur vit déjà sur la barre de plage / le repère de position). */
 .tl-item {
   position: absolute;
   width: 150px;
@@ -137,7 +138,6 @@
   gap: 6px;
   padding: 0 8px;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
   border-radius: var(--r-sm);
   background: var(--panel);
   color: var(--text);
@@ -150,6 +150,20 @@
   border-color: var(--accent);
   transform: translateY(-1px);
   z-index: 2;
+}
+/* §2 v1.8.5 : repère de position exacte pour une DATE PRÉCISE (sans barre de plage) —
+   fin trait vertical coloré planté au moment exact, arrondi et flottant (inséré haut/bas)
+   pour marquer l'instant sans ressembler à un liseré de carte. Couleur posée en inline. */
+.tl-item__pin {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  transform: translateX(-50%);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  pointer-events: none;
 }
 .tl-item__ico {
   flex: 0 0 auto;
@@ -236,24 +250,29 @@
   transform: translateY(-50%);
   border-radius: 3px;
 }
-/* Durée : ligne pleine et continue (couleur de l'entité, posée en inline). */
+/* Durée : ligne pleine et continue à la couleur de l'élément (var --evt, posée en inline). */
 .tl-eventbar--duration .tl-eventbar__body {
+  background: var(--evt, var(--accent));
   opacity: 0.9;
 }
-/* Fourchette incertaine : ligne continue hachurée de traits gris. */
+/* §3 v1.8.5 : fourchette incertaine — hachures À LA COULEUR de l'élément (rouge pour un
+   événement rouge…) sur un léger fond teinté, au lieu du gris systématique. */
 .tl-eventbar--uncertain .tl-eventbar__body {
   height: 8px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--text-mute, #8a94a6) 0,
-    var(--text-mute, #8a94a6) 2px,
-    transparent 2px,
-    transparent 5px
-  );
-  border: 1px solid var(--border-strong);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--evt, #8a94a6) 0,
+      var(--evt, #8a94a6) 2px,
+      transparent 2px,
+      transparent 5px
+    ),
+    var(--evt-soft, rgba(138, 148, 166, 0.14));
+  border: 1px solid var(--evt-line, var(--border-strong));
   border-radius: 2px;
 }
-/* Embouts nets aux DEUX extrémités (début et fin), pour les deux natures. */
+/* Embouts nets aux DEUX extrémités (début et fin), pour les deux natures. §3 v1.8.5 :
+   couleur de l'élément héritée via --evt (posée sur la barre), plus d'inline. */
 .tl-eventcap {
   position: absolute;
   top: 50%;
@@ -261,6 +280,7 @@
   height: 14px;
   transform: translateY(-50%);
   border-radius: 1px;
+  background: var(--evt, var(--accent));
 }
 .tl-eventcap--l {
   left: 0;
@@ -655,6 +675,9 @@
   background: var(--bg-elev);
   border: 1px solid var(--border);
 }
+/* §1 v1.8.5 : poignée NEUTRE (grise) — plus de bleu qui donnait l'impression d'une
+   sélection permanente. Gris foncé sur le thème sombre, gris clair sur le thème clair
+   (les tokens s'adaptent automatiquement au mode). */
 .tl-zoombar__thumb {
   position: absolute;
   top: -1px;
@@ -664,11 +687,14 @@
   align-items: center;
   justify-content: space-between;
   border-radius: var(--r-pill);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
+  background: var(--border-strong);
+  border: 1px solid var(--text-mute);
   cursor: grab;
   box-sizing: border-box;
   touch-action: none;
+}
+.tl-zoombar__thumb:hover {
+  border-color: var(--text-dim);
 }
 .tl-zoombar__thumb:active {
   cursor: grabbing;
@@ -679,19 +705,18 @@
   align-self: stretch;
   flex: 0 0 auto;
   border-radius: var(--r-pill);
-  background: var(--accent);
-  opacity: 0.9;
+  background: var(--text-mute);
   cursor: ew-resize;
   touch-action: none;
 }
 .tl-zoombar__handle:hover {
-  opacity: 1;
+  background: var(--text-dim);
 }
 .tl-zoombar__grip {
   flex: 1;
   height: 3px;
   margin: 0 4px;
   border-radius: 2px;
-  background: var(--accent);
-  opacity: 0.4;
+  background: var(--text-mute);
+  opacity: 0.5;
 }

@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.4-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.5-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-244%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-251%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -70,35 +70,19 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.4
+## 🚀 Nouveautés de la 1.8.5
 
-- **🎨 Les modifications graphiques s'appliquent sur la frise** — recolorez un élément dans
-  l'éditeur et sa **barre/carte se met à jour en direct** sur la frise.
-- **🏷️ Repères éditables** — les repères posés sur une plage prennent un **titre, une couleur
-  et des tags** (cliquez-en un pour l'éditer à droite, clic droit pour le retirer).
-- **⌨️ Ctrl + glisser pour déplacer** — les barres/embouts ne bougent **qu'avec Ctrl (⌘)
-  maintenu** — un simple clic sélectionne (fini les déplacements accidentels). **Cliquez dans
-  le vide pour désélectionner.**
-- **📏 Barre de zoom affinée** — le navigateur de zoom du bas est bien plus compact.
-- **🧹 Panneau de détail resserré** — plus d'espace vide au-dessus des détails, à droite.
+- **🎚️ Navigateur de zoom neutre** — la barre d'élargissement du bas est désormais **grise**
+  (foncée en mode sombre, claire en mode clair) au lieu de bleue : elle ne paraît plus
+  sélectionnée en permanence.
+- **🏷️ Étiquettes d'événement épurées** — suppression du liseré coloré à gauche des cartes
+  (la couleur figure déjà sur la barre de plage). Une date précise conserve un fin repère
+  de position coloré.
+- **🎨 Barres d'incertitude colorées** — les fourchettes hachurées prennent la **couleur de
+  l'événement** (un événement rouge → hachures rouges) au lieu du gris systématique.
+- **🐧 Builds Linux** — AppImage + `.deb` accompagnent désormais l'installeur/portable Windows.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.4.md`](docs/RELEASE_NOTES_v1.8.4.md).
-
----
-
-## 📸 Captures d'écran
-
-L'interface en action — déposez vos captures dans `docs/assets/` (`board.png`,
-`timeline.png`, `entity.png`) puis décommentez le bloc ci-dessous pour les afficher ici.
-
-<!--
-<table>
-  <tr>
-    <td><img src="docs/assets/board.png"    alt="Tableau d'enquête"></td>
-    <td><img src="docs/assets/timeline.png" alt="Frise des événements"></td>
-  </tr>
-</table>
--->
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.5.md`](docs/RELEASE_NOTES_v1.8.5.md).
 
 ---
 
@@ -138,10 +122,6 @@ L'interface en action — déposez vos captures dans `docs/assets/` (`board.png`
 ---
 
 ## 🛡️ Modèle de sécurité
-
-<p align="center">
-  <img src="docs/assets/architecture.svg" alt="Architecture de confidentialité de COSINT : contenu en pair-à-pair chiffré de bout en bout ; la signalisation ne voit que des handshakes opaques ; aucun relais TURN" width="92%">
-</p>
 
 | Quoi | Par où | Un tiers voit le contenu ? |
 |---|---|---|
@@ -184,14 +164,6 @@ Récupérez la dernière version dans **[Releases](../../releases)** :
 
 Vos données (tableaux, profil) vivent dans `%APPDATA%/COSINT` et survivent aux mises à jour
 comme aux réinstallations.
-
-## 🏁 Démarrage rapide
-
-1. **Créez un tableau**, ajoutez des entités depuis la barre d'outils ou par double-clic.
-2. **Partage → Générer un code** (ouvert / approbation / privé).
-3. Un collègue fait **Rejoindre avec un code** et arrive en salle d'attente.
-4. Approuvez-le — le tableau se synchronise dans les deux sens en moins de 2 secondes,
-   chiffré de bout en bout, en direct entre vos postes.
 
 ## 🖧 Auto-héberger la signalisation
 
