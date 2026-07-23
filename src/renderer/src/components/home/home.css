@@ -203,7 +203,7 @@
   line-height: 1.55;
 }
 
-/* ——— Première ouverture (profil) ——— */
+/* ——— Première ouverture (profil) — §7 v1.8.6 : mise en page éditoriale ——— */
 .hm-setup {
   height: 100%;
   display: flex;
@@ -213,46 +213,141 @@
   overflow-y: auto;
   background: var(--bg);
 }
-.hm-setup-card {
-  width: min(440px, 100%);
-  padding: var(--sp-5) var(--sp-5) var(--sp-4);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  background: var(--panel);
-  box-shadow: var(--shadow-sm);
+/* Panneau SANS carte encadrée (moins « gabarit ») : une composition typographique posée
+   sur le fond, structurée par la marque, l'accroche et une note de confidentialité. */
+.hm-setup-panel {
+  width: min(464px, 100%);
+}
+.hm-setup-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.hm-setup-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  color: var(--text);
+}
+.hm-setup-mark__glyph {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.hm-setup-kicker {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
 }
 .hm-setup-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 25px;
   font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
 }
 .hm-setup-subtitle {
-  margin: var(--sp-2) 0 var(--sp-1);
-  font-size: 12.5px;
-  line-height: 1.55;
+  margin: 11px 0 24px;
+  max-width: 44ch;
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--text-dim);
+}
+.hm-setup-form {
+  display: flex;
+  flex-direction: column;
 }
 .hm-setup-submit {
   width: 100%;
   justify-content: center;
   margin-top: var(--sp-4);
-  padding: 9px var(--sp-3);
+  padding: 10px var(--sp-3);
   font-size: 13px;
 }
-
-/* ——— Paramètres ——— */
-.hm-settings-section {
-  margin: var(--sp-4) 0 2px;
-  padding-top: var(--sp-3);
+.hm-setup-foot {
+  margin: 22px 0 0;
+  padding-top: 14px;
   border-top: 1px solid var(--border);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 11.5px;
+  line-height: 1.5;
   color: var(--text-mute);
 }
+
+/* ——— Contrôle segmenté (langue, modificateur…) — §4/§3 v1.8.6 ——— */
+.hm-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.hm-seg__btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+.hm-seg__btn:hover {
+  color: var(--text);
+}
+.hm-seg__btn--on {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.hm-setup-lang .hm-seg__btn {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+.hm-field-gap {
+  margin-top: 16px;
+}
+
+/* ——— Paramètres — §7 v1.8.6 : en-têtes de section marqués d'un repère d'accent ——— */
+.hm-settings-section {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 22px 0 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.hm-settings-section::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  height: 12px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  opacity: 0.7;
+}
 .hm-settings-section:first-child {
-  margin-top: var(--sp-1);
+  margin-top: 2px;
   padding-top: 0;
   border-top: none;
 }

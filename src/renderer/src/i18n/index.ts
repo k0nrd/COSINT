@@ -1,28 +1,55 @@
 import { fr } from './fr'
+import { en } from './en'
+import { pl } from './pl'
 
 /**
- * i18n minimaliste : v1 livrée uniquement en français (spécification §1).
- * Pour ajouter une langue : créer i18n/en.ts avec les mêmes clés, ajouter
- * l'entrée dans DICTIONARIES et exposer le choix dans les Paramètres.
+ * i18n : français (langue d'origine), anglais et polonais (§4 v1.8.6).
+ *
+ * `MessageKey` est dérivé de `fr` : c'est la source de vérité des clés. Chaque autre
+ * dictionnaire est typé `Record<MessageKey, string>`, ce qui force la COMPLÉTUDE au
+ * build (une clé oubliée casse le typecheck). `t()` retombe malgré tout sur le français
+ * si une clé venait à manquer — jamais de clé brute à l'écran.
  */
 export type MessageKey = keyof typeof fr
-export type Locale = 'fr'
+export type Locale = 'fr' | 'en' | 'pl'
 
-const DICTIONARIES: Record<Locale, Record<MessageKey, string>> = { fr }
+/** Locales disponibles, dans l'ordre d'affichage (sélecteur de langue). */
+export const LOCALES: Locale[] = ['fr', 'en', 'pl']
+
+/** Libellé natif d'une locale (pour le sélecteur de langue). */
+export const LOCALE_LABELS: Record<Locale, string> = {
+  fr: 'Français',
+  en: 'English',
+  pl: 'Polski'
+}
+
+const DICTIONARIES: Record<Locale, Record<MessageKey, string>> = { fr, en, pl }
+
+/** Étiquette Intl (BCP-47) de chaque locale — dates et nombres localisés. */
+const LOCALE_TAG: Record<Locale, string> = {
+  fr: 'fr-FR',
+  en: 'en-GB',
+  pl: 'pl-PL'
+}
 
 let currentLocale: Locale = 'fr'
 
 export function setLocale(locale: Locale): void {
-  currentLocale = locale
+  currentLocale = LOCALES.includes(locale) ? locale : 'fr'
 }
 
 export function getLocale(): Locale {
   return currentLocale
 }
 
-/** Traduit une clé, avec interpolation `{param}`. */
+/** Étiquette Intl de la locale courante (ex. « fr-FR »). */
+export function localeTag(): string {
+  return LOCALE_TAG[currentLocale]
+}
+
+/** Traduit une clé, avec interpolation `{param}` (repli français si clé absente). */
 export function t(key: MessageKey, params?: Record<string, string | number>): string {
-  let message: string = DICTIONARIES[currentLocale][key] ?? key
+  let message: string = DICTIONARIES[currentLocale][key] ?? fr[key] ?? key
   if (params) {
     for (const [name, value] of Object.entries(params)) {
       message = message.replaceAll(`{${name}}`, String(value))
@@ -33,7 +60,7 @@ export function t(key: MessageKey, params?: Record<string, string | number>): st
 
 /** Formatte une date/heure selon la locale courante (ex. « 03/07/2026 14:05 »). */
 export function formatDateTime(epochMs: number): string {
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(localeTag(), {
     dateStyle: 'short',
     timeStyle: 'short'
   }).format(new Date(epochMs))
@@ -41,17 +68,17 @@ export function formatDateTime(epochMs: number): string {
 
 /** Formatte une date seule (ex. « 3 juillet 2026 »). */
 export function formatDate(epochMs: number): string {
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(epochMs))
+  return new Intl.DateTimeFormat(localeTag(), { dateStyle: 'long' }).format(new Date(epochMs))
 }
 
 /** Formatte une heure seule (ex. « 14:05:32 ») — journal de diagnostic (§1d). */
 export function formatTime(epochMs: number): string {
-  return new Intl.DateTimeFormat('fr-FR', { timeStyle: 'medium' }).format(new Date(epochMs))
+  return new Intl.DateTimeFormat(localeTag(), { timeStyle: 'medium' }).format(new Date(epochMs))
 }
 
 /** Formatte un nombre selon la locale (virgule décimale en français). */
 export function formatNumber(value: number, fractionDigits = 1): string {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(localeTag(), {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits
   }).format(value)

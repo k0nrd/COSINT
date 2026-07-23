@@ -10,13 +10,15 @@
  */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { SHORTCUT_ACTIONS, shortcutAction } from '@/lib/shortcuts'
+import { DRAG_MODIFIERS, SHORTCUT_ACTIONS, shortcutAction, type DragModifier } from '@/lib/shortcuts'
 
 /** null = supprimé ; chaîne = réassigné. */
 export type BindingOverride = string | null
 
 interface ShortcutsState {
   overrides: Record<string, BindingOverride>
+  /** §3 v1.8.6 : touche de maintien pour l'édition au glisser sur la frise. */
+  dragModifier: DragModifier
   /** Réassigne une action à une combinaison. */
   setBinding: (actionId: string, binding: string) => void
   /** Supprime le raccourci d'une action (aucune combinaison). */
@@ -27,12 +29,15 @@ interface ShortcutsState {
   resetAll: () => void
   /** Remplace la configuration par un jeu importé (déjà validé). */
   importOverrides: (overrides: Record<string, BindingOverride>) => void
+  /** Change la touche de maintien du glisser (frise). */
+  setDragModifier: (mod: DragModifier) => void
 }
 
 export const useShortcuts = create<ShortcutsState>()(
   persist(
     (set) => ({
       overrides: {},
+      dragModifier: 'Mod',
       setBinding: (actionId, binding) =>
         set((state) => ({ overrides: { ...state.overrides, [actionId]: binding } })),
       unbindAction: (actionId) =>
@@ -44,17 +49,21 @@ export const useShortcuts = create<ShortcutsState>()(
           return { overrides: next }
         }),
       resetAll: () => set({ overrides: {} }),
-      importOverrides: (overrides) => set({ overrides })
+      importOverrides: (overrides) => set({ overrides }),
+      setDragModifier: (dragModifier) => set({ dragModifier })
     }),
     {
       name: 'cosint:shortcuts',
-      version: 1,
+      version: 2,
       migrate: (persisted) => {
         const state = persisted as Partial<ShortcutsState>
         return {
           ...state,
           overrides:
-            typeof state.overrides === 'object' && state.overrides !== null ? state.overrides : {}
+            typeof state.overrides === 'object' && state.overrides !== null ? state.overrides : {},
+          dragModifier: DRAG_MODIFIERS.includes(state.dragModifier as DragModifier)
+            ? (state.dragModifier as DragModifier)
+            : 'Mod'
         } as ShortcutsState
       }
     }

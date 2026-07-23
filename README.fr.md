@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  <a href="./README.md">English</a> · <b>Français</b>
+  <a href="./README.md">English</a> · <b>Français</b> · <a href="./README.pl.md">Polski</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.5-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.6-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-251%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-253%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -32,6 +32,10 @@ reliez-les, notez et rattachez vos sources, et regardez le dossier prendre forme
 La particularité : **il n'y a aucun serveur.** Les pairs se synchronisent **en direct**,
 chiffrés de bout en bout, et le contenu des tableaux n'atteint jamais aucun serveur — pas
 même une copie chiffrée.
+
+> 🌍 **Trilingue :** l'interface est disponible en **français, anglais et polonais**.
+> Choisissez la langue au téléchargement/à l'installation (sélecteur de l'installeur) ou à
+> tout moment dans **Paramètres → Apparence** ; par défaut, celle du système.
 
 <table>
 <tr>
@@ -70,19 +74,28 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.5
+## 🚀 Nouveautés de la 1.8.6
 
-- **🎚️ Navigateur de zoom neutre** — la barre d'élargissement du bas est désormais **grise**
-  (foncée en mode sombre, claire en mode clair) au lieu de bleue : elle ne paraît plus
-  sélectionnée en permanence.
-- **🏷️ Étiquettes d'événement épurées** — suppression du liseré coloré à gauche des cartes
-  (la couleur figure déjà sur la barre de plage). Une date précise conserve un fin repère
-  de position coloré.
-- **🎨 Barres d'incertitude colorées** — les fourchettes hachurées prennent la **couleur de
-  l'événement** (un événement rouge → hachures rouges) au lieu du gris systématique.
-- **🐧 Builds Linux** — AppImage + `.deb` accompagnent désormais l'installeur/portable Windows.
+- **🌍 Trilingue — français, anglais & polonais** — toute l'interface est traduite ; choisissez
+  la langue au téléchargement/à l'installation (sélecteur de l'installeur) ou dans
+  **Paramètres → Apparence**. Les nouvelles installations suivent la langue du système.
+- **🧵 Fils de repère sur la frise** — de fins fils relient désormais chaque barre d'événement
+  (les deux extrémités d'une fourchette ou d'une durée) à sa **date, en haut sur l'axe**.
+- **🗓️ Ajout daté, trois façons** — ajouter un élément depuis la frise propose maintenant une
+  **date précise, une durée ou une fourchette** — plus seulement une date exacte.
+- **🖱️ Corrections & indices sur la frise** — fini la sélection de texte parasite au
+  redimensionnement des barres ; un indice discret *« Maintenez [Ctrl] pour … »* apparaît si
+  l'on glisse sans le modificateur, et cette **touche de maintien est configurable**
+  (Paramètres → Raccourcis).
+- **🔗 Tracé de lien plus net** — pendant le tracé du chemin d'un lien, on ne peut plus
+  **sélectionner par erreur une zone** située dessous.
+- **🔄 Mises à jour en mode 100 % local** — une case *« garder les mises à jour activées »*
+  permet aux installations 100 % locales de vérifier GitHub (le récapitulatif signale
+  honnêtement ce contact public).
+- **🎛️ Accueil & paramètres retravaillés** — une première ouverture et des paramètres plus
+  épurés, moins « gabarit ».
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.5.md`](docs/RELEASE_NOTES_v1.8.5.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.6.md`](docs/RELEASE_NOTES_v1.8.6.md).
 
 ---
 
@@ -161,9 +174,9 @@ Récupérez la dernière version dans **[Releases](../../releases)** :
 ### Lancer ce que vous avez téléchargé
 
 **Windows**
-- **Installeur** — lancez `COSINT-Setup-x.y.z.exe`, choisissez un dossier, puis démarrez
-  COSINT depuis le menu Démarrer (ou le raccourci bureau). Les mises à jour s'installent
-  ensuite toutes seules.
+- **Installeur** — lancez `COSINT-Setup-x.y.z.exe`, **choisissez votre langue** (français /
+  anglais / polonais), choisissez un dossier, puis démarrez COSINT depuis le menu Démarrer
+  (ou le raccourci bureau). Les mises à jour s'installent ensuite toutes seules.
 - **Portable** — double-cliquez simplement `COSINT-Portable-x.y.z.exe` ; rien n'est installé.
 - Pas encore signé : SmartScreen peut afficher *« Windows a protégé votre PC »* →
   **Informations complémentaires** → **Exécuter quand même** (au premier lancement).
@@ -220,9 +233,11 @@ npm run build:linux  # AppImage + .deb → release/
 
 ## 🤝 Contribuer
 
-Issues et PR bienvenues — en particulier un **dictionnaire d'interface anglais**
-(`src/renderer/src/i18n/`), des traductions de la documentation et des retours d'enquêtes
-réelles. Les décisions d'architecture sont consignées dans [DECISIONS.md](./DECISIONS.md).
+Issues et PR bienvenues — l'interface est livrée en **français, anglais et polonais**
+(`src/renderer/src/i18n/`) ; **une relecture des chaînes anglaises/polonaises** et de
+**nouveaux dictionnaires de langue**, des traductions de la documentation et des retours
+d'enquêtes réelles sont les bienvenus. Les décisions d'architecture sont consignées dans
+[DECISIONS.md](./DECISIONS.md).
 
 ## 📄 Licence
 

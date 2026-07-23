@@ -11,10 +11,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, RotateCcw, Trash2, Upload, X } from 'lucide-react'
 import { t, type MessageKey } from '@/i18n'
 import {
+  DRAG_MODIFIERS,
   SHORTCUT_ACTIONS,
   SHORTCUT_CATEGORIES,
   bindingFromEvent,
   formatBinding,
+  modifierKeyLabel,
   shortcutAction,
   type ShortcutCategory
 } from '@/lib/shortcuts'
@@ -41,6 +43,8 @@ export function ShortcutsSettings(): JSX.Element {
   const resetBinding = useShortcuts((state) => state.resetBinding)
   const resetAll = useShortcuts((state) => state.resetAll)
   const importOverrides = useShortcuts((state) => state.importOverrides)
+  const dragModifier = useShortcuts((state) => state.dragModifier)
+  const setDragModifier = useShortcuts((state) => state.setDragModifier)
   const pushToast = useToasts((state) => state.push)
 
   const [query, setQuery] = useState('')
@@ -157,6 +161,27 @@ export function ShortcutsSettings(): JSX.Element {
           }}
         />
       </div>
+
+      {/* §3 v1.8.6 : touche de MAINTIEN pour l'édition au glisser sur la frise. */}
+      <section className="sc-group">
+        <h4 className="sc-group__title">{t('shortcut.holdSection')}</h4>
+        <div className="sc-row">
+          <span className="sc-row__label">{t('shortcut.holdTimelineEdit')}</span>
+          <div className="hm-seg" role="group" aria-label={t('shortcut.holdSection')}>
+            {DRAG_MODIFIERS.map((mod) => (
+              <button
+                key={mod}
+                type="button"
+                className={`hm-seg__btn${dragModifier === mod ? ' hm-seg__btn--on' : ''}`}
+                onClick={() => setDragModifier(mod)}
+              >
+                {modifierKeyLabel(mod)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="cm-hint">{t('shortcut.holdHint')}</p>
+      </section>
 
       {SHORTCUT_CATEGORIES.map((category) => {
         const actions = actionsByCategory.get(category) ?? []

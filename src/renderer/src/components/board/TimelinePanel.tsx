@@ -17,6 +17,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent
 } from 'react'
@@ -66,11 +67,15 @@ import {
   DAY_MS,
   toEventItems,
   toTimelineItems,
+  type AddTiming,
+  type DatationMode,
   type EventSortKey,
   type EventTiming,
   type TimelineEvent,
   type TimelineItem
 } from '@/lib/timeline'
+import { useShortcuts } from '@/store/shortcuts'
+import { eventHasModifier, modifierKeyLabel, type DragModifier } from '@/lib/shortcuts'
 import { useToasts } from '@/store/toasts'
 import './timeline.css'
 
@@ -131,9 +136,10 @@ interface TimelinePanelProps {
   /** false = visiteur : la barre d'ajout de la frise est masquée (§6). */
   canEdit: boolean
   onLocate: (nodeId: string) => void
-  /** §2 v1.8.2 : crée un élément DATÉ depuis la frise (date d'événement obligatoire).
-   * Pour une entité, l'appelant ouvre le sélecteur de type puis applique la date. */
-  onAddDated: (kind: NodeKind, exact: number, hasTime: boolean) => void
+  /** §2 v1.8.2 (§2 v1.8.6) : crée un élément DATÉ depuis la frise. La datation peut être
+   * une date PRÉCISE, une FOURCHETTE (au plus tôt / au plus tard) ou une DURÉE (de / à).
+   * Pour une entité, l'appelant ouvre le sélecteur de type puis applique la datation. */
+  onAddDated: (kind: NodeKind, timing: AddTiming) => void
   onClose: () => void
 }
 
@@ -180,11 +186,32 @@ export function TimelinePanel({
     setSelectedId(null)
     setSelectedMark(null)
   }
-  // §2 v1.8.2 : ajout d'un élément DATÉ depuis la barre d'outils de la frise. Cliquer
-  // un outil ouvre le sélecteur de date ; sans date validée, RIEN n'est créé.
+  // §2 v1.8.2 (§2 v1.8.6) : ajout d'un élément DATÉ depuis la barre d'outils de la frise.
+  // Cliquer un outil ouvre le sélecteur de datation (date précise / fourchette / durée) ;
+  // sans date validée, RIEN n'est créé.
   const [addKind, setAddKind] = useState<NodeKind | null>(null)
-  const [addDate, setAddDate] = useState('')
+  const [addMode, setAddMode] = useState<DatationMode>('exact')
   const [addHasTime, setAddHasTime] = useState(false)
+  const [addExact, setAddExact] = useState('')
+  const [addEarliest, setAddEarliest] = useState('')
+  const [addLatest, setAddLatest] = useState('')
+  const [addFrom, setAddFrom] = useState('')
+  const [addTo, setAddTo] = useState('')
+
+  // §3 v1.8.6 : touche de maintien configurable + indice discret « Maintenez [touche]
+  // pour … » affiché quand on tente d'éditer une barre sans la maintenir enfoncée.
+  const dragModifier = useShortcuts((state) => state.dragModifier)
+  const modKeyLabel = modifierKeyLabel(dragModifier)
+  const [hint, setHint] = useState<{ text: string; x: number; y: number } | null>(null)
+  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showHint = (text: string, x: number, y: number): void => {
+    setHint({ text, x, y })
+    if (hintTimer.current) clearTimeout(hintTimer.current)
+    hintTimer.current = setTimeout(() => setHint(null), 1700)
+  }
+  useEffect(() => () => {
+    if (hintTimer.current) clearTimeout(hintTimer.current)
+  }, [])
 
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
   const selectedNode = selectedId ? (nodeById.get(selectedId) ?? null) : null
@@ -417,25 +444,50 @@ export function TimelinePanel({
     }
   }
 
-  // §2 v1.8.2 : validation du sélecteur de date d'ajout. Sans date valide → aucune
-  // création (exigence : « si on met pas de date ça ne s'ajoute pas »).
+  // §2 v1.8.6 : validation du sélecteur de datation d'ajout. Sans AUCUNE date valide →
+  // aucune création (exigence : « si on met pas de date ça ne s'ajoute pas »).
+  const parseAddMs = (raw: string): number | undefined => {
+    if (raw === '') return undefined
+    const ms = addHasTime ? new Date(raw).getTime() : new Date(`${raw}T00:00:00`).getTime()
+    return Number.isFinite(ms) ? ms : undefined
+  }
+  const resetAdd = (): void => {
+    setAddKind(null)
+    setAddMode('exact')
+    setAddHasTime(false)
+    setAddExact('')
+    setAddEarliest('')
+    setAddLatest('')
+    setAddFrom('')
+    setAddTo('')
+  }
+  const buildAddTiming = (): AddTiming | null => {
+    if (addMode === 'exact') {
+      const exact = parseAddMs(addExact)
+      return exact !== undefined ? { exact, hasTime: addHasTime } : null
+    }
+    if (addMode === 'window') {
+      const earliest = parseAddMs(addEarliest)
+      const latest = parseAddMs(addLatest)
+      if (earliest === undefined && latest === undefined) return null
+      return { earliest, latest, hasTime: addHasTime }
+    }
+    const from = parseAddMs(addFrom)
+    const to = parseAddMs(addTo)
+    if (from === undefined && to === undefined) return null
+    return { from, to, hasTime: addHasTime }
+  }
   const confirmAdd = (): void => {
     if (addKind === null) return
-    const ms = addHasTime
-      ? new Date(addDate).getTime()
-      : addDate
-        ? new Date(`${addDate}T00:00:00`).getTime()
-        : NaN
-    if (!Number.isFinite(ms)) return
-    onAddDated(addKind, ms, addHasTime)
-    setAddKind(null)
-    setAddDate('')
-    setAddHasTime(false)
+    const timing = buildAddTiming()
+    if (!timing) return
+    onAddDated(addKind, timing)
+    resetAdd()
   }
-  const cancelAdd = (): void => {
-    setAddKind(null)
-    setAddDate('')
-    setAddHasTime(false)
+  const cancelAdd = (): void => resetAdd()
+  const onAddKeyDown = (e: ReactKeyboardEvent): void => {
+    if (e.key === 'Enter') confirmAdd()
+    else if (e.key === 'Escape') cancelAdd()
   }
 
   // ——— Graduations adaptatives ———
@@ -821,6 +873,7 @@ export function TimelinePanel({
                         key={event.id}
                         event={event}
                         top={top}
+                        axisTop={TOP_PAD}
                         label={label}
                         color={color}
                         minDate={minDate}
@@ -828,6 +881,8 @@ export function TimelinePanel({
                         selected={selectedId === event.id}
                         selectedMarkId={selectedMark?.nodeId === event.id ? selectedMark.markId : null}
                         canEdit={canEdit}
+                        dragModifier={dragModifier}
+                        modKeyLabel={modKeyLabel}
                         customTypeMap={customTypeMap}
                         allMarks={node?.eventMarks ?? []}
                         onSelect={() => selectNode(event.id)}
@@ -836,6 +891,7 @@ export function TimelinePanel({
                         onMoveMark={(markId, at) => updateMark(event.id, markId, { at })}
                         onRemoveMark={(markId) => removeMark(event.id, markId)}
                         onAddMark={(at) => addMark(event.id, at)}
+                        onHint={showHint}
                       />
                     )
                   })}
@@ -879,9 +935,9 @@ export function TimelinePanel({
                     key={kind}
                     className={`tl-toolbar__btn${addKind === kind ? ' tl-toolbar__btn--active' : ''}`}
                     onClick={() => {
-                      setAddDate('')
-                      setAddHasTime(false)
-                      setAddKind((current) => (current === kind ? null : kind))
+                      const willOpen = addKind !== kind
+                      resetAdd()
+                      if (willOpen) setAddKind(kind)
                     }}
                     title={t(titleKey)}
                     aria-label={t(titleKey)}
@@ -905,32 +961,116 @@ export function TimelinePanel({
             </button>
           </div>
 
-          {/* Sélecteur de date : l'ajout n'aboutit qu'une fois une date renseignée. */}
+          {/* §2 v1.8.6 : sélecteur de datation — date précise / fourchette / durée.
+              L'ajout n'aboutit qu'une fois AU MOINS une date renseignée. */}
           {addKind !== null && (
             <div className="tl-addpop" role="dialog" aria-label={t('timeline.addDated')}>
               <div className="tl-addpop__head">
                 <span className="tl-addpop__title">{t('timeline.addDated')}</span>
                 <span className="tl-addpop__kind">{t(`nodeType.${addKind}` as MessageKey)}</span>
               </div>
-              <input
-                type={addHasTime ? 'datetime-local' : 'date'}
-                className="cm-input"
-                value={addDate}
-                autoFocus
-                onChange={(e) => setAddDate(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') confirmAdd()
-                  else if (e.key === 'Escape') cancelAdd()
-                }}
-              />
+              <div className="bd-event__modes" role="group" aria-label={t('event.section')}>
+                <button
+                  type="button"
+                  className={`bd-event__mode${addMode === 'exact' ? ' bd-event__mode--on' : ''}`}
+                  onClick={() => setAddMode('exact')}
+                >
+                  {t('event.modeExact')}
+                </button>
+                <button
+                  type="button"
+                  className={`bd-event__mode${addMode === 'window' ? ' bd-event__mode--on' : ''}`}
+                  onClick={() => setAddMode('window')}
+                >
+                  {t('event.modeWindow')}
+                </button>
+                <button
+                  type="button"
+                  className={`bd-event__mode${addMode === 'duration' ? ' bd-event__mode--on' : ''}`}
+                  onClick={() => setAddMode('duration')}
+                >
+                  {t('event.modeDuration')}
+                </button>
+              </div>
+              {addMode === 'exact' ? (
+                <div className="bd-event__row">
+                  <span className="bd-event__lbl">{t('event.exact')}</span>
+                  <input
+                    type={addHasTime ? 'datetime-local' : 'date'}
+                    className="cm-input"
+                    value={addExact}
+                    autoFocus
+                    onChange={(e) => setAddExact(e.target.value)}
+                    onKeyDown={onAddKeyDown}
+                  />
+                </div>
+              ) : addMode === 'window' ? (
+                <>
+                  <div className="bd-event__row">
+                    <span className="bd-event__lbl">{t('event.earliest')}</span>
+                    <input
+                      type={addHasTime ? 'datetime-local' : 'date'}
+                      className="cm-input"
+                      value={addEarliest}
+                      autoFocus
+                      onChange={(e) => setAddEarliest(e.target.value)}
+                      onKeyDown={onAddKeyDown}
+                    />
+                  </div>
+                  <div className="bd-event__row">
+                    <span className="bd-event__lbl">{t('event.latest')}</span>
+                    <input
+                      type={addHasTime ? 'datetime-local' : 'date'}
+                      className="cm-input"
+                      value={addLatest}
+                      onChange={(e) => setAddLatest(e.target.value)}
+                      onKeyDown={onAddKeyDown}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bd-event__row">
+                    <span className="bd-event__lbl">{t('event.from')}</span>
+                    <input
+                      type={addHasTime ? 'datetime-local' : 'date'}
+                      className="cm-input"
+                      value={addFrom}
+                      autoFocus
+                      onChange={(e) => setAddFrom(e.target.value)}
+                      onKeyDown={onAddKeyDown}
+                    />
+                  </div>
+                  <div className="bd-event__row">
+                    <span className="bd-event__lbl">{t('event.to')}</span>
+                    <input
+                      type={addHasTime ? 'datetime-local' : 'date'}
+                      className="cm-input"
+                      value={addTo}
+                      onChange={(e) => setAddTo(e.target.value)}
+                      onKeyDown={onAddKeyDown}
+                    />
+                  </div>
+                </>
+              )}
               <label className="tl-addpop__time">
                 <input type="checkbox" checked={addHasTime} onChange={(e) => setAddHasTime(e.target.checked)} />
                 {t('event.withTime')}
               </label>
-              <p className="tl-addpop__hint">{t('timeline.addDatedHint')}</p>
+              <p className="tl-addpop__hint">
+                {addMode === 'exact'
+                  ? t('event.exactModeHint')
+                  : addMode === 'window'
+                    ? t('event.windowHint')
+                    : t('event.durationHint')}
+              </p>
               <div className="tl-addpop__foot">
                 <button className="cm-btn cm-btn--sm" onClick={cancelAdd}>{t('common.cancel')}</button>
-                <button className="cm-btn cm-btn--primary cm-btn--sm" onClick={confirmAdd} disabled={addDate === ''}>
+                <button
+                  className="cm-btn cm-btn--primary cm-btn--sm"
+                  onClick={confirmAdd}
+                  disabled={buildAddTiming() === null}
+                >
                   {t('timeline.addConfirm')}
                 </button>
               </div>
@@ -959,6 +1099,14 @@ export function TimelinePanel({
           onClose={deselect}
         />
       ) : null}
+
+      {/* §3 v1.8.6 : indice discret « Maintenez [touche] pour … », près du pointeur,
+          quand on tente d'éditer une barre sans maintenir le modificateur. */}
+      {hint && (
+        <div className="tl-hint" role="status" style={{ left: hint.x, top: hint.y }}>
+          {hint.text}
+        </div>
+      )}
     </div>
   )
 }
@@ -1062,6 +1210,8 @@ function eventTooltip(timing: EventTiming): string {
 interface EventRowProps {
   event: TimelineEvent
   top: number
+  /** §4 v1.8.6 : ordonnée de l'axe temporel (haut), pour tracer les fils vers les dates. */
+  axisTop: number
   label: string
   color: string
   minDate: number
@@ -1069,6 +1219,9 @@ interface EventRowProps {
   selected: boolean
   selectedMarkId: string | null
   canEdit: boolean
+  /** §3 v1.8.6 : touche de maintien exigée pour l'édition au glisser + son libellé. */
+  dragModifier: DragModifier
+  modKeyLabel: string
   customTypeMap: CustomTypeMap
   /** Liste COMPLÈTE des repères du nœud (pour un déplacement d'ensemble sans perte). */
   allMarks: EventMark[]
@@ -1078,6 +1231,8 @@ interface EventRowProps {
   onMoveMark: (markId: string, at: number) => void
   onRemoveMark: (markId: string) => void
   onAddMark: (at: number) => void
+  /** §3 v1.8.6 : affiche l'indice « Maintenez [touche] pour … » près du pointeur. */
+  onHint: (text: string, clientX: number, clientY: number) => void
 }
 
 type TlDragKind = 'move' | 'l' | 'r' | 'mark'
@@ -1092,6 +1247,7 @@ interface TlDragState {
 function EventRow({
   event,
   top,
+  axisTop,
   label,
   color,
   minDate,
@@ -1099,6 +1255,8 @@ function EventRow({
   selected,
   selectedMarkId,
   canEdit,
+  dragModifier,
+  modKeyLabel,
   customTypeMap,
   allMarks,
   onSelect,
@@ -1106,7 +1264,8 @@ function EventRow({
   onSelectMark,
   onMoveMark,
   onRemoveMark,
-  onAddMark
+  onAddMark,
+  onHint
 }: EventRowProps): JSX.Element {
   const { timing } = event
   const [drag, setDrag] = useState<TlDragState | null>(null)
@@ -1148,13 +1307,25 @@ function EventRow({
     return mark.at
   }
 
+  // §3 v1.8.6 : libellé d'action pour l'indice « Maintenez [touche] pour … ».
+  const dragActionLabel = (kind: TlDragKind): string => {
+    if (kind === 'l') return t('timeline.holdResizeStart')
+    if (kind === 'r') return t('timeline.holdResizeEnd')
+    if (kind === 'mark') return t('timeline.holdMoveMark')
+    return timing.isRange ? t('timeline.holdMoveBar') : t('timeline.holdMoveDate')
+  }
   const beginDrag =
     (kind: TlDragKind, markId: string | null) =>
     (e: ReactPointerEvent): void => {
-      // §7 v1.8.4 : l'édition visuelle exige Ctrl (⌘) — sinon un clic sélectionne (plus
-      // de déplacement accidentel).
-      if (!canEdit || e.button !== 0 || !(e.ctrlKey || e.metaKey)) return
+      if (!canEdit || e.button !== 0) return
       e.stopPropagation()
+      // §3 v1.8.6 : l'édition visuelle exige la touche de maintien configurée. Sans elle,
+      // un simple clic sélectionne (plus de déplacement accidentel) — et un indice discret
+      // rappelle la touche à maintenir pour agir.
+      if (!eventHasModifier(e, dragModifier)) {
+        onHint(t('timeline.hold', { key: modKeyLabel, action: dragActionLabel(kind) }), e.clientX, e.clientY)
+        return
+      }
       e.preventDefault()
       try {
         ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
@@ -1220,8 +1391,30 @@ function EventRow({
     onAddMark(clampMs(snap(timing.start + (e.clientX - rect.left) / pxPerMs), timing.start, timing.end))
   }
 
+  // §4 v1.8.6 : hauteur des fils reliant la barre à l'axe (haut). Le fil part du niveau
+  // de l'axe (au-dessus de la ligne) et descend jusqu'au centre de la barre.
+  const threadTop = axisTop - top
+  const threadH = top - axisTop + 15
+
   return (
     <div className="tl-eventrow" style={{ left: x, top }}>
+      {/* §4 v1.8.6 : fil fin reliant l'extrémité de DÉBUT (ou la date exacte) à sa date en
+          haut ; pour une plage, un second fil relie la FIN. La date exacte s'affiche au
+          sommet du fil quand l'élément est sélectionné. */}
+      <span
+        className={`tl-thread${selected ? ' tl-thread--sel' : ''}`}
+        style={{ left: 0, top: threadTop, height: threadH, '--evt': color } as CSSProperties}
+      >
+        {selected && <span className="tl-thread__date">{fmtBound(pStart, timing.hasTime)}</span>}
+      </span>
+      {timing.isRange && (
+        <span
+          className={`tl-thread tl-thread--end${selected ? ' tl-thread--sel' : ''}`}
+          style={{ left: barW, top: threadTop, height: threadH, '--evt': color } as CSSProperties}
+        >
+          {selected && <span className="tl-thread__date">{fmtBound(pEnd, timing.hasTime)}</span>}
+        </span>
+      )}
       {timing.isRange && (
         <span
           className={`tl-eventbar tl-eventbar--${isDuration ? 'duration' : 'uncertain'}${selected ? ' tl-eventbar--sel' : ''}${
@@ -1237,7 +1430,7 @@ function EventRow({
               '--evt-line': withAlpha(color, 0.5)
             } as CSSProperties
           }
-          title={canEdit ? t('timeline.barMove') : eventTooltip(timing)}
+          title={canEdit ? t('timeline.barMove', { key: modKeyLabel }) : eventTooltip(timing)}
           onClick={clickSelect}
           onPointerDown={beginDrag('move', null)}
           onDoubleClick={addMarkAt}
@@ -1290,7 +1483,7 @@ function EventRow({
         className={`tl-item tl-item--event${selected ? ' tl-item--selected' : ''}`}
         onClick={clickSelect}
         onPointerDown={beginDrag('move', null)}
-        title={canEdit ? `${label}\n${t('timeline.barMoveExact')}` : `${label}\n${eventTooltip(timing)}`}
+        title={canEdit ? `${label}\n${t('timeline.barMoveExact', { key: modKeyLabel })}` : `${label}\n${eventTooltip(timing)}`}
         {...dragProps}
       >
         {/* §2 v1.8.5 : DATE PRÉCISE (pas de barre de plage) → repère coloré à la position

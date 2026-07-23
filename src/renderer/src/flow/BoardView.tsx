@@ -74,6 +74,7 @@ import type { CsvDelimiter } from '@/lib/csv'
 import { CsvImportDialog } from '@/components/board/CsvImportDialog'
 import { CsvExportDialog } from '@/components/board/CsvExportDialog'
 import { TimelinePanel } from '@/components/board/TimelinePanel'
+import type { AddTiming } from '@/lib/timeline'
 import { BOARD_IMAGE_PROFILE, initialImageNodeSize, processImage } from '@/lib/image'
 import { exportBoardData, serializeTrace } from '@/lib/serialization'
 import { buildSourceReport } from '@/lib/sourceReport'
@@ -1316,9 +1317,10 @@ function BoardCanvas({
     [canvasCenterFlow]
   )
 
-  // §2 v1.8.2 : datation en attente lors d'un ajout d'ENTITÉ depuis la frise — la date
-  // est saisie AVANT le choix du type, puis appliquée à l'entité une fois créée.
-  const pendingTimingRef = useRef<{ exact: number; hasTime: boolean } | null>(null)
+  // §2 v1.8.2 (§2 v1.8.6) : datation en attente lors d'un ajout d'ENTITÉ depuis la frise —
+  // la datation (date précise / fourchette / durée) est choisie AVANT le type, puis
+  // appliquée à l'entité une fois créée.
+  const pendingTimingRef = useRef<AddTiming | null>(null)
 
   const pickEntityType = useCallback(
     (typeId: EntityType) => {
@@ -1328,7 +1330,7 @@ function BoardCanvas({
       else addEntityAt(typeId, pos.x, pos.y)
       const timing = pendingTimingRef.current
       if (timing && justCreatedId.current) {
-        setEventTiming(handle, justCreatedId.current, { exact: timing.exact, hasTime: timing.hasTime }, author)
+        setEventTiming(handle, justCreatedId.current, timing, author)
       }
       pendingTimingRef.current = null
       setEntityPickerAt(null)
@@ -1353,9 +1355,9 @@ function BoardCanvas({
    * validée par le sélecteur de la frise (sans elle, cette fonction n'est pas appelée).
    * Une entité passe par le sélecteur de type ; les autres nœuds sont créés puis datés. */
   const addDatedFromTimeline = useCallback(
-    (kind: NodeKind, exact: number, hasTime: boolean) => {
+    (kind: NodeKind, timing: AddTiming) => {
       if (kind === 'entity') {
-        pendingTimingRef.current = { exact, hasTime }
+        pendingTimingRef.current = timing
         openEntityPicker()
         return
       }
@@ -1363,7 +1365,7 @@ function BoardCanvas({
       if (kind === 'source') addSourceAt(center.x, center.y)
       else addNodeAt(kind, center.x, center.y)
       if (justCreatedId.current) {
-        setEventTiming(handle, justCreatedId.current, { exact, hasTime }, author)
+        setEventTiming(handle, justCreatedId.current, timing, author)
       }
     },
     [canvasCenterFlow, addSourceAt, addNodeAt, openEntityPicker, handle, author]
@@ -2248,6 +2250,11 @@ function BoardCanvas({
             // ni connexion, ni suppression de nœuds.
             nodesDraggable={canEdit}
             nodesConnectable={canEdit}
+            // §5 v1.8.6 : pendant le tracé manuel d'un lien, la sélection des éléments est
+            // coupée — cliquer une ZONE (ou tout nœud) pose un point de passage sans la
+            // sélectionner par-dessous. Les nœuds restent déplaçables (donc cliquables :
+            // le clic sur le corps du nœud cible termine bien le tracé).
+            elementsSelectable={routeDraw === null}
             panOnDrag={[1, 2]}
             selectionOnDrag
             // §3 (v1.3) : Espace+glisser déplace la vue (géré par React Flow).

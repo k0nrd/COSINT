@@ -86,6 +86,20 @@ export interface EventTiming {
 /** §1 v1.8.3 : nature de la datation d'un nœud, mutuellement exclusive. */
 export type DatationMode = 'exact' | 'window' | 'duration'
 
+/**
+ * §2 v1.8.6 : datation choisie lors d'un AJOUT depuis la frise. Trois natures
+ * possibles (date précise, fourchette, durée) — l'appelant la traduit en
+ * `EventTimingPatch` pour l'écrire sur le nœud fraîchement créé.
+ */
+export interface AddTiming {
+  exact?: number
+  earliest?: number
+  latest?: number
+  from?: number
+  to?: number
+  hasTime: boolean
+}
+
 /** §1 v1.8.3 : mode de datation courant d'un nœud (durée > fenêtre > date exacte). */
 export function datationMode(node: BoardNodeData): DatationMode {
   if (node.eventFrom !== undefined || node.eventTo !== undefined) return 'duration'

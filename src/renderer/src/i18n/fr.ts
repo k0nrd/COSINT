@@ -1090,9 +1090,9 @@ export const fr = {
   'timeline.backBoard': 'Revenir au tableau',
   'timeline.detailEdit': 'Modifier',
   'timeline.detailView': 'Aperçu',
-  'timeline.barMove': 'Ctrl + glisser : déplacer la barre · Ctrl + glisser un embout : début/fin · double-clic : repère',
-  'timeline.barMoveExact': 'Ctrl + glisser pour déplacer la date',
-  'timeline.markRemove': 'Repère — Ctrl + glisser pour déplacer, clic droit pour retirer',
+  'timeline.barMove': '{key} + glisser : déplacer la barre · {key} + glisser un embout : début/fin · double-clic : repère',
+  'timeline.barMoveExact': '{key} + glisser pour déplacer la date',
+  'timeline.markRemove': 'Repère — {key} + glisser pour déplacer, clic droit pour retirer',
   'timeline.zoomBarHint': 'Élargissez la barre pour dézoomer, rétrécissez-la pour zoomer · glissez le milieu pour défiler',
   'timeline.zoomBar': 'Navigateur de zoom',
 
@@ -1101,5 +1101,43 @@ export const fr = {
   'timeline.markTitleField': 'Titre',
   'timeline.markTitlePlaceholder': 'Titre du repère',
   'timeline.markAt': 'Date',
-  'timeline.markDelete': 'Supprimer le repère'
+  'timeline.markDelete': 'Supprimer le repère',
+
+  // ——— v1.8.6 : langue de l'interface (§4) ———
+  'settings.sectionLanguage': 'Langue',
+  'settings.language': 'Langue de l’interface',
+  'settings.languageHint':
+    'Choisissez la langue de COSINT (français, anglais, polonais). Vous pouvez aussi la définir au téléchargement / à l’installation.',
+
+  // ——— v1.8.6 : mise à jour en mode 100 % local (§5) ———
+  'settings.autoUpdateLocalLabel': 'Garder les mises à jour activées (contacte GitHub Releases)',
+  'settings.autoUpdateLocalHint':
+    'Même en mode 100 % local, vérifier les nouvelles versions sur GitHub au démarrage. C’est alors le SEUL service public contacté — aucune donnée de tableau n’y transite, elle reste chiffrée entre postes.',
+
+  // ——— v1.8.6 : touche de maintien pour l'édition au glisser (§3) ———
+  'settings.sectionInteraction': 'Interaction',
+  'shortcut.holdSection': 'Touche de maintien (glisser)',
+  'shortcut.holdHint':
+    'Touche à MAINTENIR pour éditer au glisser sur la frise (déplacer / redimensionner une barre, glisser un repère). Un clic simple ne fait que sélectionner.',
+  'shortcut.holdTimelineEdit': 'Édition d’une barre sur la frise',
+  'key.ctrl': 'Ctrl',
+  'key.alt': 'Alt',
+  'key.shift': 'Maj',
+  'key.delete': 'Suppr',
+  'key.escape': 'Échap',
+  'key.enter': 'Entrée',
+  'key.space': 'Espace',
+
+  // ——— v1.8.6 : indices « Maintenez [touche] pour … » sur la frise (§3) ———
+  'timeline.hold': 'Maintenez {key} pour {action}',
+  'timeline.holdMoveBar': 'déplacer la barre',
+  'timeline.holdMoveDate': 'déplacer la date',
+  'timeline.holdResizeStart': 'ajuster le début',
+  'timeline.holdResizeEnd': 'ajuster la fin',
+  'timeline.holdMoveMark': 'déplacer le repère',
+
+  // ——— v1.8.6 : accueil / première ouverture (§7) ———
+  'profile.langLabel': 'Langue',
+  'profile.welcomeKicker': 'Renseignement en source ouverte, en pair-à-pair',
+  'profile.privacyNote': 'Aucun compte, aucune donnée sur un serveur — tout reste sur ce poste.'
 } as const

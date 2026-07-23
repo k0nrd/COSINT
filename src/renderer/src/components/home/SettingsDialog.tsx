@@ -14,7 +14,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Globe, ShieldCheck, TriangleAlert } from 'lucide-react'
-import { t } from '@/i18n'
+import { LOCALES, LOCALE_LABELS, setLocale, t, type Locale } from '@/i18n'
 import {
   DEFAULT_SIGNALING_URLS,
   effectiveNetworkConfig,
@@ -132,16 +132,20 @@ function NetworkRecap({ config }: { config: EffectiveNetworkConfig }): JSX.Eleme
 export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const profile = useSettings((state) => state.profile)
   const theme = useSettings((state) => state.theme)
+  const language = useSettings((state) => state.language)
   const networkMode = useSettings((state) => state.networkMode)
   const customSignalingUrl = useSettings((state) => state.customSignalingUrl)
   const customIceServers = useSettings((state) => state.customIceServers)
   const autoUpdateCheck = useSettings((state) => state.autoUpdateCheck)
+  const localUpdateCheck = useSettings((state) => state.localUpdateCheck)
   const setProfile = useSettings((state) => state.setProfile)
   const setTheme = useSettings((state) => state.setTheme)
+  const setLanguage = useSettings((state) => state.setLanguage)
   const setNetworkMode = useSettings((state) => state.setNetworkMode)
   const setCustomSignalingUrl = useSettings((state) => state.setCustomSignalingUrl)
   const setCustomIceServers = useSettings((state) => state.setCustomIceServers)
   const setAutoUpdateCheck = useSettings((state) => state.setAutoUpdateCheck)
+  const setLocalUpdateCheck = useSettings((state) => state.setLocalUpdateCheck)
   const pushToast = useToasts((state) => state.push)
 
   const [draft, setDraft] = useState<UserProfile>(() => draftProfile(profile))
@@ -149,13 +153,15 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const [signalingUrl, setSignalingUrl] = useState(customSignalingUrl)
   const [iceDraft, setIceDraft] = useState(customIceServers)
   const [autoUpdateDraft, setAutoUpdateDraft] = useState(autoUpdateCheck)
+  const [localUpdateDraft, setLocalUpdateDraft] = useState(localUpdateCheck)
   const [pseudoError, setPseudoError] = useState(false)
   const [signalingError, setSignalingError] = useState(false)
   const [iceErrorLines, setIceErrorLines] = useState<string[]>([])
   const [version, setVersion] = useState('')
 
-  /** Thème à l'ouverture du dialogue, pour restauration en cas d'annulation. */
+  /** Thème & langue à l'ouverture — appliqués en direct, restaurés si l'on annule. */
   const initialTheme = useRef(theme)
+  const initialLanguage = useRef(language)
 
   const zq = useRef('')
   zq.current = draft.pseudo
@@ -179,13 +185,22 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
         networkMode: modeDraft,
         customSignalingUrl: signalingUrl,
         customIceServers: iceDraft,
-        autoUpdateCheck: autoUpdateDraft
+        autoUpdateCheck: autoUpdateDraft,
+        localUpdateCheck: localUpdateDraft
       }),
-    [modeDraft, signalingUrl, iceDraft, autoUpdateDraft]
+    [modeDraft, signalingUrl, iceDraft, autoUpdateDraft, localUpdateDraft]
   )
+
+  // §4 v1.8.6 : la langue s'applique en DIRECT (comme le thème) puis se restaure si l'on
+  // annule — l'interface (dont ce dialogue) bascule immédiatement.
+  const changeLanguage = (next: Locale): void => {
+    setLocale(next)
+    setLanguage(next)
+  }
 
   const handleCancel = (): void => {
     setTheme(initialTheme.current)
+    changeLanguage(initialLanguage.current)
     onClose()
   }
 
@@ -213,6 +228,9 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     setCustomSignalingUrl(trimmedUrl)
     setCustomIceServers(iceDraft.trim())
     setAutoUpdateCheck(autoUpdateDraft)
+    setLocalUpdateCheck(localUpdateDraft)
+    // La langue est déjà appliquée en direct : figer la référence pour ne pas la restaurer.
+    initialLanguage.current = language
     pushToast(t('settings.saved'), 'success')
     onClose()
   }
@@ -287,6 +305,22 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
         {themeOption('light', t('settings.themeLight'))}
       </div>
 
+      {/* §4 v1.8.6 : langue de l'interface (français / anglais / polonais). */}
+      <span className="cm-label hm-field-gap">{t('settings.language')}</span>
+      <div className="hm-seg" role="group" aria-label={t('settings.language')}>
+        {LOCALES.map((loc) => (
+          <button
+            key={loc}
+            type="button"
+            className={`hm-seg__btn${language === loc ? ' hm-seg__btn--on' : ''}`}
+            onClick={() => changeLanguage(loc)}
+          >
+            {LOCALE_LABELS[loc]}
+          </button>
+        ))}
+      </div>
+      <p className="cm-hint">{t('settings.languageHint')}</p>
+
       <h3 className="hm-settings-section">{t('settings.sectionShortcuts')}</h3>
       <p className="cm-hint">{t('settings.shortcutsHint')}</p>
       <ShortcutsSettings />
@@ -358,7 +392,19 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
           {t('settings.autoUpdateLabel')}
         </label>
       ) : (
-        <p className="cm-hint hm-update-locked">{t('settings.autoUpdateLockedLocal')}</p>
+        // §5 v1.8.6 : même en 100 % local, on peut garder les mises à jour activées
+        // (contacte GitHub) — le récapitulatif signale alors ce contact public.
+        <>
+          <label className="hm-radio hm-update-check">
+            <input
+              type="checkbox"
+              checked={localUpdateDraft}
+              onChange={(event) => setLocalUpdateDraft(event.target.checked)}
+            />
+            {t('settings.autoUpdateLocalLabel')}
+          </label>
+          <p className="cm-hint hm-update-locked">{t('settings.autoUpdateLocalHint')}</p>
+        </>
       )}
 
       <NetworkRecap config={draftConfig} />

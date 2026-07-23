@@ -134,3 +134,32 @@ describe('effectiveNetworkConfig — mode 100 % local (garantie de non-repli)', 
     expect(config.contactsPublicServices).toBe(false)
   })
 })
+
+describe('effectiveNetworkConfig — mode local + mise à jour opt-in (§5 v1.8.6)', () => {
+  it('localUpdateCheck coché : la mise à jour GitHub est autorisée, et signalée comme contact public', () => {
+    const config = effectiveNetworkConfig({
+      networkMode: 'local',
+      customSignalingUrl: 'ws://10.0.0.5:4444',
+      customIceServers: '',
+      autoUpdateCheck: false,
+      localUpdateCheck: true
+    })
+    // La mise en relation reste 100 % locale : seule la vérification de mise à jour ouvre
+    // un contact public (GitHub), ce que le récapitulatif doit avouer honnêtement.
+    expect(config.signalingUrls).toEqual(['ws://10.0.0.5:4444'])
+    expect(config.iceServers).toEqual([])
+    expect(config.updateCheck).toBe(true)
+    expect(config.contactsPublicServices).toBe(true)
+  })
+
+  it('localUpdateCheck absent/faux : comportement historique inchangé (aucun contact GitHub)', () => {
+    const config = effectiveNetworkConfig({
+      networkMode: 'local',
+      customSignalingUrl: 'ws://10.0.0.5:4444',
+      customIceServers: '',
+      autoUpdateCheck: true // sans effet en local
+    })
+    expect(config.updateCheck).toBe(false)
+    expect(config.contactsPublicServices).toBe(false)
+  })
+})

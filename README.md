@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="./README.fr.md">Français</a>
+  <b>English</b> · <a href="./README.fr.md">Français</a> · <a href="./README.pl.md">Polski</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.5-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.6-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-251%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-253%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -32,8 +32,9 @@ collaboratively in real time**.
 The twist: **there is no backend.** Peers sync **directly**, end-to-end encrypted, and
 board content never reaches any server — not even an encrypted copy.
 
-> 🇫🇷 **UI language:** the interface is **French** for now. The codebase is i18n-ready
-> (`src/renderer/src/i18n/`) — an English dictionary is a very welcome contribution.
+> 🌍 **Trilingual:** the interface ships in **French, English and Polish**. Pick your
+> language at download/install (installer selector) or anytime in **Settings → Appearance**;
+> it defaults to your system language.
 
 <table>
 <tr>
@@ -72,17 +73,25 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.5
+## 🚀 What's new in 1.8.6
 
-- **🎚️ Neutral zoom navigator** — the bottom widen/thin bar is now **grey** (dark in dark
-  mode, light in light mode) instead of blue, so it no longer looks permanently selected.
-- **🏷️ Cleaner event labels** — dropped the coloured left stripe on event cards (the colour
-  already lives on the range bar). Precise-date events keep a slim coloured position marker.
-- **🎨 Coloured uncertainty bars** — hatched *fork* ranges now use the **event's colour**
-  (a red event → red hatching) instead of always grey.
-- **🐧 Linux builds** — AppImage + `.deb` now ship alongside the Windows installer/portable.
+- **🌍 Trilingual — French, English & Polish** — the whole UI is translated; choose it at
+  download/install (installer language selector) or in **Settings → Appearance**. New
+  installs default to the system language.
+- **🧵 Timeline leader lines** — thin threads now connect each event bar (both ends of a
+  range or duration) up to its **date on the top axis**.
+- **🗓️ Dated add, three ways** — adding an element from the timeline now offers a **precise
+  date, a duration, or an uncertainty range** — not just an exact date.
+- **🖱️ Timeline fixes & hints** — no more stray text-selection when resizing bars; a discreet
+  *"Hold [Ctrl] to …"* hint appears when you drag without the modifier, and that **hold key
+  is now configurable** (Settings → Shortcuts).
+- **🔗 Cleaner link drawing** — while drawing a link's path you can no longer accidentally
+  **select a zone** underneath it.
+- **🔄 Updates in 100 % local mode** — an opt-in *"keep updates enabled"* box lets fully
+  local installs still check GitHub (the recap honestly flags that public contact).
+- **🎛️ Refreshed onboarding & settings** — a cleaner, less templated first-run and settings UI.
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.5.md`](docs/RELEASE_NOTES_v1.8.5.md).
+Full notes: [`docs/RELEASE_NOTES_v1.8.6.md`](docs/RELEASE_NOTES_v1.8.6.md).
 
 ---
 
@@ -160,8 +169,9 @@ Grab the latest build from **[Releases](../../releases)**:
 ### Launching what you downloaded
 
 **Windows**
-- **Installer** — run `COSINT-Setup-x.y.z.exe`, choose a folder, then start COSINT from the
-  Start menu (or its desktop shortcut). Later updates install themselves.
+- **Installer** — run `COSINT-Setup-x.y.z.exe`, **pick your language** (French / English /
+  Polish), choose a folder, then start COSINT from the Start menu (or its desktop shortcut).
+  Later updates install themselves.
 - **Portable** — just double-click `COSINT-Portable-x.y.z.exe`; nothing gets installed.
 - Not code-signed yet, so SmartScreen may warn *"Windows protected your PC"* →
   **More info** → **Run anyway** (first launch only).
@@ -217,9 +227,10 @@ npm run build:linux  # AppImage + .deb → release/
 
 ## 🤝 Contributing
 
-Issues and PRs are welcome — especially an **English UI dictionary**
-(`src/renderer/src/i18n/`), documentation translations, and field reports from real
-investigations. Architectural decisions are logged in [DECISIONS.md](./DECISIONS.md).
+Issues and PRs are welcome — the UI ships in **French, English and Polish**
+(`src/renderer/src/i18n/`); **proofreading of the English/Polish strings** and **new language
+dictionaries**, documentation translations, and field reports from real investigations are all
+appreciated. Architectural decisions are logged in [DECISIONS.md](./DECISIONS.md).
 
 ## 📄 License
 

@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import * as Y from 'yjs'
-import { t } from '@/i18n'
+import { setLocale, t } from '@/i18n'
 import {
   deriveRoomId,
   generateSessionSecret,
@@ -55,6 +55,11 @@ export default function App(): ReactElement {
   const settings = useSettings()
   const boards = useBoards()
   const pushToast = useToasts((state) => state.push)
+
+  // §4 v1.8.6 : langue de l'interface appliquée AVANT le rendu des enfants. Le changement
+  // de langue re-rend App (abonné au store) ; les sous-arbres portant la langue dans leur
+  // `key` (tableau, accueil) se remontent pour recalculer toutes les traductions.
+  setLocale(settings.language)
 
   const [board, setBoard] = useState<BoardRoute | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -108,7 +113,8 @@ export default function App(): ReactElement {
       settings.networkMode,
       settings.customSignalingUrl,
       settings.customIceServers,
-      settings.autoUpdateCheck
+      settings.autoUpdateCheck,
+      settings.localUpdateCheck
     ]
   )
 
@@ -725,7 +731,7 @@ export default function App(): ReactElement {
     <>
       {board ? (
         <BoardView
-          key={board.handle.boardId}
+          key={`${board.handle.boardId}:${settings.language}`}
           handle={board.handle}
           profile={settings.profile}
           isJoining={board.isJoining}
@@ -739,6 +745,7 @@ export default function App(): ReactElement {
         />
       ) : (
         <HomeScreen
+          key={`home:${settings.language}`}
           onCreate={() => void handleCreate()}
           onJoin={(code) => void handleJoin(code)}
           onImport={() => void handleImport()}

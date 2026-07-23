@@ -44,6 +44,15 @@ nsis:
   # entrée « Applications » de Windows avec désinstallateur.
   oneClick: false
   allowToChangeInstallationDirectory: true
+  # §4 v1.8.6 : l'installeur propose de choisir sa langue AU LANCEMENT (français,
+  # anglais, polonais). L'application elle-même est aussi disponible dans ces trois
+  # langues (choix dans Paramètres → Apparence, et par défaut selon la langue du système).
+  multiLanguageInstaller: true
+  displayLanguageSelector: true
+  installerLanguages:
+    - fr_FR
+    - en_US
+    - pl_PL
   artifactName: 'COSINT-Setup-${version}.exe'
   shortcutName: COSINT
   uninstallDisplayName: COSINT

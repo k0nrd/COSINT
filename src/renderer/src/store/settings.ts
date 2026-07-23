@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { UserProfile } from '@/types'
 import type { CustomPlatformDef } from '@/lib/links'
+import { LOCALES, type Locale } from '@/i18n'
 import { ICE_SERVERS } from '@/sync/network'
 
 /**
@@ -60,6 +61,8 @@ export type CustomPlatform = CustomPlatformDef
 interface SettingsState {
   profile: UserProfile | null
   theme: Theme
+  /** Langue de l'interface (§4 v1.8.6) : français, anglais ou polonais. */
+  language: Locale
   /** Mode réseau (§réseau v1.7.1) : standard (serveurs publics) ou 100 % local. */
   networkMode: NetworkMode
   /** Un ou plusieurs serveurs (séparés par virgules/espaces). Vide = défauts. */
@@ -67,9 +70,11 @@ interface SettingsState {
   /** Serveurs STUN/TURN personnalisés, un par ligne (§réseau v1.7.1). Vide = les
    * STUN publics par défaut en mode standard, AUCUN en mode 100 % local. */
   customIceServers: string
-  /** Vérification de mise à jour au démarrage (GitHub Releases). Ignorée (jamais
-   * de vérification) en mode 100 % local. */
+  /** Vérification de mise à jour au démarrage (GitHub Releases), en mode standard. */
   autoUpdateCheck: boolean
+  /** §5 v1.8.6 : en mode 100 % local, autoriser malgré tout la vérification de mise à
+   * jour (contacte GitHub Releases). Sans effet en mode standard. */
+  localUpdateCheck: boolean
   /** Dernières couleurs personnalisées utilisées (§5), plus récentes en tête. */
   colorHistory: string[]
   /** §6bis : derniers types d'entité utilisés (plus récents en tête). */
@@ -82,16 +87,31 @@ interface SettingsState {
   customPlatforms: CustomPlatform[]
   setProfile: (profile: UserProfile) => void
   setTheme: (theme: Theme) => void
+  setLanguage: (language: Locale) => void
   setNetworkMode: (mode: NetworkMode) => void
   setCustomSignalingUrl: (url: string) => void
   setCustomIceServers: (servers: string) => void
   setAutoUpdateCheck: (enabled: boolean) => void
+  setLocalUpdateCheck: (enabled: boolean) => void
   pushColor: (hex: string) => void
   pushRecentEntityType: (id: string) => void
   toggleFavoriteEntityType: (id: string) => void
   setEntitySort: (sort: EntitySort) => void
   addCustomPlatform: (platform: CustomPlatform) => void
   removeCustomPlatform: (id: string) => void
+}
+
+/**
+ * §4 v1.8.6 : langue par défaut au TOUT PREMIER lancement (aucun réglage persisté) —
+ * déduite de la langue du système. On tombe sur le français si la langue n'est pas prise
+ * en charge. Une fois choisie/enregistrée, la préférence prime (voir `migrate`).
+ */
+function detectLocale(): Locale {
+  const nav =
+    typeof navigator !== 'undefined' && typeof navigator.language === 'string'
+      ? navigator.language.slice(0, 2).toLowerCase()
+      : 'fr'
+  return nav === 'en' ? 'en' : nav === 'pl' ? 'pl' : 'fr'
 }
 
 /** Complète un profil (éventuellement issu de la v1) avec les champs v1.1. */
@@ -113,10 +133,12 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       profile: null,
       theme: 'dark',
+      language: detectLocale(),
       networkMode: 'standard',
       customSignalingUrl: '',
       customIceServers: '',
       autoUpdateCheck: true,
+      localUpdateCheck: false,
       colorHistory: [],
       recentEntityTypes: [],
       favoriteEntityTypes: [],
@@ -124,10 +146,12 @@ export const useSettings = create<SettingsState>()(
       customPlatforms: [],
       setProfile: (profile) => set({ profile: normalizeProfile(profile) }),
       setTheme: (theme) => set({ theme }),
+      setLanguage: (language) => set({ language }),
       setNetworkMode: (networkMode) => set({ networkMode }),
       setCustomSignalingUrl: (customSignalingUrl) => set({ customSignalingUrl }),
       setCustomIceServers: (customIceServers) => set({ customIceServers }),
       setAutoUpdateCheck: (autoUpdateCheck) => set({ autoUpdateCheck }),
+      setLocalUpdateCheck: (localUpdateCheck) => set({ localUpdateCheck }),
       pushColor: (hex) =>
         set((state) => ({
           colorHistory: [hex, ...state.colorHistory.filter((c) => c !== hex)].slice(
@@ -164,17 +188,19 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'cosint:settings',
-      version: 5,
+      version: 6,
       // Migration des profils v1 (sans avatar/rôle/statut) + prefs §6bis + §2 v1.5
-      // + réglages réseau v1.7.1 (mode, ICE, mise à jour).
+      // + réglages réseau v1.7.1 (mode, ICE, mise à jour) + langue & mise à jour locale v1.8.6.
       migrate: (persisted) => {
         const state = persisted as Partial<SettingsState>
         return {
           ...state,
           profile: normalizeProfile(state.profile ?? null),
+          language: LOCALES.includes(state.language as Locale) ? (state.language as Locale) : 'fr',
           networkMode: state.networkMode === 'local' ? 'local' : 'standard',
           customIceServers: typeof state.customIceServers === 'string' ? state.customIceServers : '',
           autoUpdateCheck: state.autoUpdateCheck !== false,
+          localUpdateCheck: state.localUpdateCheck === true,
           colorHistory: Array.isArray(state.colorHistory) ? state.colorHistory : [],
           recentEntityTypes: Array.isArray(state.recentEntityTypes) ? state.recentEntityTypes : [],
           favoriteEntityTypes: Array.isArray(state.favoriteEntityTypes)
@@ -294,22 +320,27 @@ export interface NetworkSettingsInput {
   customSignalingUrl: string
   customIceServers: string
   autoUpdateCheck: boolean
+  /** §5 v1.8.6 : autoriser la mise à jour GitHub MÊME en mode 100 % local (optionnel). */
+  localUpdateCheck?: boolean
 }
 
 export function effectiveNetworkConfig(settings: NetworkSettingsInput): EffectiveNetworkConfig {
   const customSignaling = parseSignalingUrls(settings.customSignalingUrl).filter(isValidSignalingUrl)
   const customIce = parseIceServers(settings.customIceServers).servers
   if (settings.networkMode === 'local') {
-    // GARANTIE du mode 100 % local : seules les adresses saisies sont utilisées.
-    // Saisie vide ou invalide → listes VIDES (hors ligne), jamais les défauts
-    // publics ; mise à jour jamais vérifiée (aucun contact GitHub).
+    // GARANTIE du mode 100 % local : seules les adresses saisies sont utilisées pour la
+    // mise en relation (jamais les défauts publics). §5 v1.8.6 : la vérification de mise à
+    // jour reste COUPÉE par défaut, mais l'utilisateur peut l'activer explicitement
+    // (case « garder les mises à jour ») — c'est alors le SEUL service public contacté,
+    // et le récapitulatif le signale honnêtement.
+    const localUpdate = settings.localUpdateCheck === true
     return {
       mode: 'local',
       signalingUrls: customSignaling,
       iceServers: customIce,
-      updateCheck: false,
+      updateCheck: localUpdate,
       localNoSignaling: customSignaling.length === 0,
-      contactsPublicServices: false
+      contactsPublicServices: localUpdate
     }
   }
   return {

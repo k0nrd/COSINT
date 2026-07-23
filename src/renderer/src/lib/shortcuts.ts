@@ -10,10 +10,34 @@
  * `Mod` = Ctrl (ou Cmd sur macOS). L'ordre des modificateurs est fixe
  * (Mod, Alt, Shift) pour que deux combinaisons identiques aient la MÊME chaîne.
  */
-import type { MessageKey } from '@/i18n'
+import { t, type MessageKey } from '@/i18n'
 
 /** Catégories d'actions (regroupement dans l'UI). */
 export type ShortcutCategory = 'edition' | 'navigation' | 'creation' | 'view'
+
+/**
+ * §3 v1.8.6 : touche de MAINTIEN pour l'édition au glisser (déplacer/redimensionner
+ * une barre sur la frise, glisser un repère). Configurable dans les Paramètres —
+ * `Mod` = Ctrl (⌘ sur macOS), `Alt`, ou `Shift`. Sert à la fois à filtrer le geste
+ * et à afficher l'indice « Maintenez [touche] pour … ».
+ */
+export type DragModifier = 'Mod' | 'Alt' | 'Shift'
+export const DRAG_MODIFIERS: DragModifier[] = ['Mod', 'Alt', 'Shift']
+
+/** Libellé lisible (traduit) d'une touche de maintien — ex. `Mod` → « Ctrl ». */
+export function modifierKeyLabel(mod: DragModifier): string {
+  return t(mod === 'Mod' ? 'key.ctrl' : mod === 'Alt' ? 'key.alt' : 'key.shift')
+}
+
+/** true si l'événement pointeur/clavier porte la touche de maintien demandée. */
+export function eventHasModifier(
+  e: { ctrlKey: boolean; metaKey: boolean; altKey: boolean; shiftKey: boolean },
+  mod: DragModifier
+): boolean {
+  if (mod === 'Mod') return e.ctrlKey || e.metaKey
+  if (mod === 'Alt') return e.altKey
+  return e.shiftKey
+}
 
 /** Une action raccourciable. `defaultBinding = null` = sans raccourci par défaut. */
 export interface ShortcutAction {
@@ -101,17 +125,30 @@ export function bindingFromEvent(event: KeyboardEvent): string | null {
   return parts.join('+')
 }
 
-/** Libellés lisibles des touches spéciales (affichage). */
-const KEY_LABELS: Record<string, string> = {
-  Delete: 'Suppr',
-  Backspace: '⌫',
-  Escape: 'Échap',
-  Enter: 'Entrée',
-  ArrowUp: '↑',
-  ArrowDown: '↓',
-  ArrowLeft: '←',
-  ArrowRight: '→',
-  ' ': 'Espace'
+/** Libellés (traduits) des touches spéciales à l'affichage ; symboles universels sinon. */
+function keyLabel(part: string): string {
+  switch (part) {
+    case 'Delete':
+      return t('key.delete')
+    case 'Backspace':
+      return '⌫'
+    case 'Escape':
+      return t('key.escape')
+    case 'Enter':
+      return t('key.enter')
+    case 'ArrowUp':
+      return '↑'
+    case 'ArrowDown':
+      return '↓'
+    case 'ArrowLeft':
+      return '←'
+    case 'ArrowRight':
+      return '→'
+    case ' ':
+      return t('key.space')
+    default:
+      return part
+  }
 }
 
 /** Combinaison → texte lisible (ex. `Mod+Shift+Z` → `Ctrl + Maj + Z`). */
@@ -120,10 +157,10 @@ export function formatBinding(binding: string | null): string {
   return binding
     .split('+')
     .map((part) => {
-      if (part === 'Mod') return 'Ctrl'
-      if (part === 'Shift') return 'Maj'
-      if (part === 'Alt') return 'Alt'
-      return KEY_LABELS[part] ?? part
+      if (part === 'Mod') return t('key.ctrl')
+      if (part === 'Shift') return t('key.shift')
+      if (part === 'Alt') return t('key.alt')
+      return keyLabel(part)
     })
     .join(' + ')
 }
