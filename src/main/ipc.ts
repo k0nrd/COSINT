@@ -12,6 +12,9 @@ import { normalizeExternalUrl } from '../shared/url'
 /** Taille maximale acceptée pour un fichier .trace importé (256 Mo). */
 const MAX_TRACE_BYTES = 256 * 1024 * 1024
 
+/** §1 v1.8.7 : un profil d'organisation (.cosint-org) est minuscule — 256 Ko suffisent. */
+const MAX_ORG_PROFILE_BYTES = 256 * 1024
+
 /** Plafond des données écrites côté main (symétrie avec la lecture). */
 const MAX_WRITE_BYTES = 256 * 1024 * 1024
 
@@ -53,6 +56,9 @@ const TRACE_FILTERS = [
 const PNG_FILTERS = [{ name: 'Image PNG', extensions: ['png'] }]
 const MD_FILTERS = [{ name: 'Markdown', extensions: ['md'] }]
 const CSV_FILTERS = [{ name: 'CSV', extensions: ['csv'] }]
+const ORG_PROFILE_FILTERS = [
+  { name: "Profil d'organisation COSINT", extensions: ['cosint-org', 'json'] }
+]
 
 /**
  * Décode un buffer de CSV en détectant l'encodage par son BOM (§1 v1.7) : UTF-16 LE/BE
@@ -266,6 +272,59 @@ export function setupIpc(): void {
       const buffer = await readFile(path)
       const { text, encoding } = decodeCsvBuffer(buffer)
       return { text, path, encoding }
+    } catch {
+      return { error: 'read' }
+    }
+  })
+
+  // ——— §1 v1.8.7 : profil d'organisation (.cosint-org) — export/import ———
+  ipcMain.handle(
+    'file:save-org-profile',
+    async (event, payload: unknown): Promise<SaveResult> => {
+      if (typeof payload !== 'object' || payload === null) return { saved: false, error: 'invalid' }
+      const { defaultName, json } = payload as { defaultName?: unknown; json?: unknown }
+      if (typeof defaultName !== 'string' || typeof json !== 'string') {
+        return { saved: false, error: 'invalid' }
+      }
+      if (Buffer.byteLength(json, 'utf8') > MAX_ORG_PROFILE_BYTES) {
+        return { saved: false, error: 'write' }
+      }
+      try {
+        const win = windowOf(event)
+        const options = {
+          defaultPath: safeDefaultPath(defaultName, ['cosint-org', 'json']),
+          filters: ORG_PROFILE_FILTERS
+        }
+        const result = win
+          ? await dialog.showSaveDialog(win, options)
+          : await dialog.showSaveDialog(options)
+        if (result.canceled || !result.filePath) return { saved: false }
+        await writeFile(result.filePath, json, 'utf8')
+        return { saved: true, path: result.filePath }
+      } catch {
+        return { saved: false, error: 'write' }
+      }
+    }
+  )
+
+  ipcMain.handle('file:open-org-profile', async (event): Promise<OpenResult> => {
+    let path: string | undefined
+    try {
+      const win = windowOf(event)
+      const options = { filters: ORG_PROFILE_FILTERS, properties: ['openFile' as const] }
+      const result = win
+        ? await dialog.showOpenDialog(win, options)
+        : await dialog.showOpenDialog(options)
+      path = result.filePaths[0]
+      if (result.canceled || !path) return { canceled: true }
+    } catch {
+      return { canceled: true }
+    }
+    try {
+      const info = await stat(path)
+      if (info.size > MAX_ORG_PROFILE_BYTES) return { error: 'too-large' }
+      const json = await readFile(path, 'utf8')
+      return { json, path }
     } catch {
       return { error: 'read' }
     }

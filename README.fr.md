@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.6-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.7-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-253%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-279%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -74,28 +74,25 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.6
+## 🚀 Nouveautés de la 1.8.7
 
-- **🌍 Trilingue — français, anglais & polonais** — toute l'interface est traduite ; choisissez
-  la langue au téléchargement/à l'installation (sélecteur de l'installeur) ou dans
-  **Paramètres → Apparence**. Les nouvelles installations suivent la langue du système.
-- **🧵 Fils de repère sur la frise** — de fins fils relient désormais chaque barre d'événement
-  (les deux extrémités d'une fourchette ou d'une durée) à sa **date, en haut sur l'axe**.
-- **🗓️ Ajout daté, trois façons** — ajouter un élément depuis la frise propose maintenant une
-  **date précise, une durée ou une fourchette** — plus seulement une date exacte.
-- **🖱️ Corrections & indices sur la frise** — fini la sélection de texte parasite au
-  redimensionnement des barres ; un indice discret *« Maintenez [Ctrl] pour … »* apparaît si
-  l'on glisse sans le modificateur, et cette **touche de maintien est configurable**
-  (Paramètres → Raccourcis).
-- **🔗 Tracé de lien plus net** — pendant le tracé du chemin d'un lien, on ne peut plus
-  **sélectionner par erreur une zone** située dessous.
-- **🔄 Mises à jour en mode 100 % local** — une case *« garder les mises à jour activées »*
-  permet aux installations 100 % locales de vérifier GitHub (le récapitulatif signale
-  honnêtement ce contact public).
-- **🎛️ Accueil & paramètres retravaillés** — une première ouverture et des paramètres plus
-  épurés, moins « gabarit ».
+- **🏷️ La marque de votre organisation (mode 100 % local)** — pointez COSINT vers votre
+  serveur de signalisation interne et l'écran d'accueil affiche **votre logo, votre nom et
+  votre accroche**, servis par le serveur lui-même et co-marqués *« · sur COSINT »* pour que
+  l'origine reste claire. Purement cosmétique — sans aucun effet sur le chiffrement.
+- **🔑 Verrouillez votre serveur aux seuls postes autorisés** — définissez un `COSINT_TOKEN` et
+  tout poste sans le jeton partagé est **refusé dès la poignée de main**, avant même l'ouverture
+  de la WebSocket. Jeton comparé à temps constant, **masqué à l'écran**, et **jamais transmis
+  aux serveurs publics**.
+- **📇 Provisionnement en un clic (profil `.cosint-org`)** — exportez un profil portable
+  (adresse interne + jeton d'accès) que vos collègues **importent** pour configurer d'un coup le
+  mode 100 % local, l'adresse du serveur et le jeton.
+- **🔒 Confidentialité réaffirmée** — même entièrement ouvert, le serveur n'expose rien (rooms
+  dérivées par HKDF, contenu chiffré de bout en bout) ; le nouveau contrôle d'accès décide *qui
+  peut utiliser votre relais*. Toute la frontière d'assainissement marque/profil est désormais
+  couverte par des tests.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.6.md`](docs/RELEASE_NOTES_v1.8.6.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
 
 ---
 

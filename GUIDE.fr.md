@@ -488,7 +488,7 @@ confidentialité** — elle remplace alors les serveurs publics.
 
 ### Mode « 100 % local » (v1.7.1) — déploiement en réseau fermé
 
-Pour les organisations (gendarmerie, entreprise…) qui exigent que **rien ne sorte du
+Pour les organisations (administration, entreprise…) qui exigent que **rien ne sorte du
 réseau interne**, **Paramètres → Réseau & confidentialité** propose deux modes :
 
 - **Standard (Internet)** — comportement historique : serveurs publics par défaut,
@@ -520,7 +520,7 @@ interne (ou distribuez un build préconfiguré, voir la note ci-dessous).
 
 > Note parc : pour figer ces valeurs **par construction** (aucun réglage utilisateur),
 > modifiez les défauts (`store/settings.ts`, `sync/network.ts`) et recompilez — voir le
-> guide de déploiement gendarmerie. Le mode 100 % local de l'interface offre la même
+> guide de déploiement en réseau fermé. Le mode 100 % local de l'interface offre la même
 > garantie sans recompilation.
 
 Note OPSEC : les favicons des nœuds « Lien » ne sont **jamais** téléchargés (une icône

@@ -13,7 +13,7 @@
  * qui est affiché est exactement ce que le logiciel fera.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Globe, ShieldCheck, TriangleAlert } from 'lucide-react'
+import { CheckCircle2, Download, Globe, KeyRound, ShieldCheck, TriangleAlert, Upload } from 'lucide-react'
 import { LOCALES, LOCALE_LABELS, setLocale, t, type Locale } from '@/i18n'
 import {
   DEFAULT_SIGNALING_URLS,
@@ -27,6 +27,7 @@ import {
   type Theme
 } from '@/store/settings'
 import { ICE_SERVERS } from '@/sync/network'
+import { parseOrgProfile, serializeOrgProfile } from '@/lib/orgProfile'
 import { useToasts } from '@/store/toasts'
 import { USER_COLORS } from '@/lib/colors'
 import type { UserProfile } from '@/types'
@@ -111,6 +112,20 @@ function NetworkRecap({ config }: { config: EffectiveNetworkConfig }): JSX.Eleme
         </dd>
         <dt>{t('settings.recapUpdate')}</dt>
         <dd>{config.updateCheck ? t('settings.recapUpdateOn') : t('settings.recapUpdateOff')}</dd>
+        {config.mode === 'local' && (
+          <>
+            <dt>{t('settings.recapToken')}</dt>
+            <dd>
+              {config.signalingToken !== '' ? (
+                <span className="hm-recap__ok">
+                  <ShieldCheck size={13} aria-hidden="true" /> {t('settings.recapTokenOn')}
+                </span>
+              ) : (
+                t('settings.recapTokenOff')
+              )}
+            </dd>
+          </>
+        )}
         <dt>{t('settings.recapContent')}</dt>
         <dd>{t('settings.recapContentValue')}</dd>
       </dl>
@@ -138,6 +153,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const customIceServers = useSettings((state) => state.customIceServers)
   const autoUpdateCheck = useSettings((state) => state.autoUpdateCheck)
   const localUpdateCheck = useSettings((state) => state.localUpdateCheck)
+  const signalingToken = useSettings((state) => state.signalingToken)
   const setProfile = useSettings((state) => state.setProfile)
   const setTheme = useSettings((state) => state.setTheme)
   const setLanguage = useSettings((state) => state.setLanguage)
@@ -146,6 +162,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const setCustomIceServers = useSettings((state) => state.setCustomIceServers)
   const setAutoUpdateCheck = useSettings((state) => state.setAutoUpdateCheck)
   const setLocalUpdateCheck = useSettings((state) => state.setLocalUpdateCheck)
+  const setSignalingToken = useSettings((state) => state.setSignalingToken)
   const pushToast = useToasts((state) => state.push)
 
   const [draft, setDraft] = useState<UserProfile>(() => draftProfile(profile))
@@ -154,6 +171,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const [iceDraft, setIceDraft] = useState(customIceServers)
   const [autoUpdateDraft, setAutoUpdateDraft] = useState(autoUpdateCheck)
   const [localUpdateDraft, setLocalUpdateDraft] = useState(localUpdateCheck)
+  const [tokenDraft, setTokenDraft] = useState(signalingToken)
   const [pseudoError, setPseudoError] = useState(false)
   const [signalingError, setSignalingError] = useState(false)
   const [iceErrorLines, setIceErrorLines] = useState<string[]>([])
@@ -186,9 +204,10 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
         customSignalingUrl: signalingUrl,
         customIceServers: iceDraft,
         autoUpdateCheck: autoUpdateDraft,
-        localUpdateCheck: localUpdateDraft
+        localUpdateCheck: localUpdateDraft,
+        signalingToken: tokenDraft
       }),
-    [modeDraft, signalingUrl, iceDraft, autoUpdateDraft, localUpdateDraft]
+    [modeDraft, signalingUrl, iceDraft, autoUpdateDraft, localUpdateDraft, tokenDraft]
   )
 
   // §4 v1.8.6 : la langue s'applique en DIRECT (comme le thème) puis se restaure si l'on
@@ -202,6 +221,44 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     setTheme(initialTheme.current)
     changeLanguage(initialLanguage.current)
     onClose()
+  }
+
+  // §1 v1.8.7 : IMPORT d'un profil d'organisation (.cosint-org) — configure d'un coup le
+  // mode 100 % local, l'URL du serveur interne et le jeton d'accès. Provisionnement
+  // « en un clic » pour un poste, sans connaissance technique.
+  const importOrgProfile = async (): Promise<void> => {
+    const result = await window.cosint.openOrgProfile()
+    if ('canceled' in result) return
+    if ('error' in result) {
+      pushToast(t('settings.orgProfileInvalid'), 'error')
+      return
+    }
+    const profileData = parseOrgProfile(result.json)
+    if (!profileData) {
+      pushToast(t('settings.orgProfileInvalid'), 'error')
+      return
+    }
+    setModeDraft('local')
+    setSignalingUrl(profileData.signalingUrl)
+    setSignalingError(false)
+    setTokenDraft(profileData.token ?? '')
+    pushToast(t('settings.orgProfileImported'), 'success')
+  }
+
+  // §1 v1.8.7 : EXPORT du profil courant, pour qu'un admin le distribue à ses collègues.
+  const exportOrgProfile = async (): Promise<void> => {
+    const url = signalingUrl.trim()
+    if (url === '') {
+      pushToast(t('settings.orgProfileExportEmpty'), 'info')
+      return
+    }
+    const json = serializeOrgProfile({
+      signalingUrl: url,
+      token: tokenDraft.trim() || undefined
+    })
+    const result = await window.cosint.saveOrgProfile('organisation.cosint-org', json)
+    if (result.saved) pushToast(t('settings.orgProfileExported'), 'success')
+    else if (result.error) pushToast(t('export.failed'), 'error')
   }
 
   const handleSave = (): void => {
@@ -229,6 +286,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     setCustomIceServers(iceDraft.trim())
     setAutoUpdateCheck(autoUpdateDraft)
     setLocalUpdateCheck(localUpdateDraft)
+    setSignalingToken(tokenDraft.trim())
     // La langue est déjà appliquée en direct : figer la référence pour ne pas la restaurer.
     initialLanguage.current = language
     pushToast(t('settings.saved'), 'success')
@@ -381,6 +439,41 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
         </p>
       )}
       <p className="cm-hint">{t('settings.iceHint')}</p>
+
+      {/* §1 v1.8.7 : jeton d'accès + profil d'organisation — mode 100 % local uniquement. */}
+      {modeDraft === 'local' && (
+        <>
+          <label className="cm-label" htmlFor="hm-settings-token">
+            <KeyRound size={13} aria-hidden="true" /> {t('settings.tokenLabel')}
+          </label>
+          <input
+            id="hm-settings-token"
+            className="cm-input cm-mono"
+            type="password"
+            value={tokenDraft}
+            placeholder={t('settings.tokenPlaceholder')}
+            spellCheck={false}
+            autoComplete="off"
+            onChange={(event) => setTokenDraft(event.target.value)}
+          />
+          <p className="cm-hint">{t('settings.tokenHint')}</p>
+
+          <div className="hm-orgprofile">
+            <div className="hm-orgprofile__head">
+              <span className="cm-label hm-orgprofile__title">{t('settings.orgProfile')}</span>
+              <div className="hm-orgprofile__actions">
+                <button className="cm-btn cm-btn--sm" onClick={() => void importOrgProfile()}>
+                  <Upload size={14} /> {t('settings.importOrgProfile')}
+                </button>
+                <button className="cm-btn cm-btn--sm" onClick={() => void exportOrgProfile()}>
+                  <Download size={14} /> {t('settings.exportOrgProfile')}
+                </button>
+              </div>
+            </div>
+            <p className="cm-hint">{t('settings.orgProfileHint')}</p>
+          </div>
+        </>
+      )}
 
       {modeDraft === 'standard' ? (
         <label className="hm-radio hm-update-check">

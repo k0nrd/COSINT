@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { UserProfile } from '@/types'
 import type { CustomPlatformDef } from '@/lib/links'
+import type { OrgBranding } from '@/lib/orgProfile'
 import { LOCALES, type Locale } from '@/i18n'
 import { ICE_SERVERS } from '@/sync/network'
 
@@ -41,7 +42,7 @@ export type Theme = 'dark' | 'light'
  *    internes saisies par l'utilisateur sont utilisées ; sans adresse valide, les
  *    tableaux partagés restent HORS LIGNE (jamais de repli silencieux vers les
  *    serveurs publics). La vérification de mise à jour (GitHub) est coupée.
- *    Conçu pour les déploiements en réseau fermé (organisation, gendarmerie…).
+ *    Conçu pour les déploiements en réseau fermé (organisation, administration…).
  */
 export type NetworkMode = 'standard' | 'local'
 
@@ -75,6 +76,12 @@ interface SettingsState {
   /** §5 v1.8.6 : en mode 100 % local, autoriser malgré tout la vérification de mise à
    * jour (contacte GitHub Releases). Sans effet en mode standard. */
   localUpdateCheck: boolean
+  /** §1 v1.8.7 : jeton d'accès pré-partagé du serveur de signalisation interne (mode
+   * 100 % local). Vide = serveur ouvert. Ajouté aux connexions (`?token=`). */
+  signalingToken: string
+  /** §1 v1.8.7 : dernière MARQUE d'organisation servie par le serveur (cache local, pour
+   * un affichage immédiat au lancement même si le serveur est momentanément injoignable). */
+  orgBranding: OrgBranding | null
   /** Dernières couleurs personnalisées utilisées (§5), plus récentes en tête. */
   colorHistory: string[]
   /** §6bis : derniers types d'entité utilisés (plus récents en tête). */
@@ -93,6 +100,8 @@ interface SettingsState {
   setCustomIceServers: (servers: string) => void
   setAutoUpdateCheck: (enabled: boolean) => void
   setLocalUpdateCheck: (enabled: boolean) => void
+  setSignalingToken: (token: string) => void
+  setOrgBranding: (branding: OrgBranding | null) => void
   pushColor: (hex: string) => void
   pushRecentEntityType: (id: string) => void
   toggleFavoriteEntityType: (id: string) => void
@@ -139,6 +148,8 @@ export const useSettings = create<SettingsState>()(
       customIceServers: '',
       autoUpdateCheck: true,
       localUpdateCheck: false,
+      signalingToken: '',
+      orgBranding: null,
       colorHistory: [],
       recentEntityTypes: [],
       favoriteEntityTypes: [],
@@ -152,6 +163,8 @@ export const useSettings = create<SettingsState>()(
       setCustomIceServers: (customIceServers) => set({ customIceServers }),
       setAutoUpdateCheck: (autoUpdateCheck) => set({ autoUpdateCheck }),
       setLocalUpdateCheck: (localUpdateCheck) => set({ localUpdateCheck }),
+      setSignalingToken: (signalingToken) => set({ signalingToken }),
+      setOrgBranding: (orgBranding) => set({ orgBranding }),
       pushColor: (hex) =>
         set((state) => ({
           colorHistory: [hex, ...state.colorHistory.filter((c) => c !== hex)].slice(
@@ -188,9 +201,10 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'cosint:settings',
-      version: 6,
+      version: 7,
       // Migration des profils v1 (sans avatar/rôle/statut) + prefs §6bis + §2 v1.5
-      // + réglages réseau v1.7.1 (mode, ICE, mise à jour) + langue & mise à jour locale v1.8.6.
+      // + réglages réseau v1.7.1 (mode, ICE, mise à jour) + langue & mise à jour locale v1.8.6
+      // + jeton d'accès & marque d'organisation v1.8.7.
       migrate: (persisted) => {
         const state = persisted as Partial<SettingsState>
         return {
@@ -201,6 +215,9 @@ export const useSettings = create<SettingsState>()(
           customIceServers: typeof state.customIceServers === 'string' ? state.customIceServers : '',
           autoUpdateCheck: state.autoUpdateCheck !== false,
           localUpdateCheck: state.localUpdateCheck === true,
+          signalingToken: typeof state.signalingToken === 'string' ? state.signalingToken : '',
+          orgBranding:
+            state.orgBranding && typeof state.orgBranding === 'object' ? state.orgBranding : null,
           colorHistory: Array.isArray(state.colorHistory) ? state.colorHistory : [],
           recentEntityTypes: Array.isArray(state.recentEntityTypes) ? state.recentEntityTypes : [],
           favoriteEntityTypes: Array.isArray(state.favoriteEntityTypes)
@@ -308,6 +325,9 @@ export interface EffectiveNetworkConfig {
   iceServers: RTCIceServer[]
   /** true si la vérification de mise à jour (GitHub Releases) est autorisée. */
   updateCheck: boolean
+  /** §1 v1.8.7 : jeton d'accès à ajouter aux connexions (mode local uniquement ;
+   * jamais transmis aux serveurs PUBLICS par défaut). Vide = aucun. */
+  signalingToken: string
   /** Mode local SANS signalisation valide : les tableaux partagés resteront hors
    * ligne — c'est voulu (échec franc, jamais de repli vers les serveurs publics). */
   localNoSignaling: boolean
@@ -322,6 +342,8 @@ export interface NetworkSettingsInput {
   autoUpdateCheck: boolean
   /** §5 v1.8.6 : autoriser la mise à jour GitHub MÊME en mode 100 % local (optionnel). */
   localUpdateCheck?: boolean
+  /** §1 v1.8.7 : jeton d'accès au serveur de signalisation interne (mode local). */
+  signalingToken?: string
 }
 
 export function effectiveNetworkConfig(settings: NetworkSettingsInput): EffectiveNetworkConfig {
@@ -339,6 +361,8 @@ export function effectiveNetworkConfig(settings: NetworkSettingsInput): Effectiv
       signalingUrls: customSignaling,
       iceServers: customIce,
       updateCheck: localUpdate,
+      // §1 v1.8.7 : le jeton n'a de sens qu'en mode local (serveur interne).
+      signalingToken: (settings.signalingToken ?? '').trim(),
       localNoSignaling: customSignaling.length === 0,
       contactsPublicServices: localUpdate
     }
@@ -348,6 +372,8 @@ export function effectiveNetworkConfig(settings: NetworkSettingsInput): Effectiv
     signalingUrls: customSignaling.length > 0 ? customSignaling : DEFAULT_SIGNALING_URLS,
     iceServers: customIce.length > 0 ? customIce : ICE_SERVERS,
     updateCheck: settings.autoUpdateCheck,
+    // Jamais de jeton vers les serveurs PUBLICS par défaut (mode standard).
+    signalingToken: '',
     localNoSignaling: false,
     contactsPublicServices:
       customSignaling.length === 0 || customIce.length === 0 || settings.autoUpdateCheck

@@ -59,7 +59,7 @@ export const pl: Record<MessageKey, string> = {
     'Łączenie uczestników przez serwery publiczne (sygnalizacja y-webrtc, STUN Google/Cloudflare/Twilio), do zastąpienia poniżej. Serwery te widzą tylko metadane łączenia — nigdy treść tablic, która jest szyfrowana od końca do końca i wymieniana bezpośrednio między komputerami.',
   'settings.modeLocal': 'W pełni lokalny (własny hosting)',
   'settings.modeLocalDesc':
-    'ŻADNA usługa publiczna nie jest kontaktowana: aplikacja używa TYLKO wewnętrznych serwerów wpisanych poniżej, a sprawdzanie aktualizacji (GitHub) jest wyłączone. Bez prawidłowego adresu udostępnione tablice pozostają offline — nigdy cichego przełączenia na serwery publiczne. Dla sieci zamkniętych (organizacja, służby…): zobacz folder server/, aby hostować sygnalizację wewnętrznie.',
+    'ŻADNA usługa publiczna nie jest kontaktowana: aplikacja używa TYLKO wewnętrznych serwerów wpisanych poniżej, a sprawdzanie aktualizacji (GitHub) jest wyłączone. Bez prawidłowego adresu udostępnione tablice pozostają offline — nigdy cichego przełączenia na serwery publiczne. Dla sieci zamkniętych (organizacja, administracja…): zobacz folder server/, aby hostować sygnalizację wewnętrznie.',
   'settings.signalingLabelLocal': 'WEWNĘTRZNE serwery sygnalizacyjne (wymagane do współpracy)',
   'settings.signalingPlaceholderLocal': 'ws://10.0.0.5:4444 lub wss://cosint-signal.wewnetrzny:443',
   'settings.signalingHintLocal':
@@ -1134,5 +1134,26 @@ export const pl: Record<MessageKey, string> = {
   // ——— v1.8.6: ekran główny / pierwsze uruchomienie (§7) ———
   'profile.langLabel': 'Język',
   'profile.welcomeKicker': 'Biały wywiad (OSINT), w trybie peer-to-peer',
-  'profile.privacyNote': 'Bez konta, bez danych na serwerze — wszystko pozostaje na tym komputerze.'
+  'profile.privacyNote': 'Bez konta, bez danych na serwerze — wszystko pozostaje na tym komputerze.',
+
+  // ——— v1.8.7: token dostępu + profil organizacji (tryb w pełni lokalny) (§1) ———
+  'settings.tokenLabel': 'Token dostępu do serwera (opcjonalnie)',
+  'settings.tokenPlaceholder': 'Token udostępniony przez Twoją organizację',
+  'settings.tokenHint':
+    'Jeśli Twój serwer sygnalizacyjny wymaga tokenu (zmienna COSINT_TOKEN), wpisz go tutaj: bez właściwego tokenu połączenie jest odrzucane już na wejściu. Uniemożliwia to każdemu zewnętrznemu komputerowi korzystanie z Twojego serwera. Pozostaw puste, jeśli serwer jest otwarty.',
+  'settings.orgProfile': 'Profil organizacji',
+  'settings.orgProfileHint':
+    'Plik .cosint-org dostarczony przez Twoją organizację konfiguruje za jednym razem tryb w pełni lokalny, adres serwera wewnętrznego i token dostępu. „Importuj profil” stosuje plik; „Eksportuj” zapisuje bieżącą konfigurację do rozdania współpracownikom. Logo i tytuł pojawiają się następnie automatycznie, serwowane przez serwer.',
+  'settings.importOrgProfile': 'Importuj profil',
+  'settings.exportOrgProfile': 'Eksportuj',
+  'settings.orgProfileImported': 'Profil organizacji zaimportowany — sprawdź i zapisz.',
+  'settings.orgProfileInvalid': 'Nieprawidłowy plik profilu organizacji.',
+  'settings.orgProfileExported': 'Profil organizacji wyeksportowany.',
+  'settings.orgProfileExportEmpty': 'Najpierw podaj adres serwera sygnalizacyjnego.',
+  'settings.recapToken': 'Dostęp do serwera',
+  'settings.recapTokenOn': 'Chroniony tokenem',
+  'settings.recapTokenOff': 'Brak tokenu (serwer otwarty)',
+
+  // ——— v1.8.7: współbranding ekranu głównego (§1) ———
+  'home.onCosint': '· na COSINT'
 }

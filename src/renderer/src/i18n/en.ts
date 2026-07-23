@@ -59,7 +59,7 @@ export const en: Record<MessageKey, string> = {
     'Peer matchmaking via public servers (y-webrtc signalling, Google/Cloudflare/Twilio STUN), replaceable below. These servers only see matchmaking metadata — never board content, which is end-to-end encrypted and exchanged directly between computers.',
   'settings.modeLocal': '100% local (self-hosted)',
   'settings.modeLocalDesc':
-    'NO public service is contacted: the app uses ONLY the internal servers entered below, and update checking (GitHub) is disabled. Without a valid address, shared boards stay offline — never a silent fallback to public servers. For closed networks (organisation, law enforcement…): see the server/ folder to host signalling internally.',
+    'NO public service is contacted: the app uses ONLY the internal servers entered below, and update checking (GitHub) is disabled. Without a valid address, shared boards stay offline — never a silent fallback to public servers. For closed networks (organisation, public administration…): see the server/ folder to host signalling internally.',
   'settings.signalingLabelLocal': 'INTERNAL signalling servers (required to collaborate)',
   'settings.signalingPlaceholderLocal': 'ws://10.0.0.5:4444 or wss://cosint-signal.internal:443',
   'settings.signalingHintLocal':
@@ -1134,5 +1134,26 @@ export const en: Record<MessageKey, string> = {
   // ——— v1.8.6: home / first run (§7) ———
   'profile.langLabel': 'Language',
   'profile.welcomeKicker': 'Open-source intelligence, peer to peer',
-  'profile.privacyNote': 'No account, no data on a server — everything stays on this computer.'
+  'profile.privacyNote': 'No account, no data on a server — everything stays on this computer.',
+
+  // ——— v1.8.7: access token + organization profile (100% local mode) (§1) ———
+  'settings.tokenLabel': 'Server access token (optional)',
+  'settings.tokenPlaceholder': 'Token shared by your organization',
+  'settings.tokenHint':
+    'If your signalling server requires a token (COSINT_TOKEN variable), enter it here: without the right token, the connection is refused at the door. Prevents any outside computer from using your server. Leave empty if the server is open.',
+  'settings.orgProfile': 'Organization profile',
+  'settings.orgProfileHint':
+    'A .cosint-org file supplied by your organization configures 100% local mode, the internal server address and the access token in one go. “Import a profile” applies the file; “Export” saves your current configuration to distribute to colleagues. The logo and title then appear automatically, served by the server.',
+  'settings.importOrgProfile': 'Import a profile',
+  'settings.exportOrgProfile': 'Export',
+  'settings.orgProfileImported': 'Organization profile imported — review then save.',
+  'settings.orgProfileInvalid': 'Invalid organization profile file.',
+  'settings.orgProfileExported': 'Organization profile exported.',
+  'settings.orgProfileExportEmpty': 'Enter the signalling server address first.',
+  'settings.recapToken': 'Server access',
+  'settings.recapTokenOn': 'Token-protected',
+  'settings.recapTokenOff': 'No token (open server)',
+
+  // ——— v1.8.7: co-branding of the main screen (§1) ———
+  'home.onCosint': '· on COSINT'
 }

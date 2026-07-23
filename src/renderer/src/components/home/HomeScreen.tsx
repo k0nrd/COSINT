@@ -3,16 +3,19 @@
  * Présentationnel — la navigation et les effets (création, import…) sont
  * délégués au parent via les props ; seul l'état des dialogues est local.
  */
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { FileUp, KeyRound, Plus, Settings, Trash2 } from 'lucide-react'
 import { formatDateTime, t } from '@/i18n'
 import { sortedBoards, useBoards } from '@/store/boards'
 import type { BoardRegistryEntry } from '@/types'
+import type { OrgBranding } from '@/lib/orgProfile'
 import { Modal } from '@/components/common/Modal'
 import { JoinDialog } from './JoinDialog'
 import './home.css'
 
 interface HomeScreenProps {
+  /** §1 v1.8.7 : marque d'organisation (mode 100 % local) — co-marquage « COSINT · Org ». */
+  branding: OrgBranding | null
   onCreate: () => void
   onJoin: (canonicalCode: string) => void
   onImport: () => void
@@ -22,6 +25,7 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({
+  branding,
   onCreate,
   onJoin,
   onImport,
@@ -35,14 +39,34 @@ export function HomeScreen({
 
   const recent = sortedBoards(boards)
 
+  // §1 v1.8.7 : l'accent de l'organisation (le cas échéant) ne re-teinte QUE l'accueil.
+  const screenStyle = branding?.accent ? ({ '--accent': branding.accent } as CSSProperties) : undefined
+
   return (
-    <div className="hm-screen">
+    <div className="hm-screen" style={screenStyle}>
       <div className="hm-container">
         <header className="hm-header">
-          <div>
-            <h1 className="hm-brand-title">{t('app.title')}</h1>
-            <p className="hm-brand-tagline">{t('app.tagline')}</p>
-          </div>
+          {branding ? (
+            // Co-marquage « COSINT · Organisation » : le logo + le nom de l'organisation
+            // mènent, l'identité COSINT reste visible (jamais de confusion sur l'origine).
+            <div className="hm-brand hm-brand--org">
+              {branding.logo && (
+                <img className="hm-brand__logo" src={branding.logo} alt="" aria-hidden="true" />
+              )}
+              <div className="hm-brand__text">
+                <h1 className="hm-brand-title">{branding.name}</h1>
+                <p className="hm-brand-tagline">
+                  {branding.subtitle || t('app.tagline')}
+                  <span className="hm-brand__cobrand">{t('home.onCosint')}</span>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="hm-brand">
+              <h1 className="hm-brand-title">{t('app.title')}</h1>
+              <p className="hm-brand-tagline">{t('app.tagline')}</p>
+            </div>
+          )}
           <button
             className="cm-btn cm-btn--ghost cm-btn--icon"
             onClick={onOpenSettings}

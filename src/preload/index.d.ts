@@ -47,6 +47,9 @@ export interface CosintApi {
   saveReport: (defaultName: string, markdown: string) => Promise<SaveResult>
   saveCsv: (defaultName: string, csv: string) => Promise<SaveResult>
   openCsv: () => Promise<OpenTextResult>
+  /** §1 v1.8.7 : profil d'organisation (.cosint-org) — export/import. */
+  saveOrgProfile: (defaultName: string, json: string) => Promise<SaveResult>
+  openOrgProfile: () => Promise<OpenResult>
   onMenuAction: (callback: (action: MenuAction) => void) => () => void
 }
 

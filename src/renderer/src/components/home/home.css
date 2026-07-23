@@ -36,6 +36,38 @@
   color: var(--text-dim);
 }
 
+/* §1 v1.8.7 : co-marquage « COSINT · Organisation » (marque servie par le serveur local). */
+.hm-brand--org {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.hm-brand__logo {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.hm-brand__text {
+  min-width: 0;
+}
+.hm-brand--org .hm-brand-title {
+  font-size: 22px;
+  letter-spacing: 0.01em;
+}
+.hm-brand__cobrand {
+  margin-left: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+
 /* ——— Cartes d'action ——— */
 .hm-actions {
   display: grid;
@@ -510,6 +542,46 @@
 }
 .hm-update-locked {
   margin-top: 10px;
+}
+
+/* §1 v1.8.7 : profil d'organisation (import/export) — mode 100 % local. */
+.hm-orgprofile {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.hm-orgprofile__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hm-orgprofile__title {
+  margin: 0;
+}
+.hm-orgprofile__actions {
+  display: flex;
+  gap: 6px;
+}
+.hm-orgprofile__actions .cm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.hm-orgprofile .cm-hint {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Indicateur « protégé par jeton » du récapitulatif réseau. */
+.hm-recap__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--success, #16a34a);
 }
 
 /* Récapitulatif « Ce que l'application contactera » — miroir exact de la

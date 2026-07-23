@@ -163,3 +163,38 @@ describe('effectiveNetworkConfig — mode local + mise à jour opt-in (§5 v1.8.
     expect(config.contactsPublicServices).toBe(false)
   })
 })
+
+describe('effectiveNetworkConfig — jeton d’accès (§1 v1.8.7)', () => {
+  it('mode local : le jeton saisi est transmis (rogné) aux connexions', () => {
+    const config = effectiveNetworkConfig({
+      networkMode: 'local',
+      customSignalingUrl: 'wss://cosint.interne',
+      customIceServers: '',
+      autoUpdateCheck: false,
+      signalingToken: '  jeton-partage  '
+    })
+    expect(config.signalingToken).toBe('jeton-partage')
+  })
+
+  it('mode standard : JAMAIS de jeton vers les serveurs PUBLICS, même si un jeton traîne', () => {
+    const config = effectiveNetworkConfig({
+      networkMode: 'standard',
+      customSignalingUrl: '',
+      customIceServers: '',
+      autoUpdateCheck: true,
+      signalingToken: 'ne-doit-pas-fuiter'
+    })
+    expect(config.signalingUrls).toEqual(DEFAULT_SIGNALING_URLS)
+    expect(config.signalingToken).toBe('')
+  })
+
+  it('mode local sans jeton : chaîne vide (serveur ouvert)', () => {
+    const config = effectiveNetworkConfig({
+      networkMode: 'local',
+      customSignalingUrl: 'ws://10.0.0.5:4444',
+      customIceServers: '',
+      autoUpdateCheck: false
+    })
+    expect(config.signalingToken).toBe('')
+  })
+})

@@ -9,6 +9,7 @@
  */
 import type { WebrtcProvider } from 'y-webrtc'
 import type { Awareness } from 'y-protocols/awareness'
+import { stripToken } from './branding'
 
 /**
  * Serveurs STUN publics fiables (Google + Cloudflare), configurés explicitement
@@ -168,7 +169,8 @@ export function computeDiagnostics(
   const signaling: SignalingServerStatus[] = []
   for (const conn of latestByUrl.values()) {
     signaling.push({
-      url: conn.url,
+      // §1 v1.8.7 : jamais de jeton d'accès (`?token=`) à l'écran — on l'ôte à l'affichage.
+      url: stripToken(conn.url),
       state: signalingState(conn),
       retries: conn.unsuccessfulReconnects
     })
@@ -284,7 +286,7 @@ export function observeDiagnostics(
       context.instrumentedSignaling.add(conn)
       const onDisconnect = (event: unknown): void => {
         const error = (event as { error?: unknown } | undefined)?.error
-        if (error) context.lastError = `Signalisation ${conn.url} : connexion perdue`
+        if (error) context.lastError = `Signalisation ${stripToken(conn.url)} : connexion perdue`
         emit()
       }
       const onConnect = (): void => emit()

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Mini-serveur de signalisation y-webrtc pour COSINT (v1.3, §1.2).
+ * Mini-serveur de signalisation y-webrtc pour COSINT (v1.3, §1.2 ; durci v1.8.7).
  *
  * Adapté du script officiel `y-webrtc/bin/server.js` (MIT). Rôle : mettre en
  * relation les pairs d'une même « room » (identifiant dérivé, non réversible).
@@ -8,13 +8,32 @@
  * chiffrés de bout en bout (AES-GCM, clé dérivée du code de partage) et le
  * contenu des tableaux ne transite jamais par la signalisation.
  *
- * Déploiement en 5 minutes : voir server/README.md (Render gratuit, Docker,
- * ou n'importe quel hôte Node avec un port HTTP). Une seule dépendance : `ws`.
+ * ——— §1 v1.8.7 : deux ajouts pour les déploiements en réseau fermé ———
  *
- * Usage : PORT=4444 node signaling.js
+ *  1. JETON D'ACCÈS (facultatif). Définissez la variable d'environnement
+ *     `COSINT_TOKEN` : le serveur EXIGE alors ce jeton (paramètre `?token=` de
+ *     l'URL) et REFUSE toute connexion sans le bon jeton, AVANT même d'établir la
+ *     WebSocket. Empêche tout poste extérieur d'utiliser le serveur. Sans cette
+ *     variable, le serveur reste ouvert (comportement historique).
+ *
+ *  2. MARQUE D'ORGANISATION (facultative). Renseignez `COSINT_ORG_NAME` (et,
+ *     au besoin, `COSINT_ORG_SUBTITLE`, `COSINT_ORG_ACCENT` = #RRGGBB,
+ *     `COSINT_ORG_LOGO` = chemin d'une image png/jpg/gif/webp/svg ≤ 300 Ko) :
+ *     le serveur répond à la demande `{type:'branding'}` par ces informations,
+ *     que l'application affiche sur son écran principal en mode 100 % local
+ *     (co-marquage « COSINT · Organisation »). La marque est purement cosmétique
+ *     et ne change RIEN au chiffrement ni à la confidentialité.
+ *
+ * Déploiement en 5 minutes : voir server/README.md (Render, Docker, ou n'importe
+ * quel hôte Node). Une seule dépendance : `ws`.
+ *
+ * Usage : PORT=4444 [COSINT_TOKEN=…] [COSINT_ORG_NAME=…] node signaling.js
  */
 const { WebSocketServer } = require('ws')
 const http = require('http')
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
 
 /** Codes d'état WebSocket utilisés (readyState). */
 const WS_CONNECTING = 0
@@ -33,6 +52,71 @@ const MAX_TOPICS_PER_CONN = 100
 const MAX_TOPIC_LENGTH = 200
 
 const port = Number(process.env.PORT) || 4444
+
+// ——— §1 v1.8.7 : jeton d'accès pré-partagé (facultatif) ———
+const ACCESS_TOKEN = (process.env.COSINT_TOKEN || '').trim()
+
+/** Comparaison à temps constant du jeton fourni (paramètre `?token=`). */
+function tokenAccepted(request) {
+  if (ACCESS_TOKEN === '') return true // serveur ouvert (aucun jeton exigé)
+  let provided = ''
+  try {
+    provided = new URL(request.url, 'http://localhost').searchParams.get('token') || ''
+  } catch {
+    provided = ''
+  }
+  const a = Buffer.from(provided)
+  const b = Buffer.from(ACCESS_TOKEN)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+
+// ——— §1 v1.8.7 : marque d'organisation (facultative), lue une fois au démarrage ———
+const LOGO_MIME = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml'
+}
+const MAX_LOGO_BYTES = 300 * 1024
+
+/** Lit un logo depuis un chemin et l'encode en data-URI, ou undefined si invalide. */
+function readLogo(file) {
+  if (!file) return undefined
+  const mime = LOGO_MIME[path.extname(file).toLowerCase()]
+  if (!mime) {
+    console.warn(`[COSINT] Logo ignoré (type non supporté) : ${file}`)
+    return undefined
+  }
+  try {
+    const bytes = fs.readFileSync(file)
+    if (bytes.length > MAX_LOGO_BYTES) {
+      console.warn(`[COSINT] Logo ignoré (> 300 Ko) : ${file}`)
+      return undefined
+    }
+    return `data:${mime};base64,${bytes.toString('base64')}`
+  } catch {
+    console.warn(`[COSINT] Logo introuvable : ${file}`)
+    return undefined
+  }
+}
+
+/** Construit la marque depuis l'environnement (null si aucun nom d'organisation). */
+function buildBranding() {
+  const name = (process.env.COSINT_ORG_NAME || '').trim()
+  if (name === '') return null
+  const branding = { name: name.slice(0, 60) }
+  const subtitle = (process.env.COSINT_ORG_SUBTITLE || '').trim()
+  if (subtitle) branding.subtitle = subtitle.slice(0, 140)
+  const accent = (process.env.COSINT_ORG_ACCENT || '').trim()
+  if (/^#[0-9a-fA-F]{6}$/.test(accent)) branding.accent = accent
+  const logo = readLogo((process.env.COSINT_ORG_LOGO || '').trim())
+  if (logo) branding.logo = logo
+  return branding
+}
+
+const BRANDING = buildBranding()
 
 // Petit serveur HTTP : répond « okay » (health-check des hébergeurs gratuits).
 const server = http.createServer((_request, response) => {
@@ -63,7 +147,7 @@ const send = (conn, message) => {
   }
 }
 
-/** Gère le cycle de vie d'un client (protocole y-webrtc : 4 types de message). */
+/** Gère le cycle de vie d'un client (protocole y-webrtc + demande de marque). */
 const onConnection = (conn) => {
   /** @type {Set<string>} */
   const subscribedTopics = new Set()
@@ -147,6 +231,12 @@ const onConnection = (conn) => {
       case 'ping':
         send(conn, { type: 'pong' })
         break
+      // §1 v1.8.7 : marque d'organisation (co-marquage de l'écran principal). La
+      // connexion a déjà franchi le contrôle de jeton (à l'upgrade) : seul un poste
+      // autorisé peut donc lire la marque.
+      case 'branding':
+        send(conn, { type: 'branding', branding: BRANDING })
+        break
     }
   })
 }
@@ -154,11 +244,20 @@ const onConnection = (conn) => {
 wss.on('connection', onConnection)
 
 server.on('upgrade', (request, socket, head) => {
+  // §1 v1.8.7 : contrôle du jeton AVANT d'établir la WebSocket — un poste sans le
+  // bon jeton est éconduit immédiatement (jamais de room, jamais de marque).
+  if (!tokenAccepted(request)) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n')
+    socket.destroy()
+    return
+  }
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit('connection', ws, request)
   })
 })
 
 server.listen(port, () => {
-  console.log(`Serveur de signalisation COSINT à l'écoute sur le port ${port}`)
+  const guard = ACCESS_TOKEN === '' ? 'ouvert (aucun jeton)' : 'protégé par jeton'
+  const brand = BRANDING ? `marque « ${BRANDING.name} »` : 'sans marque'
+  console.log(`Serveur de signalisation COSINT — port ${port}, ${guard}, ${brand}.`)
 })

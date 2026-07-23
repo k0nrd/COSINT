@@ -1478,7 +1478,7 @@ Une revue multi-agents du diff v1.7 a confirmé plusieurs bugs de correctness, c
 ### §2 — Mode réseau « 100 % local » (`store/settings.ts`, `sync/network.ts`, `main/updater.ts`, Paramètres)
 
 - **Objectif** : le grand public garde le comportement « ça marche tout seul » (serveurs
-  publics par défaut) ; une organisation (gendarmerie…) doit pouvoir passer TOUT en
+  publics par défaut) ; une organisation (administration…) doit pouvoir passer TOUT en
   interne **sans recompiler**, avec une garantie visible. Paramètres → **Réseau &
   confidentialité** : deux cartes, `standard` / `local` (persisté, migration settings
   v4→v5).

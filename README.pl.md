@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.8.6-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.8.7-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
-  <img src="https://img.shields.io/badge/testy-253%20zielone-3fbf6a" alt="Testy">
+  <img src="https://img.shields.io/badge/testy-279%20zielone-3fbf6a" alt="Testy">
   <img src="https://img.shields.io/badge/telemetria-brak-ef4444" alt="Brak telemetrii">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Zbudowano z">
 </p>
@@ -74,27 +74,25 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.8.6
+## 🚀 Nowości w 1.8.7
 
-- **🌍 Trójjęzyczny — francuski, angielski i polski** — cały interfejs jest przetłumaczony;
-  wybierz język przy pobieraniu/instalacji (selektor języka instalatora) lub w
-  **Ustawienia → Wygląd**. Nowe instalacje przyjmują język systemu.
-- **🧵 Linie odniesienia na osi czasu** — cienkie nici łączą teraz każdy pasek wydarzenia
-  (oba końce przedziału lub czasu trwania) z jego **datą u góry, na osi**.
-- **🗓️ Datowane dodawanie, na trzy sposoby** — dodawanie elementu z osi czasu oferuje teraz
-  **dokładną datę, czas trwania lub przedział niepewności** — nie tylko dokładną datę.
-- **🖱️ Poprawki i wskazówki na osi czasu** — koniec z przypadkowym zaznaczaniem tekstu przy
-  zmianie rozmiaru pasków; dyskretna wskazówka *„Przytrzymaj [Ctrl], aby …”* pojawia się przy
-  przeciąganiu bez modyfikatora, a ten **klawisz przytrzymania jest konfigurowalny**
-  (Ustawienia → Skróty).
-- **🔗 Czystsze rysowanie połączeń** — podczas rysowania ścieżki połączenia nie można już
-  przypadkowo **zaznaczyć strefy** pod spodem.
-- **🔄 Aktualizacje w trybie w pełni lokalnym** — opcjonalne pole *„zachowaj włączone
-  aktualizacje”* pozwala w pełni lokalnym instalacjom nadal sprawdzać GitHub (podsumowanie
-  uczciwie sygnalizuje ten kontakt publiczny).
-- **🎛️ Odświeżone pierwsze uruchomienie i ustawienia** — czystszy, mniej szablonowy interfejs.
+- **🏷️ Marka Twojej organizacji (tryb w pełni lokalny)** — wskaż COSINT swój wewnętrzny serwer
+  sygnalizacyjny, a ekran główny wyświetli **Twoje logo, nazwę i hasło**, serwowane przez sam
+  serwer i opatrzone dopiskiem *„· na COSINT”*, aby pochodzenie pozostało jasne. Wyłącznie
+  kosmetyczne — bez wpływu na szyfrowanie.
+- **🔑 Zablokuj serwer do autoryzowanych stanowisk** — ustaw `COSINT_TOKEN`, a każdy komputer
+  bez wspólnego tokenu zostanie **odrzucony już przy nawiązywaniu połączenia**, zanim WebSocket
+  w ogóle się otworzy. Token porównywany w czasie stałym, **maskowany na ekranie** i **nigdy
+  nie wysyłany do serwerów publicznych**.
+- **📇 Konfiguracja jednym kliknięciem (profil `.cosint-org`)** — wyeksportuj przenośny profil
+  (adres wewnętrzny + token dostępu), który współpracownicy **importują**, aby za jednym razem
+  skonfigurować tryb w pełni lokalny, adres serwera i token.
+- **🔒 Prywatność potwierdzona** — nawet całkowicie otwarty serwer niczego nie ujawnia
+  (identyfikatory pokojów pochodzą z HKDF, treść szyfrowana end-to-end); nowa kontrola dostępu
+  decyduje o tym, *kto może korzystać z Twojego przekaźnika*. Cała granica sanityzacji
+  marki/profilu jest teraz pokryta testami.
 
-Pełne informacje: [`docs/RELEASE_NOTES_v1.8.6.md`](docs/RELEASE_NOTES_v1.8.6.md).
+Pełne informacje: [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
 
 ---
 

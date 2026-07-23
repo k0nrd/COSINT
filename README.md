@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.6-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.7-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-253%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-279%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -73,25 +73,24 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.6
+## 🚀 What's new in 1.8.7
 
-- **🌍 Trilingual — French, English & Polish** — the whole UI is translated; choose it at
-  download/install (installer language selector) or in **Settings → Appearance**. New
-  installs default to the system language.
-- **🧵 Timeline leader lines** — thin threads now connect each event bar (both ends of a
-  range or duration) up to its **date on the top axis**.
-- **🗓️ Dated add, three ways** — adding an element from the timeline now offers a **precise
-  date, a duration, or an uncertainty range** — not just an exact date.
-- **🖱️ Timeline fixes & hints** — no more stray text-selection when resizing bars; a discreet
-  *"Hold [Ctrl] to …"* hint appears when you drag without the modifier, and that **hold key
-  is now configurable** (Settings → Shortcuts).
-- **🔗 Cleaner link drawing** — while drawing a link's path you can no longer accidentally
-  **select a zone** underneath it.
-- **🔄 Updates in 100 % local mode** — an opt-in *"keep updates enabled"* box lets fully
-  local installs still check GitHub (the recap honestly flags that public contact).
-- **🎛️ Refreshed onboarding & settings** — a cleaner, less templated first-run and settings UI.
+- **🏷️ Your organization's branding (100 % local mode)** — point COSINT at your internal
+  signaling server and the home screen shows **your logo, name and tagline**, served by the
+  server itself and co-branded *"· on COSINT"* so the origin stays clear. Purely cosmetic —
+  it never touches the end-to-end encryption.
+- **🔑 Lock your signaling server to authorized stations** — set a `COSINT_TOKEN` and any
+  computer without the shared token is **refused at the handshake**, before the WebSocket
+  even opens. The token is checked in constant time, **masked on screen**, and **never sent
+  to public servers**.
+- **📇 One-click provisioning (`.cosint-org` profile)** — export a portable profile
+  (internal address + access token) and colleagues **import** it to set up 100 % local mode,
+  the server address and the token in one go.
+- **🔒 Privacy, reaffirmed** — even a fully open server exposes nothing (rooms are
+  HKDF-derived, content is end-to-end encrypted); the new access control is about *who may
+  use your relay*. The whole branding/profile sanitization boundary is now covered by tests.
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.6.md`](docs/RELEASE_NOTES_v1.8.6.md).
+Full notes: [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
 
 ---
 

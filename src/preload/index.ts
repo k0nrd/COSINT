@@ -82,6 +82,13 @@ const api = {
   /** Dialogue « Ouvrir » pour un fichier CSV (encodage détecté côté main). */
   openCsv: (): Promise<OpenTextResult> => ipcRenderer.invoke('file:open-csv'),
 
+  /** §1 v1.8.7 : Dialogue « Enregistrer sous » pour un profil d'organisation (.cosint-org). */
+  saveOrgProfile: (defaultName: string, json: string): Promise<SaveResult> =>
+    ipcRenderer.invoke('file:save-org-profile', { defaultName, json }),
+
+  /** §1 v1.8.7 : Dialogue « Ouvrir » pour un profil d'organisation (.cosint-org). */
+  openOrgProfile: (): Promise<OpenResult> => ipcRenderer.invoke('file:open-org-profile'),
+
   /** Abonnement aux actions du menu applicatif ; retourne le désabonnement. */
   onMenuAction: (callback: (action: MenuAction) => void): (() => void) => {
     const listener = (_event: IpcRendererEvent, action: MenuAction): void => callback(action)

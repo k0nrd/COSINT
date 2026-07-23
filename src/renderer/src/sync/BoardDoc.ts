@@ -63,7 +63,8 @@ export interface OpenBoardOptions {
   boardId: string
   /** Code de partage, ou null/absent = tableau SOLO (aucune connexion P2P, §5). */
   shareCode?: string | null
-  /** URLs des serveurs de signalisation à utiliser. */
+  /** URLs des serveurs de signalisation à utiliser (déjà porteuses du jeton d'accès
+   * `?token=` le cas échéant — la tokenisation est faite en amont, §1 v1.8.7). */
   signalingUrls: string[]
   /** Serveurs ICE (STUN/TURN) à utiliser (§réseau v1.7.1). Absent = STUN publics
    * par défaut ; liste vide = aucun (mode 100 % local sur un même réseau). */

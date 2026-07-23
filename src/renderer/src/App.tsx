@@ -30,6 +30,7 @@ import {
 } from '@/sync/lobby'
 import type { AccessMode, BoardEdgeData, BoardNodeData } from '@/types'
 import { effectiveNetworkConfig, useSettings } from '@/store/settings'
+import { fetchBranding, withToken } from '@/sync/branding'
 import { boardEntry, secretForBoard, useBoards } from '@/store/boards'
 import { useToasts } from '@/store/toasts'
 import { BoardView, profileToPresence, type BoardMenuSignal } from '@/flow/BoardView'
@@ -114,9 +115,36 @@ export default function App(): ReactElement {
       settings.customSignalingUrl,
       settings.customIceServers,
       settings.autoUpdateCheck,
-      settings.localUpdateCheck
+      settings.localUpdateCheck,
+      settings.signalingToken
     ]
   )
+
+  // §1 v1.8.7 : URLs de signalisation PORTEUSES du jeton d'accès (mode local), pour
+  // TOUTES les connexions (tableau, salon d'attente, demande d'accès). L'affichage
+  // (récapitulatif, diagnostic) conserve les URLs SANS jeton — jamais de secret à l'écran.
+  const signalingForConnect = useMemo(
+    () => withToken(network.signalingUrls, network.signalingToken),
+    [network.signalingUrls, network.signalingToken]
+  )
+
+  // §1 v1.8.7 : MARQUE d'organisation en mode 100 % local — servie par le serveur de
+  // signalisation (canal WebSocket, CSP inchangée) puis mise en cache. Hors mode local
+  // (ou sans serveur configuré), toute marque est effacée.
+  useEffect(() => {
+    if (network.mode !== 'local' || network.signalingUrls.length === 0) {
+      if (settings.orgBranding !== null) settings.setOrgBranding(null)
+      return
+    }
+    let cancelled = false
+    void fetchBranding(network.signalingUrls, network.signalingToken).then((branding) => {
+      if (!cancelled && branding) settings.setOrgBranding(branding)
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [network.mode, network.signalingUrls, network.signalingToken])
 
   // Politique de mise à jour transmise au processus principal : la vérification
   // GitHub n'est lancée QUE si le mode réseau l'autorise (jamais en 100 % local).
@@ -142,7 +170,7 @@ export default function App(): ReactElement {
         const handle = await openBoard({
           boardId,
           shareCode,
-          signalingUrls: network.signalingUrls,
+          signalingUrls: signalingForConnect,
           iceServers: network.iceServers,
           sessionSecret
         })
@@ -197,7 +225,7 @@ export default function App(): ReactElement {
         const handle = await openBoard({
           boardId,
           shareCode,
-          signalingUrls: network.signalingUrls,
+          signalingUrls: signalingForConnect,
           iceServers: network.iceServers,
           sessionSecret
         })
@@ -246,7 +274,7 @@ export default function App(): ReactElement {
     let cancelled = false
     void startLobbyServer({
       code: board.handle.shareCode,
-      signalingUrls: network.signalingUrls,
+      signalingUrls: signalingForConnect,
       iceServers: network.iceServers,
       sessionSecret: board.sessionSecret,
       identity: profileToPresence(profile),
@@ -415,7 +443,7 @@ export default function App(): ReactElement {
       setWaiting({ state: 'connecting' })
       const client = await requestAccess({
         code,
-        signalingUrls: network.signalingUrls,
+        signalingUrls: signalingForConnect,
         iceServers: network.iceServers,
         identity: profileToPresence(profile),
         onPhase: (phase) => {
@@ -746,6 +774,7 @@ export default function App(): ReactElement {
       ) : (
         <HomeScreen
           key={`home:${settings.language}`}
+          branding={network.mode === 'local' ? settings.orgBranding : null}
           onCreate={() => void handleCreate()}
           onJoin={(code) => void handleJoin(code)}
           onImport={() => void handleImport()}

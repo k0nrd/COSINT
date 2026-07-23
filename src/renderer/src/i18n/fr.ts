@@ -58,7 +58,7 @@ export const fr = {
     'Mise en relation via des serveurs publics (signalisation y-webrtc, STUN Google/Cloudflare/Twilio), remplaçables ci-dessous. Ces serveurs ne voient que des métadonnées de mise en relation — jamais le contenu des tableaux, chiffré de bout en bout et échangé en direct entre postes.',
   'settings.modeLocal': '100 % local (auto-hébergé)',
   'settings.modeLocalDesc':
-    'AUCUN service public n’est contacté : l’application n’utilise QUE les serveurs internes saisis ci-dessous, et la vérification de mise à jour (GitHub) est coupée. Sans adresse valide, les tableaux partagés restent hors ligne — jamais de repli silencieux vers les serveurs publics. Pour les réseaux fermés (organisation, gendarmerie…) : voir le dossier server/ pour héberger la signalisation en interne.',
+    'AUCUN service public n’est contacté : l’application n’utilise QUE les serveurs internes saisis ci-dessous, et la vérification de mise à jour (GitHub) est coupée. Sans adresse valide, les tableaux partagés restent hors ligne — jamais de repli silencieux vers les serveurs publics. Pour les réseaux fermés (organisation, administration…) : voir le dossier server/ pour héberger la signalisation en interne.',
   'settings.signalingLabelLocal': 'Serveurs de signalisation INTERNES (requis pour collaborer)',
   'settings.signalingPlaceholderLocal': 'ws://10.0.0.5:4444 ou wss://cosint-signal.interne:443',
   'settings.signalingHintLocal':
@@ -1139,5 +1139,26 @@ export const fr = {
   // ——— v1.8.6 : accueil / première ouverture (§7) ———
   'profile.langLabel': 'Langue',
   'profile.welcomeKicker': 'Renseignement en source ouverte, en pair-à-pair',
-  'profile.privacyNote': 'Aucun compte, aucune donnée sur un serveur — tout reste sur ce poste.'
+  'profile.privacyNote': 'Aucun compte, aucune donnée sur un serveur — tout reste sur ce poste.',
+
+  // ——— v1.8.7 : jeton d'accès + profil d'organisation (mode 100 % local) (§1) ———
+  'settings.tokenLabel': 'Jeton d’accès du serveur (optionnel)',
+  'settings.tokenPlaceholder': 'Jeton partagé par votre organisation',
+  'settings.tokenHint':
+    'Si votre serveur de signalisation exige un jeton (variable COSINT_TOKEN), saisissez-le ici : sans le bon jeton, la connexion au serveur est refusée dès l’entrée. Empêche tout poste extérieur d’utiliser votre serveur. Laissez vide si le serveur est ouvert.',
+  'settings.orgProfile': 'Profil d’organisation',
+  'settings.orgProfileHint':
+    'Un fichier .cosint-org fourni par votre organisation configure d’un coup le mode 100 % local, l’adresse du serveur interne et le jeton d’accès. « Importer un profil » applique le fichier ; « Exporter » enregistre votre configuration actuelle pour la distribuer à vos collègues. Le logo et le titre s’affichent ensuite automatiquement, servis par le serveur.',
+  'settings.importOrgProfile': 'Importer un profil',
+  'settings.exportOrgProfile': 'Exporter',
+  'settings.orgProfileImported': 'Profil d’organisation importé — vérifiez puis enregistrez.',
+  'settings.orgProfileInvalid': 'Fichier de profil d’organisation invalide.',
+  'settings.orgProfileExported': 'Profil d’organisation exporté.',
+  'settings.orgProfileExportEmpty': 'Renseignez d’abord l’adresse du serveur de signalisation.',
+  'settings.recapToken': 'Accès serveur',
+  'settings.recapTokenOn': 'Protégé par jeton',
+  'settings.recapTokenOff': 'Aucun jeton (serveur ouvert)',
+
+  // ——— v1.8.7 : co-marquage de l'écran principal (§1) ———
+  'home.onCosint': '· sur COSINT'
 } as const
