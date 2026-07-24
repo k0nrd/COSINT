@@ -24,6 +24,11 @@
  *     (co-marquage « COSINT · Organisation »). La marque est purement cosmétique
  *     et ne change RIEN au chiffrement ni à la confidentialité.
  *
+ *  3. DÉCOUVERTE AUTOMATIQUE (v1.8.9, toujours active). `GET /cosint` renvoie une
+ *     empreinte non réversible dérivée du jeton, pour qu'un poste dont le serveur
+ *     a changé d'adresse (DHCP) le retrouve seul sur le réseau local. Voir le bloc
+ *     de commentaire au-dessus de `DISCOVERY_ID`.
+ *
  * Déploiement en 5 minutes : voir server/README.md (Render, Docker, ou n'importe
  * quel hôte Node). Une seule dépendance : `ws`.
  *
@@ -118,8 +123,45 @@ function buildBranding() {
 
 const BRANDING = buildBranding()
 
-// Petit serveur HTTP : répond « okay » (health-check des hébergeurs gratuits).
-const server = http.createServer((_request, response) => {
+// ——— §1 v1.8.9 : découverte automatique du serveur sur le réseau local ———
+//
+// PROBLÈME. En DHCP, l'adresse du serveur change (souvent toutes les 24 h). Chaque
+// poste doit alors être reconfiguré à la main : inexploitable au quotidien.
+//
+// SOLUTION. Le serveur publie une EMPREINTE d'identité sur `GET /cosint`, sans
+// authentification. Un poste qui ne joint plus son serveur balaie son propre
+// sous-réseau, compare l'empreinte à celle qu'il calcule depuis SON jeton, et ne
+// retient que le serveur qui correspond — puis met son adresse à jour tout seul.
+//
+// POURQUOI C'EST SÛR :
+//  - l'empreinte est un SHA-256 du jeton (préfixé d'un domaine) : elle prouve la
+//    connaissance du jeton sans le révéler, et n'est pas inversible (le jeton
+//    généré par le guide fait 24 octets aléatoires) ;
+//  - le poste ne transmet JAMAIS son jeton avant que l'empreinte corresponde : un
+//    serveur pirate sur le même réseau ne peut donc pas se le faire livrer ;
+//  - rien d'autre n'est exposé — ni le nom d'organisation, ni le logo, ni les rooms.
+//    La marque reste derrière le contrôle de jeton, comme en v1.8.7.
+//
+// Sans `COSINT_TOKEN`, l'empreinte est une constante : tout serveur COSINT ouvert
+// correspond. C'est cohérent — un serveur sans jeton n'authentifie rien par
+// définition.
+const DISCOVERY_ID = crypto
+  .createHash('sha256')
+  .update(`cosint-discovery-v1:${ACCESS_TOKEN}`)
+  .digest('hex')
+  .slice(0, 32)
+
+// Petit serveur HTTP : empreinte de découverte, et « okay » ailleurs (health-check
+// des hébergeurs gratuits).
+const server = http.createServer((request, response) => {
+  if (request.method === 'GET' && (request.url || '').split('?')[0] === '/cosint') {
+    response.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store'
+    })
+    response.end(JSON.stringify({ cosint: 1, id: DISCOVERY_ID }))
+    return
+  }
   response.writeHead(200, { 'Content-Type': 'text/plain' })
   response.end('okay')
 })
@@ -260,4 +302,5 @@ server.listen(port, () => {
   const guard = ACCESS_TOKEN === '' ? 'ouvert (aucun jeton)' : 'protégé par jeton'
   const brand = BRANDING ? `marque « ${BRANDING.name} »` : 'sans marque'
   console.log(`Serveur de signalisation COSINT — port ${port}, ${guard}, ${brand}.`)
+  console.log(`Découverte automatique : GET /cosint → empreinte ${DISCOVERY_ID}.`)
 })

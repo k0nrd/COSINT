@@ -89,6 +89,16 @@ const api = {
   /** §1 v1.8.7 : Dialogue « Ouvrir » pour un profil d'organisation (.cosint-org). */
   openOrgProfile: (): Promise<OpenResult> => ipcRenderer.invoke('file:open-org-profile'),
 
+  /** §1 v1.8.9 : le serveur attendu répond-il à cette adresse, avec la bonne identité ?
+   * `expectedId` est une empreinte NON RÉVERSIBLE dérivée du jeton — jamais le jeton. */
+  checkServer: (host: string, port: number, expectedId: string): Promise<boolean> =>
+    ipcRenderer.invoke('net:check-server', { host, port, expectedId }),
+
+  /** §1 v1.8.9 : retrouve le serveur sur le réseau local (adresse changée par DHCP).
+   * Balaie les sous-réseaux PRIVÉS de cette machine, sur le seul port configuré. */
+  discoverServer: (port: number, expectedId: string): Promise<{ host: string; port: number } | null> =>
+    ipcRenderer.invoke('net:discover-server', { port, expectedId }),
+
   /** Abonnement aux actions du menu applicatif ; retourne le désabonnement. */
   onMenuAction: (callback: (action: MenuAction) => void): (() => void) => {
     const listener = (_event: IpcRendererEvent, action: MenuAction): void => callback(action)

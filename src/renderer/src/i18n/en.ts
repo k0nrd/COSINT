@@ -1241,5 +1241,32 @@ export const en: Record<MessageKey, string> = {
     'Export the whole board as a .trace file (portable, re-importable), as a PNG image, as CSV, or pull a Markdown source report.',
   'tutorial.end.title': 'Over to you',
   'tutorial.end.text':
-    'You have the essentials. The rest is learned by doing. This tutorial restarts from the home screen, or from Settings → About.'
+    'You have the essentials. The rest is learned by doing. This tutorial restarts from the home screen, or from Settings → About.',
+
+  // ——— v1.8.9: tutorial steps about HOW IT WORKS (§2) ———
+  'tutorial.status.title': 'Qualify what you know',
+  'tutorial.status.text':
+    'Every item carries a status: to check, confirmed, ruled out. That discipline is what separates an investigation from a pile of screenshots — an unconfirmed fact must look unconfirmed, to you and to your colleagues.',
+  'tutorial.roles.title': 'Who can do what',
+  'tutorial.roles.text':
+    'Three roles: the admin manages sharing and roles, the editor changes the board, the visitor reads without touching anything. You also set the maximum number of participants, and you can regenerate the code or remove someone at any time.',
+  'tutorial.privacy.title': 'Where your data goes',
+  'tutorial.privacy.text':
+    'Nowhere but the participants’ machines. Content flows directly peer to peer, end-to-end encrypted. A server only introduces you to each other: it sees neither your boards nor your share code. This pill shows the real connection state — click it for the detailed diagnostics.',
+  'tutorial.storage.title': 'Offline, and yours',
+  'tutorial.storage.text':
+    'Everything is saved on your machine as you go. With no network you keep working: syncing resumes on its own when a colleague comes back. Export a .trace now and then — it is your backup, and nobody else holds a copy.',
+
+  // ——— v1.8.9: signalling server discovery (§1) ———
+  'settings.discovery': 'Server discovery',
+  'settings.discoverNow': 'Search',
+  'settings.discoverySearching': 'Searching…',
+  'settings.autoDiscoverLabel': 'Find the server again automatically if its address changes',
+  'settings.discoveryHint':
+    'If your server uses DHCP, its address changes (often every night). COSINT checks the saved address at startup and, if it no longer answers, finds the server on your local network by comparing a fingerprint derived from the token — your token is never sent before the right server is identified. It only searches the configured port, and only on your private networks. Requires a server running 1.8.9 or later.',
+  'settings.discoveryNoAddress': 'Enter the signalling server address first.',
+  'settings.discoveryReachable': 'The server answers at the saved address.',
+  'settings.discoveryNotFound':
+    'Server not found on this network. Check that it is running, that the token matches, and that it is on 1.8.9 or later.',
+  'settings.serverMoved': 'Server found again — new address: {url}'
 }

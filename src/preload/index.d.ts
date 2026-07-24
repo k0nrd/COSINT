@@ -50,6 +50,9 @@ export interface CosintApi {
   /** §1 v1.8.7 : profil d'organisation (.cosint-org) — export/import. */
   saveOrgProfile: (defaultName: string, json: string) => Promise<SaveResult>
   openOrgProfile: () => Promise<OpenResult>
+  /** §1 v1.8.9 : découverte du serveur de signalisation sur le réseau local. */
+  checkServer: (host: string, port: number, expectedId: string) => Promise<boolean>
+  discoverServer: (port: number, expectedId: string) => Promise<{ host: string; port: number } | null>
   onMenuAction: (callback: (action: MenuAction) => void) => () => void
 }
 

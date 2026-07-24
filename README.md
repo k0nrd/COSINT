@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.9-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-290%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-306%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -73,28 +73,38 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.8
+## 🚀 What's new in 1.8.9
+
+- **📡 Your DHCP server, found automatically** — a self-hosted signaling server whose address
+  changed overnight used to mean rebuilding and re-importing a profile on every workstation,
+  every morning. Now each station checks the saved address at startup and, if it no longer
+  answers, **finds the server again on the local network by itself**. It matches a
+  **fingerprint derived from your access token**, so it can only ever land on *your* server —
+  and **your token is never sent before that server is identified**. Only the configured port
+  is probed, only on your private subnets. Requires a server on 1.8.9.
+- **🎓 The tutorial now explains how it works** — four extra steps beyond the mechanics:
+  qualifying what you know (to check / confirmed / ruled out), who can do what (roles and
+  participant limits), where your data actually goes (peer-to-peer, end-to-end encrypted,
+  what a server can and cannot see), and working offline with `.trace` as your backup.
+
+Full notes: [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+<details>
+<summary>1.8.8 — guided tutorial, tabbed settings, new icon</summary>
 
 - **🎓 A guided tutorial, right on the home screen** — a discreet *Tutorial* button walks
-  newcomers through the essentials in twelve short steps: create a board, drop an entity,
-  fill in its card, link two entities, cite your sources, read the timeline, share and
-  export. It **highlights the real interface** while you use it — nothing is simulated —
-  and you can **leave at any time**. Replay it from Settings → About.
+  newcomers through the essentials, **highlighting the real interface** while you use it.
 - **🗂️ Settings, finally sorted** — one endless scrolling page became **five tabs**
-  (Profile, Appearance, Shortcuts, Network, About). Same single *Save*, whichever tab
-  you are on; validation errors jump you back to the offending field.
+  (Profile, Appearance, Shortcuts, Network, About).
 - **🖼️ New app icon** — a fresh logo across the installer, taskbar, window and home screen.
-- **🔄 Updates stay on in 100 % local mode** — switching to local mode no longer silently
-  cuts you off from fixes. GitHub Releases becomes the **only** public service contacted
-  (no board data ever goes through it), the recap says so plainly, and a single checkbox
-  turns it off for genuinely air-gapped networks.
-- **📘 A real deployment guide, in all three languages** — [`docs/DEPLOY_LOCAL.md`](docs/DEPLOY_LOCAL.md):
-  systemd service, access token, firewall **including IPv6**, organization branding,
-  end-to-end verification, workstation provisioning, troubleshooting. Field-tested on
-  Ubuntu 24.04, written from an actual deployment rather than from theory.
+- **🔄 Updates stay on in 100 % local mode**, with one checkbox to turn them off for
+  genuinely air-gapped networks.
+- **📘 A real deployment guide, in all three languages** — [`docs/DEPLOY_LOCAL.md`](docs/DEPLOY_LOCAL.md).
 - **✍️ Made by k0nrd** — the home screen now says who wrote it, one click from the source.
 
 Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
+
+</details>
 
 ---
 

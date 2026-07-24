@@ -27,6 +27,7 @@ export function StatusBar({ connection, onOpenDiagnostics, solo, onShare }: Stat
         onClick={onShare}
         title={t('share.generateHint')}
         aria-label={t('status.solo')}
+        data-tut="connection"
       >
         <span className="bd-status__dot" aria-hidden="true" />
         <span className="bd-status__label">{t('status.solo')}</span>
@@ -52,6 +53,7 @@ export function StatusBar({ connection, onOpenDiagnostics, solo, onShare }: Stat
       onClick={onOpenDiagnostics}
       title={t('status.openDiagnostics')}
       aria-label={`${label} — ${t('status.openDiagnostics')}`}
+      data-tut="connection"
     >
       <span className="bd-status__dot" aria-hidden="true" />
       <span className="bd-status__label">{label}</span>

@@ -7,7 +7,7 @@
 Instalacja serwera sygnalizacyjnego COSINT w sieci zamkniętej oraz konfiguracja stanowisk
 klienckich.
 
-Sprawdzone na **Ubuntu 24.04 LTS** z **COSINT v1.8.8**. Do zastosowania w każdej dystrybucji
+Sprawdzone na **Ubuntu 24.04 LTS** z **COSINT v1.8.9**. Do zastosowania w każdej dystrybucji
 korzystającej z systemd.
 
 ### Wartości do podmiany
@@ -79,13 +79,18 @@ ip -4 a | grep inet
 
 Zanotuj IP interfejsu zwróconego do sieci stanowisk (`<INTERFEJS>`, `eth0`…).
 
-### Ustal adres na stałe — nie pomijaj tego
+### Ustal adres na stałe — albo pozwól COSINT się tym zająć
 
-Jeśli powyższy wynik zawiera `dynamic`, adres pochodzi z DHCP i **może się zmienić**. W dniu,
-w którym się zmieni, wszystkie stanowiska naraz stracą serwer, a rozdany profil stanie się
-nieaktualny.
+Jeśli powyższy wynik zawiera `dynamic`, adres pochodzi z DHCP i **może się zmienić**.
 
-Dwie opcje, w kolejności preferencji:
+> **✅ Od wersji 1.8.9 nie jest to już przeszkodą.** Każde stanowisko sprawdza zapisany adres
+> przy uruchomieniu i, gdy przestaje on odpowiadać, **samo odnajduje serwer** w sieci
+> lokalnej — zobacz [§ Automatyczne wykrywanie](#automatyczne-wykrywanie-serwer-w-dhcp).
+> Koniec z odtwarzaniem profilu każdego ranka.
+
+Ustalenie adresu na stałe pozostaje **lepszym rozwiązaniem** (natychmiastowe ponowne
+połączenie, brak skanowania, profil `.cosint-org` ważny bezterminowo). Dwie opcje,
+w kolejności preferencji:
 
 1. **Rezerwacja DHCP na routerze lub serwerze DHCP** (zalecane) — powiąż adres MAC interfejsu
    z żądanym IP. Odczytaj MAC poleceniem:
@@ -467,6 +472,7 @@ sudo journalctl -u cosint-signaling -n 3 --no-pager
 | Serwer sygnalizacyjny | `ws://<IP_SERWERA>:4444` |
 | Token dostępu | Wygenerowany token |
 | STUN / TURN | **Puste** |
+| Automatycznie odnajduj serwer | **Zaznaczone** (zalecane przy DHCP) |
 | Zachowaj włączone aktualizacje | **Twoja decyzja** — patrz niżej |
 
 **Dlaczego puste STUN/TURN:** w sieci LAN uczestnicy odnajdują się przez bezpośrednich
@@ -484,6 +490,60 @@ nieprawidłowe pole zostawia udostępnione tablice offline, bez obejścia.
 Podsumowanie „z czym skontaktuje się aplikacja” jest wyliczane przez tę samą funkcję, która
 faktycznie otwiera połączenia: **musi dokładnie odzwierciedlać Twoją politykę.** To Twój
 dowód izolacji — sprawdź je na każdym stanowisku.
+
+### Automatyczne wykrywanie (serwer w DHCP)
+
+**Problem.** W DHCP adres serwera się zmienia — często każdej nocy. Do wersji 1.8.8 trzeba
+było odczytać nowy adres, odtworzyć plik `.cosint-org` i zaimportować go na każdym
+stanowisku. Każdego ranka.
+
+**Co robi wersja 1.8.9.** Serwer publikuje **odcisk tożsamości** pod `GET /cosint`, bez
+uwierzytelniania:
+
+```bash
+curl -s http://<IP_SERWERA>:4444/cosint
+# {"cosint":1,"id":"069dc41621ee0610c845dcd3912ccc2b"}
+```
+
+Ten odcisk to skrócony `sha256("cosint-discovery-v1:" + COSINT_TOKEN)`. Jest też wypisywany
+przy starcie usługi:
+
+```bash
+sudo journalctl -u cosint-signaling -n 3 --no-pager
+# Découverte automatique : GET /cosint → empreinte 069dc41621ee0610c845dcd3912ccc2b.
+```
+
+Każde stanowisko wyprowadza **ten sam** odcisk z posiadanego tokenu, a następnie:
+
+1. sprawdza zapisany adres — jedno żądanie i w typowym przypadku to koniec;
+2. jeśli adres nie odpowiada, **przeszukuje własne podsieci prywatne** wyłącznie na
+   skonfigurowanym porcie;
+3. akceptuje **tylko** serwer o zgodnym odcisku i zapisuje jego nowy adres.
+   Informuje o tym komunikat: „Serwer odnaleziony — nowy adres …”.
+
+**Dlaczego to jest bezpieczne.** Odcisk dowodzi znajomości tokenu **bez jego ujawniania**
+(token z tego przewodnika to 24 losowe bajty: nie do złamania siłowo). Stanowisko wysyła
+token **dopiero po** zidentyfikowaniu właściwego serwera, więc podstawiony serwer w tej samej
+sieci nie może ani podszyć się pod Twój, ani otrzymać tokenu. Nic więcej nie jest ujawniane —
+ani nazwa organizacji, ani logo, ani pokoje: marka pozostaje za kontrolą tokenu.
+
+> **⚠️ Bez `COSINT_TOKEN` odcisk jest stałą**: pasuje każdy otwarty serwer COSINT w sieci.
+> Wykrywanie staje się wtedy udogodnieniem, a nie gwarancją — kolejny powód, by ustawić token.
+
+**Co jest przeszukiwane i nic poza tym:** **prywatne** zakresy interfejsów samego stanowiska
+(najwyżej jedna /24 na interfejs, 3 interfejsy), na **jedynym** skonfigurowanym porcie. Nigdy
+zakres publiczny, nigdy inny port.
+
+**Ustawienie** — Ustawienia → Sieć → *Wykrywanie serwera*: pole „Automatycznie odnajduj serwer,
+gdy zmieni adres” jest **domyślnie zaznaczone**, a przycisk **Szukaj** wymusza natychmiastowe
+wyszukiwanie (przydatne zaraz po wpisaniu tokenu).
+
+Na stanowisku **poza siecią** (w domu, w innej lokalizacji) żaden odcisk nie pasuje: nic się
+nie zmienia, stanowisko po prostu pozostaje offline. Takie jest zamierzone zachowanie.
+
+> **Serwer musi działać w wersji 1.8.9 lub nowszej.** Starszy serwer nie odpowiada pod
+> `/cosint`: wykrywanie kończy się po cichu niepowodzeniem i adres nadal trzeba wpisać ręcznie.
+> Aktualizacja: zobacz [§11](#11-codzienna-eksploatacja).
 
 ### Konfiguracja automatyczna: plik `.cosint-org`
 
@@ -570,7 +630,14 @@ aktualizacji pozostaje domyślnie włączone w trybie w pełni lokalnym. Odznacz
 włączone aktualizacje” (Ustawienia → Sieć).
 
 **Wszystko działało, po restarcie nic** — reguły zapory nieutrwalone albo IP serwera zmienione
-przez DHCP.
+przez DHCP (automatyczne wykrywanie powinno je wtedy odnaleźć: sprawdź, czy serwer działa
+w wersji 1.8.9 lub nowszej).
+
+**Automatyczne wykrywanie nie znajduje serwera** — po kolei: serwer starszy niż 1.8.9
+(`curl http://<IP_SERWERA>:4444/cosint` musi zwrócić JSON); różne tokeny na stanowisku
+i serwerze (odciski się nie zgadzają); stanowisko w innej sieci niż serwer; zapora blokująca
+port od strony stanowiska; izolacja klientów Wi-Fi. Przycisk **Szukaj** w Ustawieniach daje
+natychmiastową informację zwrotną.
 
 **`git clone` lub `npm install` odrzucone w `/opt`** — uprawnienia. Użyj `sudo` albo zainstaluj
 w katalogu, który należy do Ciebie.
@@ -629,7 +696,7 @@ Różnica między nimi oznacza zapomniany `daemon-reload` lub `restart`.
 
 - [ ] Node ≥ 18 zainstalowany
 - [ ] Repozytorium sklonowane, `npm install` wykonany
-- [ ] IP serwera ustalone na stałe (rezerwacja DHCP)
+- [ ] IP serwera ustalone na stałe (rezerwacja DHCP) — lub zweryfikowane automatyczne wykrywanie
 - [ ] Konto usługi wybrane, uprawnienia dostosowane
 - [ ] Token wygenerowany i nigdy nieujawniony
 - [ ] Usługa systemd aktywna i włączona przy starcie
@@ -646,4 +713,4 @@ Różnica między nimi oznacza zapomniany `daemon-reload` lub `restart`.
 
 ---
 
-*Na podstawie COSINT v1.8.8 — https://github.com/k0nrd/COSINT*
+*Na podstawie COSINT v1.8.9 — https://github.com/k0nrd/COSINT*

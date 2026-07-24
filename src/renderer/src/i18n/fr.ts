@@ -1246,5 +1246,32 @@ export const fr = {
     'Exportez le tableau entier en .trace (fichier portable, ré-importable), en image PNG, en CSV, ou tirez un rapport de sources en Markdown.',
   'tutorial.end.title': 'À vous de jouer',
   'tutorial.end.text':
-    'Vous avez l’essentiel. Le reste s’apprend en faisant. Ce tutoriel se relance depuis l’accueil, ou depuis Paramètres → À propos.'
+    'Vous avez l’essentiel. Le reste s’apprend en faisant. Ce tutoriel se relance depuis l’accueil, ou depuis Paramètres → À propos.',
+
+  // ——— v1.8.9 : étapes de tutoriel sur le FONCTIONNEMENT (§2) ———
+  'tutorial.status.title': 'Qualifier ce que vous savez',
+  'tutorial.status.text':
+    'Chaque élément porte un statut : à vérifier, confirmé, écarté. C’est la discipline qui distingue une enquête d’un tas de captures d’écran — un fait non confirmé doit se voir comme tel, y compris par vos collègues.',
+  'tutorial.roles.title': 'Qui peut faire quoi',
+  'tutorial.roles.text':
+    'Trois rôles : l’admin gère le partage et les rôles, l’éditeur modifie le tableau, le visiteur consulte sans rien changer. Vous fixez aussi le nombre maximum de participants, et vous pouvez régénérer le code ou exclure quelqu’un à tout moment.',
+  'tutorial.privacy.title': 'Où passent vos données',
+  'tutorial.privacy.text':
+    'Nulle part ailleurs que sur les postes. Le contenu circule directement de pair à pair, chiffré de bout en bout. Un serveur ne sert qu’à vous présenter les uns aux autres : il ne voit ni vos tableaux, ni votre code de partage. Cette pastille indique l’état réel de la connexion — cliquez-la pour le diagnostic détaillé.',
+  'tutorial.storage.title': 'Hors ligne, et à vous',
+  'tutorial.storage.text':
+    'Tout est enregistré sur votre poste au fil de l’eau. Sans réseau, vous continuez à travailler : la synchronisation reprend d’elle-même au retour d’un collègue. Pensez à exporter un .trace de temps en temps — c’est votre sauvegarde, et personne d’autre ne l’a.',
+
+  // ——— v1.8.9 : découverte du serveur de signalisation (§1) ———
+  'settings.discovery': 'Découverte du serveur',
+  'settings.discoverNow': 'Rechercher',
+  'settings.discoverySearching': 'Recherche…',
+  'settings.autoDiscoverLabel': 'Retrouver automatiquement le serveur s’il change d’adresse',
+  'settings.discoveryHint':
+    'Si votre serveur est en DHCP, son adresse change (souvent chaque nuit). COSINT vérifie l’adresse enregistrée au démarrage et, si elle ne répond plus, retrouve le serveur sur votre réseau local en comparant une empreinte dérivée du jeton — votre jeton n’est jamais transmis avant que le bon serveur soit identifié. Ne cherche que sur le port configuré, et uniquement sur vos réseaux privés. Nécessite un serveur en v1.8.9 ou plus.',
+  'settings.discoveryNoAddress': 'Renseignez d’abord l’adresse du serveur de signalisation.',
+  'settings.discoveryReachable': 'Le serveur répond à l’adresse enregistrée.',
+  'settings.discoveryNotFound':
+    'Serveur introuvable sur ce réseau. Vérifiez qu’il est allumé, que le jeton est le bon, et qu’il tourne en v1.8.9 ou plus.',
+  'settings.serverMoved': 'Serveur retrouvé — nouvelle adresse : {url}'
 } as const

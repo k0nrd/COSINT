@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.8.8-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.8.9-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
-  <img src="https://img.shields.io/badge/testy-290%20zielone-3fbf6a" alt="Testy">
+  <img src="https://img.shields.io/badge/testy-306%20zielone-3fbf6a" alt="Testy">
   <img src="https://img.shields.io/badge/telemetria-brak-ef4444" alt="Brak telemetrii">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Zbudowano z">
 </p>
@@ -74,29 +74,40 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.8.8
+## 🚀 Nowości w 1.8.9
+
+- **📡 Twój serwer w DHCP, odnajdywany automatycznie** — własny serwer sygnalizacyjny, którego
+  adres zmieniał się w nocy, oznaczał odtwarzanie profilu i import na każdym stanowisku,
+  każdego ranka. Teraz każde stanowisko sprawdza zapisany adres przy uruchomieniu i, gdy ten
+  przestaje odpowiadać, **samo odnajduje serwer w sieci lokalnej**. Rozpoznaje go po
+  **odcisku wyprowadzonym z Twojego tokenu dostępu**: nie da się trafić na inny serwer niż
+  Twój, a **token nigdy nie jest wysyłany, zanim ten serwer nie zostanie zidentyfikowany**.
+  Sondowany jest tylko skonfigurowany port i wyłącznie Twoje podsieci prywatne. Wymaga
+  serwera w wersji 1.8.9.
+- **🎓 Samouczek tłumaczy też zasadę działania** — cztery dodatkowe kroki poza samą mechaniką:
+  określanie, co wiemy (do sprawdzenia / potwierdzone / odrzucone), kto co może (role i limit
+  uczestników), gdzie naprawdę trafiają Twoje dane (peer-to-peer, szyfrowanie end-to-end, co
+  serwer widzi, a czego nie) oraz praca offline z plikiem `.trace` jako kopią zapasową.
+
+Pełne informacje: [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+<details>
+<summary>1.8.8 — samouczek prowadzony, ustawienia w zakładkach, nowa ikona</summary>
 
 - **🎓 Samouczek prowadzony, prosto z ekranu głównego** — dyskretny przycisk *Samouczek*
-  wprowadza w podstawy w dwunastu krótkich krokach: utworzyć tablicę, dodać encję, uzupełnić
-  jej kartę, połączyć dwie encje, podać źródła, odczytać oś czasu, udostępnić i wyeksportować.
-  **Wskazuje prawdziwy interfejs** podczas pracy — nic nie jest symulowane — i można go
-  **zamknąć w każdej chwili**. Do powtórzenia z Ustawienia → O programie.
-- **🗂️ Ustawienia wreszcie uporządkowane** — jedna niekończąca się strona zamieniła się
-  w **pięć zakładek** (Profil, Wygląd, Skróty, Sieć, O programie). Jeden przycisk *Zapisz*,
-  niezależnie od zakładki; błąd wprowadzania przenosi z powrotem do niepoprawnego pola.
+  wprowadza w podstawy, **wskazując prawdziwy interfejs** podczas pracy.
+- **🗂️ Ustawienia wreszcie uporządkowane** — **pięć zakładek** (Profil, Wygląd, Skróty, Sieć,
+  O programie).
 - **🖼️ Nowa ikona aplikacji** — odświeżone logo: instalator, pasek zadań, okno i ekran główny.
-- **🔄 Aktualizacje pozostają włączone w trybie w pełni lokalnym** — przełączenie na tryb
-  lokalny nie odcina już po cichu od poprawek. GitHub Releases staje się **jedyną**
-  kontaktowaną usługą publiczną (żadne dane tablic przez nią nie przechodzą), podsumowanie
-  mówi o tym wprost, a jedno pole wyboru wyłącza to w sieci naprawdę odizolowanej.
+- **🔄 Aktualizacje pozostają włączone w trybie w pełni lokalnym**, z jednym polem wyboru do
+  ich wyłączenia w sieci naprawdę odizolowanej.
 - **📘 Prawdziwy przewodnik wdrożeniowy, we wszystkich trzech językach** —
-  [`docs/DEPLOY_LOCAL.pl.md`](docs/DEPLOY_LOCAL.pl.md): usługa systemd, token dostępu, zapora
-  **wraz z IPv6**, marka organizacji, weryfikacja end-to-end, konfiguracja stanowisk,
-  rozwiązywanie problemów. Sprawdzony w praktyce (Ubuntu 24.04), napisany na podstawie
-  rzeczywistego wdrożenia, nie teorii.
+  [`docs/DEPLOY_LOCAL.pl.md`](docs/DEPLOY_LOCAL.pl.md).
 - **✍️ Autor: k0nrd** — ekran główny mówi teraz, kto to napisał, o jedno kliknięcie od źródeł.
 
 Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
+
+</details>
 
 ---
 

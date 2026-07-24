@@ -7,7 +7,7 @@
 Guide d'installation d'un serveur de signalisation COSINT sur un réseau fermé, et de
 provisionnement des postes clients.
 
-Testé sur **Ubuntu 24.04 LTS** avec **COSINT v1.8.8**. Adaptable à toute distribution
+Testé sur **Ubuntu 24.04 LTS** avec **COSINT v1.8.9**. Adaptable à toute distribution
 disposant de systemd.
 
 ### Valeurs à remplacer
@@ -80,13 +80,17 @@ ip -4 a | grep inet
 
 Notez l'IP de l'interface reliée au réseau des postes (`<INTERFACE>`, `eth0`…).
 
-### Figer l'adresse — à ne pas négliger
+### Figer l'adresse — ou laisser COSINT s'en charger
 
 Si la sortie précédente mentionne `dynamic`, l'adresse vient du DHCP et **peut changer**.
-Le jour où elle change, tous les postes perdent le serveur d'un coup, et le profil
-distribué devient caduc.
 
-Deux options, par ordre de préférence :
+> **✅ Depuis la v1.8.9, ce n'est plus bloquant.** Chaque poste vérifie l'adresse
+> enregistrée au démarrage et, si elle ne répond plus, **retrouve le serveur tout seul**
+> sur le réseau local — voir [§ Découverte automatique](#découverte-automatique-serveur-en-dhcp).
+> Plus besoin de refaire un profil chaque matin.
+
+Figer l'adresse reste **préférable** (reconnexion instantanée, pas de balayage, profil
+`.cosint-org` valable indéfiniment). Deux options, par ordre de préférence :
 
 1. **Réservation DHCP sur la box ou le serveur DHCP** (recommandé) — associez l'adresse
    MAC de l'interface à l'IP voulue. Relevez la MAC avec :
@@ -470,6 +474,7 @@ sudo journalctl -u cosint-signaling -n 3 --no-pager
 | Serveur de signalisation | `ws://<IP_SERVEUR>:4444` |
 | Jeton d'accès | Le jeton généré |
 | STUN / TURN | **Vides** |
+| Retrouver automatiquement le serveur | **Coché** (recommandé si DHCP) |
 | Garder les mises à jour activées | **Votre choix** — voir ci-dessous |
 
 **Pourquoi vider STUN/TURN :** sur un LAN, les pairs se découvrent par candidats hôtes
@@ -487,6 +492,63 @@ laisse les tableaux partagés hors ligne, sans contournement.
 Le récapitulatif « ce que l'application va contacter » est calculé par la fonction qui
 ouvre réellement les connexions : **il doit refléter exactement votre politique.** C'est
 votre preuve de cloisonnement — vérifiez-le sur chaque poste.
+
+### Découverte automatique (serveur en DHCP)
+
+**Le problème.** En DHCP, l'adresse du serveur change — souvent chaque nuit. Jusqu'à la
+v1.8.8, il fallait relever la nouvelle adresse, refaire un `.cosint-org` et le réimporter
+sur chaque poste. Tous les matins.
+
+**Ce que fait la v1.8.9.** Le serveur publie une **empreinte d'identité** sur
+`GET /cosint`, sans authentification :
+
+```bash
+curl -s http://<IP_SERVEUR>:4444/cosint
+# {"cosint":1,"id":"069dc41621ee0610c845dcd3912ccc2b"}
+```
+
+Cette empreinte est un `sha256("cosint-discovery-v1:" + COSINT_TOKEN)` tronqué. Elle est
+aussi affichée au démarrage du service :
+
+```bash
+sudo journalctl -u cosint-signaling -n 3 --no-pager
+# Découverte automatique : GET /cosint → empreinte 069dc41621ee0610c845dcd3912ccc2b.
+```
+
+Chaque poste dérive la **même** empreinte depuis le jeton qu'il détient, puis :
+
+1. vérifie l'adresse enregistrée — une requête, et c'est terminé dans le cas courant ;
+2. si elle ne répond plus, **balaie ses propres sous-réseaux privés** sur le seul port
+   configuré ;
+3. n'accepte **que** le serveur dont l'empreinte correspond, et réécrit son adresse.
+   Un message le signale : « Serveur retrouvé — nouvelle adresse … ».
+
+**Pourquoi c'est sûr.** L'empreinte prouve la connaissance du jeton **sans le révéler**
+(le jeton du guide fait 24 octets aléatoires : non brute-forçable). Le poste ne transmet
+son jeton **qu'après** avoir identifié le bon serveur : un serveur pirate posé sur le même
+réseau ne peut donc ni usurper l'identité du vôtre, ni se faire livrer le jeton. Rien
+d'autre n'est exposé — ni le nom d'organisation, ni le logo, ni les rooms : la marque
+reste derrière le contrôle de jeton.
+
+> **⚠️ Sans `COSINT_TOKEN`, l'empreinte est une constante** : n'importe quel serveur COSINT
+> ouvert du réseau correspond. La découverte devient une commodité, pas une garantie —
+> une raison de plus de définir un jeton.
+
+**Ce qui est balayé, et rien d'autre :** les plages **privées** des interfaces du poste
+(au plus un /24 par interface, 3 interfaces), sur le **seul port** déjà configuré. Jamais
+une plage publique, jamais un autre port.
+
+**Le réglage** — Paramètres → Réseau → *Découverte du serveur* : la case « Retrouver
+automatiquement le serveur s'il change d'adresse » est **cochée par défaut**, et le bouton
+**Rechercher** force une recherche immédiate (utile après avoir saisi un jeton).
+
+Sur un poste **hors du réseau** (à la maison, sur un autre site), aucune empreinte ne
+correspond : rien ne bouge, le poste reste simplement hors ligne. C'est le comportement
+voulu.
+
+> **Le serveur doit tourner en v1.8.9 ou plus.** Un serveur antérieur ne répond pas sur
+> `/cosint` : la découverte échoue silencieusement et l'adresse reste à saisir à la main.
+> Mise à jour : voir [§11](#11-exploitation-courante).
 
 ### Provisionnement automatique : le fichier `.cosint-org`
 
@@ -573,7 +635,15 @@ vérification de mise à jour reste active par défaut en 100 % local. Décochez
 mises à jour activées » (Paramètres → Réseau).
 
 **Tout marchait, plus rien après un redémarrage** — règles de pare-feu non persistées, ou
-IP du serveur modifiée par le DHCP.
+IP du serveur modifiée par le DHCP (la découverte automatique doit alors la retrouver :
+vérifiez que le serveur tourne en v1.8.9 ou plus).
+
+**La découverte automatique ne retrouve pas le serveur** — dans l'ordre : serveur en
+version antérieure à la v1.8.9 (`curl http://<IP_SERVEUR>:4444/cosint` doit renvoyer du
+JSON) ; jeton différent entre le poste et le serveur (les empreintes ne correspondent
+pas) ; poste sur un autre réseau que le serveur ; pare-feu bloquant le port depuis le
+poste ; isolation des clients Wi-Fi. Le bouton **Rechercher** des Paramètres donne un
+retour immédiat.
 
 **`git clone` ou `npm install` refusés dans `/opt`** — droits. Utilisez `sudo`, ou
 installez dans un répertoire vous appartenant.
@@ -633,7 +703,7 @@ Une différence entre les deux signale un `daemon-reload` ou un `restart` oubli�
 
 - [ ] Node ≥ 18 installé
 - [ ] Dépôt cloné, `npm install` effectué
-- [ ] IP du serveur figée (réservation DHCP)
+- [ ] IP du serveur figée (réservation DHCP) — ou découverte automatique validée
 - [ ] Compte d'exécution choisi, droits ajustés
 - [ ] Jeton généré et jamais divulgué
 - [ ] Service systemd actif et activé au démarrage
@@ -650,4 +720,4 @@ Une différence entre les deux signale un `daemon-reload` ou un `restart` oubli�
 
 ---
 
-*Basé sur COSINT v1.8.8 — https://github.com/k0nrd/COSINT*
+*Basé sur COSINT v1.8.9 — https://github.com/k0nrd/COSINT*

@@ -30,6 +30,7 @@ const ANCHOR_SOURCES = [
   'src/renderer/src/components/board/Toolbar.tsx',
   'src/renderer/src/components/board/TopBar.tsx',
   'src/renderer/src/components/board/SidePanel.tsx',
+  'src/renderer/src/components/board/StatusBar.tsx',
   'src/renderer/src/flow/BoardView.tsx'
 ]
 

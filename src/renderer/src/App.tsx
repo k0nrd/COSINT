@@ -31,6 +31,7 @@ import {
 import type { AccessMode, BoardEdgeData, BoardNodeData } from '@/types'
 import { effectiveNetworkConfig, useSettings } from '@/store/settings'
 import { fetchBranding, withToken } from '@/sync/branding'
+import { locateServer } from '@/sync/discovery'
 import { boardEntry, secretForBoard, useBoards } from '@/store/boards'
 import { useToasts } from '@/store/toasts'
 import { useTutorial } from '@/store/tutorial'
@@ -133,6 +134,44 @@ export default function App(): ReactElement {
     () => withToken(network.signalingUrls, network.signalingToken),
     [network.signalingUrls, network.signalingToken]
   )
+
+  // §1 v1.8.9 : le serveur interne a-t-il changé d'adresse ? En DHCP, c'est le cas
+  // presque chaque jour. On vérifie l'adresse enregistrée (une requête) et, si elle
+  // ne répond plus, on retrouve le serveur sur le réseau local par son EMPREINTE —
+  // puis on réécrit l'adresse. L'effet « networkKey » ci-dessous rebranche alors le
+  // tableau ouvert tout seul. Jamais silencieux : un message signale le déplacement.
+  //
+  // Déclencheurs volontairement rares (un balayage n'est pas gratuit) : au montage,
+  // au retour du réseau, et à chaque changement d'adresse configurée. Un verrou
+  // empêche deux balayages simultanés, et l'adresse trouvée fait cesser les suivants.
+  const locating = useRef(false)
+  useEffect(() => {
+    if (network.mode !== 'local' || !settings.autoDiscoverServer) return
+    if (network.signalingUrls.length === 0) return
+    let cancelled = false
+
+    const relocate = async (): Promise<void> => {
+      if (locating.current) return
+      locating.current = true
+      try {
+        const outcome = await locateServer(network.signalingUrls, network.signalingToken)
+        if (cancelled || outcome.status !== 'moved') return
+        logSync('success', `Serveur de signalisation retrouvé — nouvelle adresse ${outcome.url}.`)
+        pushToast(t('settings.serverMoved', { url: outcome.url }), 'success')
+        settings.setCustomSignalingUrl(outcome.url)
+      } finally {
+        locating.current = false
+      }
+    }
+
+    void relocate()
+    window.addEventListener('online', relocate)
+    return () => {
+      cancelled = true
+      window.removeEventListener('online', relocate)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [network.mode, network.signalingUrls, network.signalingToken, settings.autoDiscoverServer])
 
   // §1 v1.8.7 : MARQUE d'organisation en mode 100 % local — servie par le serveur de
   // signalisation (canal WebSocket, CSP inchangée) puis mise en cache. Hors mode local

@@ -1241,5 +1241,32 @@ export const pl: Record<MessageKey, string> = {
     'Wyeksportuj całą tablicę do pliku .trace (przenośny, można go zaimportować), do obrazu PNG, do CSV lub wygeneruj raport źródeł w formacie Markdown.',
   'tutorial.end.title': 'Teraz Twoja kolej',
   'tutorial.end.text':
-    'Masz podstawy. Reszty nauczysz się w praktyce. Ten samouczek uruchomisz ponownie z ekranu głównego lub z Ustawienia → O programie.'
+    'Masz podstawy. Reszty nauczysz się w praktyce. Ten samouczek uruchomisz ponownie z ekranu głównego lub z Ustawienia → O programie.',
+
+  // ——— v1.8.9: kroki samouczka o ZASADZIE DZIAŁANIA (§2) ———
+  'tutorial.status.title': 'Określ, co wiesz',
+  'tutorial.status.text':
+    'Każdy element ma status: do sprawdzenia, potwierdzone, odrzucone. Ta dyscyplina odróżnia śledztwo od stosu zrzutów ekranu — fakt niepotwierdzony musi wyglądać na niepotwierdzony, także dla współpracowników.',
+  'tutorial.roles.title': 'Kto co może',
+  'tutorial.roles.text':
+    'Trzy role: administrator zarządza udostępnianiem i rolami, edytor zmienia tablicę, gość tylko przegląda. Ustalasz też maksymalną liczbę uczestników i w każdej chwili możesz wygenerować nowy kod lub kogoś usunąć.',
+  'tutorial.privacy.title': 'Gdzie trafiają Twoje dane',
+  'tutorial.privacy.text':
+    'Nigdzie poza komputery uczestników. Treść płynie bezpośrednio między nimi, szyfrowana end-to-end. Serwer służy wyłącznie do wzajemnego przedstawienia: nie widzi ani tablic, ani kodu udostępniania. Ta plakietka pokazuje rzeczywisty stan połączenia — kliknij po szczegółową diagnostykę.',
+  'tutorial.storage.title': 'Offline i tylko Twoje',
+  'tutorial.storage.text':
+    'Wszystko zapisuje się na bieżąco na Twoim komputerze. Bez sieci pracujesz dalej: synchronizacja wznowi się sama, gdy współpracownik wróci. Od czasu do czasu wyeksportuj plik .trace — to Twoja kopia zapasowa i nikt inny jej nie ma.',
+
+  // ——— v1.8.9: wykrywanie serwera sygnalizacyjnego (§1) ———
+  'settings.discovery': 'Wykrywanie serwera',
+  'settings.discoverNow': 'Szukaj',
+  'settings.discoverySearching': 'Szukanie…',
+  'settings.autoDiscoverLabel': 'Automatycznie odnajduj serwer, gdy zmieni adres',
+  'settings.discoveryHint':
+    'Jeśli Twój serwer korzysta z DHCP, jego adres się zmienia (często każdej nocy). COSINT sprawdza zapisany adres przy uruchomieniu i, gdy przestaje odpowiadać, odnajduje serwer w sieci lokalnej, porównując odcisk wyprowadzony z tokenu — Twój token nigdy nie jest wysyłany, zanim właściwy serwer nie zostanie zidentyfikowany. Przeszukuje tylko skonfigurowany port i wyłącznie Twoje sieci prywatne. Wymaga serwera w wersji 1.8.9 lub nowszej.',
+  'settings.discoveryNoAddress': 'Najpierw podaj adres serwera sygnalizacyjnego.',
+  'settings.discoveryReachable': 'Serwer odpowiada pod zapisanym adresem.',
+  'settings.discoveryNotFound':
+    'Nie znaleziono serwera w tej sieci. Sprawdź, czy działa, czy token się zgadza i czy ma wersję 1.8.9 lub nowszą.',
+  'settings.serverMoved': 'Serwer odnaleziony — nowy adres: {url}'
 }

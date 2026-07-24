@@ -7,7 +7,7 @@
 How to install a COSINT signalling server on a closed network, and provision the client
 workstations.
 
-Tested on **Ubuntu 24.04 LTS** with **COSINT v1.8.8**. Adaptable to any distribution that
+Tested on **Ubuntu 24.04 LTS** with **COSINT v1.8.9**. Adaptable to any distribution that
 ships systemd.
 
 ### Placeholders to replace
@@ -79,13 +79,17 @@ ip -4 a | grep inet
 
 Note the IP of the interface facing the workstation network (`<INTERFACE>`, `eth0`…).
 
-### Pin the address — do not skip this
+### Pin the address — or let COSINT handle it
 
-If the previous output says `dynamic`, the address comes from DHCP and **can change**. The
-day it does, every workstation loses the server at once, and the profile you distributed
-becomes obsolete.
+If the previous output says `dynamic`, the address comes from DHCP and **can change**.
 
-Two options, in order of preference:
+> **✅ Since 1.8.9 this is no longer a blocker.** Every workstation checks the saved address
+> at startup and, if it no longer answers, **finds the server again by itself** on the local
+> network — see [§ Automatic discovery](#automatic-discovery-dhcp-server). No more rebuilding
+> a profile every morning.
+
+Pinning the address is still **preferable** (instant reconnection, no sweep, a `.cosint-org`
+profile that stays valid indefinitely). Two options, in order of preference:
 
 1. **DHCP reservation on the router or DHCP server** (recommended) — tie the interface's
    MAC address to the IP you want. Read the MAC with:
@@ -465,6 +469,7 @@ sudo journalctl -u cosint-signaling -n 3 --no-pager
 | Signalling server | `ws://<SERVER_IP>:4444` |
 | Access token | The token you generated |
 | STUN / TURN | **Empty** |
+| Find the server again automatically | **Ticked** (recommended under DHCP) |
 | Keep updates enabled | **Your call** — see below |
 
 **Why empty STUN/TURN:** on a LAN, peers find each other through direct host candidates —
@@ -482,6 +487,61 @@ offline, with no workaround.
 The "what the app will contact" recap is computed by the very function that opens the real
 connections: **it must mirror your policy exactly.** That is your proof of isolation — check
 it on every workstation.
+
+### Automatic discovery (DHCP server)
+
+**The problem.** Under DHCP the server's address changes — often every night. Up to 1.8.8
+you had to read the new address, rebuild a `.cosint-org` and re-import it on every
+workstation. Every morning.
+
+**What 1.8.9 does.** The server publishes an **identity fingerprint** on `GET /cosint`,
+unauthenticated:
+
+```bash
+curl -s http://<SERVER_IP>:4444/cosint
+# {"cosint":1,"id":"069dc41621ee0610c845dcd3912ccc2b"}
+```
+
+That fingerprint is a truncated `sha256("cosint-discovery-v1:" + COSINT_TOKEN)`. It is also
+printed when the service starts:
+
+```bash
+sudo journalctl -u cosint-signaling -n 3 --no-pager
+# Découverte automatique : GET /cosint → empreinte 069dc41621ee0610c845dcd3912ccc2b.
+```
+
+Each workstation derives the **same** fingerprint from the token it holds, then:
+
+1. checks the saved address — one request, and in the common case that is the end of it;
+2. if it no longer answers, **sweeps its own private subnets** on the configured port only;
+3. accepts **only** the server whose fingerprint matches, and rewrites its address.
+   A message says so: "Server found again — new address …".
+
+**Why this is safe.** The fingerprint proves knowledge of the token **without revealing it**
+(the token from this guide is 24 random bytes: not brute-forceable). The workstation sends
+its token **only after** it has identified the right server, so a rogue server on the same
+network can neither impersonate yours nor be handed the token. Nothing else is exposed —
+not the organization name, not the logo, not the rooms: branding stays behind the token
+check.
+
+> **⚠️ Without `COSINT_TOKEN` the fingerprint is a constant**: any open COSINT server on the
+> network matches. Discovery becomes a convenience rather than a guarantee — one more reason
+> to set a token.
+
+**What gets swept, and nothing else:** the **private** ranges of the workstation's own
+interfaces (at most one /24 per interface, 3 interfaces), on the **single port** already
+configured. Never a public range, never another port.
+
+**The setting** — Settings → Network → *Server discovery*: "Find the server again
+automatically if its address changes" is **ticked by default**, and the **Search** button
+forces an immediate lookup (handy right after entering a token).
+
+On a workstation **outside the network** (at home, on another site) no fingerprint matches:
+nothing moves, the workstation simply stays offline. That is the intended behaviour.
+
+> **The server must run 1.8.9 or later.** An earlier server does not answer on `/cosint`:
+> discovery fails silently and the address still has to be entered by hand. Updating: see
+> [§11](#11-day-to-day-operation).
 
 ### Automatic provisioning: the `.cosint-org` file
 
@@ -568,7 +628,14 @@ checking stays on by default in 100 % local mode. Untick "Keep updates enabled"
 (Settings → Network).
 
 **Everything worked, nothing does after a reboot** — firewall rules not persisted, or the
-server IP changed by DHCP.
+server IP changed by DHCP (automatic discovery should then find it again: check the server
+runs 1.8.9 or later).
+
+**Automatic discovery does not find the server** — in order: server older than 1.8.9
+(`curl http://<SERVER_IP>:4444/cosint` must return JSON); token mismatch between workstation
+and server (the fingerprints differ); workstation on a different network than the server;
+firewall blocking the port from the workstation; Wi-Fi client isolation. The **Search**
+button in Settings gives immediate feedback.
 
 **`git clone` or `npm install` refused in `/opt`** — permissions. Use `sudo`, or install into
 a directory you own.
@@ -627,7 +694,7 @@ A difference between the two means a forgotten `daemon-reload` or `restart`.
 
 - [ ] Node ≥ 18 installed
 - [ ] Repository cloned, `npm install` done
-- [ ] Server IP pinned (DHCP reservation)
+- [ ] Server IP pinned (DHCP reservation) — or automatic discovery verified
 - [ ] Service account chosen, ownership adjusted
 - [ ] Token generated and never disclosed
 - [ ] systemd service active and enabled at boot
@@ -644,4 +711,4 @@ A difference between the two means a forgotten `daemon-reload` or `restart`.
 
 ---
 
-*Based on COSINT v1.8.8 — https://github.com/k0nrd/COSINT*
+*Based on COSINT v1.8.9 — https://github.com/k0nrd/COSINT*

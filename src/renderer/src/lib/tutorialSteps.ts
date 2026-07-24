@@ -68,6 +68,13 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     textKey: 'tutorial.details.text'
   },
   {
+    id: 'status',
+    scope: 'board',
+    anchor: 'side-panel',
+    titleKey: 'tutorial.status.title',
+    textKey: 'tutorial.status.text'
+  },
+  {
     id: 'link',
     scope: 'board',
     anchor: 'board-canvas',
@@ -101,6 +108,26 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     anchor: 'share',
     titleKey: 'tutorial.share.title',
     textKey: 'tutorial.share.text'
+  },
+  {
+    id: 'roles',
+    scope: 'board',
+    anchor: 'share',
+    titleKey: 'tutorial.roles.title',
+    textKey: 'tutorial.roles.text'
+  },
+  {
+    id: 'privacy',
+    scope: 'board',
+    anchor: 'connection',
+    titleKey: 'tutorial.privacy.title',
+    textKey: 'tutorial.privacy.text'
+  },
+  {
+    id: 'storage',
+    scope: 'board',
+    titleKey: 'tutorial.storage.title',
+    textKey: 'tutorial.storage.text'
   },
   {
     id: 'export',

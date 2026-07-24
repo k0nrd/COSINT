@@ -82,6 +82,10 @@ interface SettingsState {
   /** §1 v1.8.7 : jeton d'accès pré-partagé du serveur de signalisation interne (mode
    * 100 % local). Vide = serveur ouvert. Ajouté aux connexions (`?token=`). */
   signalingToken: string
+  /** §1 v1.8.9 : retrouver seul le serveur interne quand son adresse a changé (DHCP).
+   * Actif par défaut : c'est le comportement attendu d'un parc en réseau fermé, et il
+   * ne s'applique QU'EN mode 100 % local, sur le seul port déjà configuré. */
+  autoDiscoverServer: boolean
   /** §1 v1.8.7 : dernière MARQUE d'organisation servie par le serveur (cache local, pour
    * un affichage immédiat au lancement même si le serveur est momentanément injoignable). */
   orgBranding: OrgBranding | null
@@ -104,6 +108,7 @@ interface SettingsState {
   setAutoUpdateCheck: (enabled: boolean) => void
   setLocalUpdateCheck: (enabled: boolean) => void
   setSignalingToken: (token: string) => void
+  setAutoDiscoverServer: (enabled: boolean) => void
   setOrgBranding: (branding: OrgBranding | null) => void
   pushColor: (hex: string) => void
   pushRecentEntityType: (id: string) => void
@@ -152,6 +157,7 @@ export const useSettings = create<SettingsState>()(
       autoUpdateCheck: true,
       localUpdateCheck: true,
       signalingToken: '',
+      autoDiscoverServer: true,
       orgBranding: null,
       colorHistory: [],
       recentEntityTypes: [],
@@ -167,6 +173,7 @@ export const useSettings = create<SettingsState>()(
       setAutoUpdateCheck: (autoUpdateCheck) => set({ autoUpdateCheck }),
       setLocalUpdateCheck: (localUpdateCheck) => set({ localUpdateCheck }),
       setSignalingToken: (signalingToken) => set({ signalingToken }),
+      setAutoDiscoverServer: (autoDiscoverServer) => set({ autoDiscoverServer }),
       setOrgBranding: (orgBranding) => set({ orgBranding }),
       pushColor: (hex) =>
         set((state) => ({
@@ -204,10 +211,10 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'cosint:settings',
-      version: 7,
+      version: 8,
       // Migration des profils v1 (sans avatar/rôle/statut) + prefs §6bis + §2 v1.5
       // + réglages réseau v1.7.1 (mode, ICE, mise à jour) + langue & mise à jour locale v1.8.6
-      // + jeton d'accès & marque d'organisation v1.8.7.
+      // + jeton d'accès & marque d'organisation v1.8.7 + découverte du serveur v1.8.9.
       migrate: (persisted) => {
         const state = persisted as Partial<SettingsState>
         return {
@@ -223,6 +230,9 @@ export const useSettings = create<SettingsState>()(
           // les mises à jour actives en 100 % local.
           localUpdateCheck: state.localUpdateCheck !== false,
           signalingToken: typeof state.signalingToken === 'string' ? state.signalingToken : '',
+          // §1 v1.8.9 : actif par défaut, y compris pour les installations antérieures
+          // (elles n'avaient pas le réglage) ; un refus explicite reste respecté.
+          autoDiscoverServer: state.autoDiscoverServer !== false,
           orgBranding:
             state.orgBranding && typeof state.orgBranding === 'object' ? state.orgBranding : null,
           colorHistory: Array.isArray(state.colorHistory) ? state.colorHistory : [],

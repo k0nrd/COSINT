@@ -30,6 +30,7 @@ import {
   KeyRound,
   Keyboard,
   Palette,
+  Radar,
   Server,
   ShieldCheck,
   TriangleAlert,
@@ -51,6 +52,7 @@ import {
 } from '@/store/settings'
 import { ICE_SERVERS } from '@/sync/network'
 import { parseOrgProfile, serializeOrgProfile } from '@/lib/orgProfile'
+import { locateServer } from '@/sync/discovery'
 import { REPO_URL, deployGuideUrl, openExternal } from '@/lib/project'
 import { useToasts } from '@/store/toasts'
 import { useTutorial } from '@/store/tutorial'
@@ -192,6 +194,8 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const autoUpdateCheck = useSettings((state) => state.autoUpdateCheck)
   const localUpdateCheck = useSettings((state) => state.localUpdateCheck)
   const signalingToken = useSettings((state) => state.signalingToken)
+  const autoDiscoverServer = useSettings((state) => state.autoDiscoverServer)
+  const setAutoDiscoverServer = useSettings((state) => state.setAutoDiscoverServer)
   const setProfile = useSettings((state) => state.setProfile)
   const setTheme = useSettings((state) => state.setTheme)
   const setLanguage = useSettings((state) => state.setLanguage)
@@ -212,6 +216,8 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const [autoUpdateDraft, setAutoUpdateDraft] = useState(autoUpdateCheck)
   const [localUpdateDraft, setLocalUpdateDraft] = useState(localUpdateCheck)
   const [tokenDraft, setTokenDraft] = useState(signalingToken)
+  const [autoDiscoverDraft, setAutoDiscoverDraft] = useState(autoDiscoverServer)
+  const [searching, setSearching] = useState(false)
   const [pseudoError, setPseudoError] = useState(false)
   const [signalingError, setSignalingError] = useState(false)
   const [iceErrorLines, setIceErrorLines] = useState<string[]>([])
@@ -301,6 +307,29 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     else if (result.error) pushToast(t('export.failed'), 'error')
   }
 
+  // §1 v1.8.9 : recherche MANUELLE du serveur (le bouton). Utile quand on vient de
+  // saisir un jeton, ou pour retrouver le serveur sans attendre le prochain démarrage.
+  // Le résultat se pose dans le brouillon : rien n'est appliqué sans « Enregistrer ».
+  const findServer = async (): Promise<void> => {
+    const urls = parseSignalingUrls(signalingUrl.trim()).filter(isValidSignalingUrl)
+    if (urls.length === 0) {
+      pushToast(t('settings.discoveryNoAddress'), 'info')
+      return
+    }
+    setSearching(true)
+    try {
+      const outcome = await locateServer(urls, tokenDraft.trim())
+      if (outcome.status === 'reachable') pushToast(t('settings.discoveryReachable'), 'success')
+      else if (outcome.status === 'moved') {
+        setSignalingUrl(outcome.url)
+        setSignalingError(false)
+        pushToast(t('settings.serverMoved', { url: outcome.url }), 'success')
+      } else pushToast(t('settings.discoveryNotFound'), 'error')
+    } finally {
+      setSearching(false)
+    }
+  }
+
   const handleSave = (): void => {
     const pseudo = draft.pseudo.trim()
     if (pseudo === '') {
@@ -331,6 +360,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     setAutoUpdateCheck(autoUpdateDraft)
     setLocalUpdateCheck(localUpdateDraft)
     setSignalingToken(tokenDraft.trim())
+    setAutoDiscoverServer(autoDiscoverDraft)
     // La langue est déjà appliquée en direct : figer la référence pour ne pas la restaurer.
     initialLanguage.current = language
     pushToast(t('settings.saved'), 'success')
@@ -538,6 +568,30 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
                     onChange={(event) => setTokenDraft(event.target.value)}
                   />
                   <p className="cm-hint">{t('settings.tokenHint')}</p>
+
+                  {/* §1 v1.8.9 : serveur en DHCP — le poste le retrouve seul. */}
+                  <div className="hm-orgprofile">
+                    <div className="hm-orgprofile__head">
+                      <span className="cm-label hm-orgprofile__title">{t('settings.discovery')}</span>
+                      <button
+                        className="cm-btn cm-btn--sm"
+                        onClick={() => void findServer()}
+                        disabled={searching}
+                      >
+                        <Radar size={14} />
+                        {searching ? t('settings.discoverySearching') : t('settings.discoverNow')}
+                      </button>
+                    </div>
+                    <label className="hm-radio hm-update-check">
+                      <input
+                        type="checkbox"
+                        checked={autoDiscoverDraft}
+                        onChange={(event) => setAutoDiscoverDraft(event.target.checked)}
+                      />
+                      {t('settings.autoDiscoverLabel')}
+                    </label>
+                    <p className="cm-hint">{t('settings.discoveryHint')}</p>
+                  </div>
 
                   <div className="hm-orgprofile">
                     <div className="hm-orgprofile__head">

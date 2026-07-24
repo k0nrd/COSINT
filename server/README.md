@@ -44,6 +44,12 @@ Puis, dans COSINT : Paramètres → Réseau → `ws://localhost:4444` (ou
 Toutes facultatives. Sans `COSINT_ORG_NAME`, aucune marque n'est servie ; sans
 `COSINT_TOKEN`, le serveur est ouvert à quiconque peut atteindre le port.
 
+> **v1.8.9 — découverte automatique (rien à configurer).** Le serveur publie sur
+> `GET /cosint` une empreinte non réversible dérivée de `COSINT_TOKEN`. Un poste dont le
+> serveur a changé d'adresse (DHCP) le retrouve seul sur le réseau local en comparant cette
+> empreinte, sans jamais transmettre son jeton avant d'avoir identifié le bon serveur.
+> Détail et garde-fous : [guide de déploiement](../docs/DEPLOY_LOCAL.fr.md#découverte-automatique-serveur-en-dhcp).
+
 | Variable | Rôle | Contrainte |
 | --- | --- | --- |
 | `PORT` | Port d'écoute | `4444` par défaut |

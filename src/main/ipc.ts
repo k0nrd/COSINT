@@ -8,6 +8,7 @@ import type { IpcMainInvokeEvent } from 'electron'
 import { readFile, stat, writeFile } from 'node:fs/promises'
 import { win32, join } from 'node:path'
 import { normalizeExternalUrl } from '../shared/url'
+import { checkServer, discoverServer, type DiscoveredServer } from './discovery'
 
 /** Taille maximale acceptée pour un fichier .trace importé (256 Mo). */
 const MAX_TRACE_BYTES = 256 * 1024 * 1024
@@ -98,6 +99,43 @@ export function setupIpc(): void {
       return false
     }
   })
+
+  // §1 v1.8.9 : le renderer ne peut pas émettre de HTTP (CSP `connect-src ws: wss:`).
+  // Ces deux canaux lui permettent de VÉRIFIER que son serveur de signalisation est
+  // bien à l'adresse enregistrée, et sinon de le RETROUVER sur le réseau local (cas
+  // du serveur en DHCP dont l'adresse change). Le jeton ne circule jamais ici : le
+  // renderer n'envoie qu'une empreinte non réversible qui en est dérivée.
+  ipcMain.handle(
+    'net:check-server',
+    async (_event, payload: unknown): Promise<boolean> => {
+      const p = payload as { host?: unknown; port?: unknown; expectedId?: unknown }
+      if (
+        typeof p?.host !== 'string' ||
+        typeof p?.port !== 'number' ||
+        typeof p?.expectedId !== 'string'
+      ) {
+        return false
+      }
+      try {
+        return await checkServer(p.host, p.port, p.expectedId)
+      } catch {
+        return false
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'net:discover-server',
+    async (_event, payload: unknown): Promise<DiscoveredServer | null> => {
+      const p = payload as { port?: unknown; expectedId?: unknown }
+      if (typeof p?.port !== 'number' || typeof p?.expectedId !== 'string') return null
+      try {
+        return await discoverServer(p.port, p.expectedId)
+      } catch {
+        return null
+      }
+    }
+  )
 
   // §2 (v1.3) : copie via l'API clipboard du processus principal — fiable sous
   // sandbox, contrairement à navigator.clipboard (permissions/focus du renderer).

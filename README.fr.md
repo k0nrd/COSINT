@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.9-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-290%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-306%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -74,29 +74,40 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.8
+## 🚀 Nouveautés de la 1.8.9
+
+- **📡 Votre serveur en DHCP, retrouvé tout seul** — un serveur auto-hébergé dont l'adresse
+  changeait dans la nuit, c'était refaire un profil et le réimporter sur chaque poste, tous
+  les matins. Désormais chaque poste vérifie l'adresse enregistrée au démarrage et, si elle
+  ne répond plus, **retrouve le serveur seul sur le réseau local**. Il le reconnaît à une
+  **empreinte dérivée de votre jeton d'accès** : impossible de tomber sur un autre serveur
+  que le vôtre, et **votre jeton n'est jamais transmis avant que ce serveur soit identifié**.
+  Seul le port configuré est sondé, seulement sur vos sous-réseaux privés. Nécessite un
+  serveur en 1.8.9.
+- **🎓 Le tutoriel explique aussi le fonctionnement** — quatre étapes de plus que la simple
+  mécanique : qualifier ce que l'on sait (à vérifier / confirmé / écarté), qui peut faire
+  quoi (rôles et limite de participants), où passent réellement vos données (pair-à-pair,
+  chiffré de bout en bout, ce qu'un serveur voit et ne voit pas), et le travail hors ligne
+  avec le `.trace` comme sauvegarde.
+
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+<details>
+<summary>1.8.8 — tutoriel guidé, paramètres en onglets, nouvelle icône</summary>
 
 - **🎓 Un tutoriel guidé, dès l'écran d'accueil** — un bouton *Tutoriel* discret fait
-  découvrir l'essentiel en douze étapes courtes : créer un tableau, poser une entité,
-  renseigner sa fiche, relier deux entités, citer ses sources, lire la frise, partager et
-  exporter. Il **désigne la vraie interface** pendant que vous la manipulez — rien n'est
-  simulé — et se **quitte à tout moment**. Rejouable depuis Paramètres → À propos.
+  découvrir l'essentiel en **désignant la vraie interface** pendant que vous la manipulez.
 - **🗂️ Des paramètres enfin rangés** — la page unique à rallonge devient **cinq onglets**
-  (Profil, Apparence, Raccourcis, Réseau, À propos). Un seul *Enregistrer*, quel que soit
-  l'onglet ; une erreur de saisie vous ramène sur le champ fautif.
-- **🖼️ Nouvelle icône** — un logo repensé, de l'installeur à la barre des tâches, de la
-  fenêtre à l'écran d'accueil.
-- **🔄 Mises à jour maintenues en mode 100 % local** — basculer en local ne vous coupe plus
-  silencieusement des correctifs. GitHub Releases devient le **seul** service public
-  contacté (aucune donnée de tableau n'y transite), le récapitulatif le dit franchement, et
-  une case à décocher suffit pour un réseau réellement isolé.
-- **📘 Un vrai guide de déploiement, dans les trois langues** — [`docs/DEPLOY_LOCAL.fr.md`](docs/DEPLOY_LOCAL.fr.md) :
-  service systemd, jeton d'accès, pare-feu **y compris IPv6**, marque d'organisation,
-  vérification de bout en bout, provisionnement des postes, dépannage. Éprouvé sur le
-  terrain (Ubuntu 24.04), écrit depuis un déploiement réel et non depuis la théorie.
+  (Profil, Apparence, Raccourcis, Réseau, À propos).
+- **🖼️ Nouvelle icône** — un logo repensé, de l'installeur à l'écran d'accueil.
+- **🔄 Mises à jour maintenues en mode 100 % local**, avec une case à décocher pour un
+  réseau réellement isolé.
+- **📘 Un vrai guide de déploiement, dans les trois langues** — [`docs/DEPLOY_LOCAL.fr.md`](docs/DEPLOY_LOCAL.fr.md).
 - **✍️ Fait par k0nrd** — l'écran d'accueil dit désormais qui l'a écrit, à un clic des sources.
 
 Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
+
+</details>
 
 ---
 
