@@ -36,8 +36,17 @@
   color: var(--text-dim);
 }
 
-/* §1 v1.8.7 : co-marquage « COSINT · Organisation » (marque servie par le serveur local). */
-.hm-brand--org {
+.hm-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 0 0 auto;
+}
+
+/* §1 v1.8.7 : co-marquage « COSINT · Organisation » (marque servie par le serveur local).
+   §2 v1.8.8 : la marque COSINT elle-même adopte la même composition (logo + texte). */
+.hm-brand--org,
+.hm-brand--cosint {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -66,6 +75,19 @@
   text-transform: uppercase;
   color: var(--text-mute);
   white-space: nowrap;
+}
+/* §2 v1.8.8 : signature de l'auteur sous l'accroche. */
+.hm-brand__author {
+  display: inline-block;
+  margin-top: 4px;
+}
+/* Le logo COSINT est un visuel plein (pas une icône plate) : léger contour et
+   coins arrondis pour qu'il se pose proprement sur le fond, comme le logo d'une
+   organisation servi par un serveur interne. */
+.hm-brand--cosint .hm-brand__logo {
+  width: 50px;
+  height: 50px;
+  background: transparent;
 }
 
 /* ——— Cartes d'action ——— */
@@ -267,12 +289,12 @@
   letter-spacing: 0.2em;
   color: var(--text);
 }
-.hm-setup-mark__glyph {
-  width: 11px;
-  height: 11px;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+/* §2 v1.8.8 : le logo réel remplace le repère abstrait dès la première ouverture. */
+.hm-setup-mark__logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: var(--r-md);
 }
 .hm-setup-kicker {
   margin: 0 0 12px;
@@ -309,12 +331,20 @@
   font-size: 13px;
 }
 .hm-setup-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
   margin: 22px 0 0;
   padding-top: 14px;
   border-top: 1px solid var(--border);
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--text-mute);
+}
+.hm-setup-author {
+  flex: 0 0 auto;
 }
 
 /* ——— Contrôle segmenté (langue, modificateur…) — §4/§3 v1.8.6 ——— */
@@ -355,34 +385,113 @@
   margin-top: 16px;
 }
 
-/* ——— Paramètres — §7 v1.8.6 : en-têtes de section marqués d'un repère d'accent ——— */
-.hm-settings-section {
+/* ——— Paramètres en onglets (§4 v1.8.8) ———
+   Rail vertical à gauche, panneau à droite. Le rail est collant : sur l'onglet
+   Réseau (le plus long), la navigation reste sous la main pendant le défilement. */
+.hm-settings {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  min-height: 340px;
+}
+.hm-tabs {
+  position: sticky;
+  top: 0;
+  flex: 0 0 168px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: var(--sp-3);
+  border-right: 1px solid var(--border);
+}
+.hm-tab {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin: 22px 0 10px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+.hm-tab:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.hm-tab--on {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  color: var(--accent);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+}
+.hm-tabpanel {
+  flex: 1;
+  min-width: 0;
+}
+/* Chapeau d'onglet : dit à quoi sert la section, en une phrase. */
+.hm-tabpanel__lead {
+  margin: 0 0 var(--sp-3);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.55;
   color: var(--text-dim);
 }
-.hm-settings-section::before {
-  content: '';
+/* Le premier libellé d'un panneau ne doit pas ajouter de marge haute. */
+.hm-tabpanel > .cm-label:first-of-type {
+  margin-top: 0;
+}
+
+/* ——— Onglet « À propos » ——— */
+.hm-about-tab__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.hm-about-tab__logo {
   flex: 0 0 auto;
-  width: 3px;
-  height: 12px;
-  border-radius: var(--r-pill);
-  background: var(--accent);
-  opacity: 0.7;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: var(--r-md);
 }
-.hm-settings-section:first-child {
-  margin-top: 2px;
-  padding-top: 0;
-  border-top: none;
+.hm-about-tab__name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
+.hm-about-tab__version {
+  margin: 2px 0 3px;
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.hm-about-tab__tagline {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+.hm-about-tab__row {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.hm-about-tab__row .cm-hint {
+  margin-top: 6px;
+}
+
+/* ——— Paramètres — contrôles communs aux onglets ——— */
 .hm-radios {
   display: flex;
   gap: var(--sp-4);
@@ -407,13 +516,33 @@
   color: var(--text-mute);
 }
 
-/* Fenêtre étroite : cartes d'action empilées */
+/* Fenêtre étroite : cartes d'action empilées, onglets des réglages en bandeau */
 @media (max-width: 640px) {
   .hm-actions {
     grid-template-columns: 1fr;
   }
   .hm-container {
     padding: var(--sp-5) var(--sp-4) 40px;
+  }
+  .hm-settings {
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  .hm-tabs {
+    position: static;
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-right: 0;
+    padding-bottom: var(--sp-3);
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .hm-tabpanel {
+    width: 100%;
+  }
+  .hm-netmode {
+    grid-template-columns: 1fr;
   }
 }
 

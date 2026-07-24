@@ -1,20 +1,43 @@
 /**
- * Paramètres (profil enrichi §7, apparence, réseau & confidentialité).
- * Le thème est écrit dans le store dès le clic (App applique data-theme sur
- * <html>) et restauré à sa valeur d'ouverture si l'utilisateur annule.
- * Le profil n'est appliqué qu'à l'enregistrement.
+ * Paramètres — §4 v1.8.8 : réorganisés en ONGLETS.
+ *
+ * Avant, tout tenait sur une seule page : profil, thème, langue, raccourcis,
+ * mode réseau, ICE, jeton, mises à jour et récapitulatif s'y succédaient, et
+ * chercher un réglage revenait à faire défiler. Chaque famille a désormais son
+ * onglet ; le pied (Annuler / Enregistrer) reste COMMUN — un seul enregistrement
+ * valide l'ensemble, quel que soit l'onglet où l'on se trouve.
+ *
+ * Ce qui ne change pas :
+ *  - le thème et la langue s'appliquent EN DIRECT et se restaurent si l'on annule ;
+ *  - le profil et le réseau ne sont appliqués qu'à l'enregistrement ;
+ *  - le récapitulatif « Ce que l'application contactera » est calculé par la MÊME
+ *    fonction (`effectiveNetworkConfig`) que celle qui ouvre les connexions : ce
+ *    qui est affiché est exactement ce que le logiciel fera.
  *
  * §réseau v1.7.1 — mode réseau explicite :
  *  - « Standard (Internet) » : serveurs publics par défaut (remplaçables) ;
  *  - « 100 % local (auto-hébergé) » : SEULES les adresses internes saisies sont
- *    utilisées — jamais de repli public, mise à jour GitHub coupée.
- * Le récapitulatif « Ce que l'application contactera » est calculé par la MÊME
- * fonction (`effectiveNetworkConfig`) que celle qui ouvre les connexions : ce
- * qui est affiché est exactement ce que le logiciel fera.
+ *    utilisées — jamais de repli public.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Download, Globe, KeyRound, ShieldCheck, TriangleAlert, Upload } from 'lucide-react'
-import { LOCALES, LOCALE_LABELS, setLocale, t, type Locale } from '@/i18n'
+import {
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  Globe,
+  GraduationCap,
+  Info,
+  KeyRound,
+  Keyboard,
+  Palette,
+  Server,
+  ShieldCheck,
+  TriangleAlert,
+  Upload,
+  UserRound,
+  type LucideIcon
+} from 'lucide-react'
+import { LOCALES, LOCALE_LABELS, setLocale, t, type Locale, type MessageKey } from '@/i18n'
 import {
   DEFAULT_SIGNALING_URLS,
   effectiveNetworkConfig,
@@ -28,18 +51,33 @@ import {
 } from '@/store/settings'
 import { ICE_SERVERS } from '@/sync/network'
 import { parseOrgProfile, serializeOrgProfile } from '@/lib/orgProfile'
+import { DEPLOY_GUIDE_URL, REPO_URL, openExternal } from '@/lib/project'
 import { useToasts } from '@/store/toasts'
+import { useTutorial } from '@/store/tutorial'
 import { USER_COLORS } from '@/lib/colors'
 import type { UserProfile } from '@/types'
 import { Modal } from '@/components/common/Modal'
+import { AuthorTag } from '@/components/common/AuthorTag'
 import { ProfileEditor } from '@/components/common/ProfileEditor'
 import { ShortcutsSettings } from '@/components/home/ShortcutsSettings'
+import cosintLogo from '@/assets/logo.png'
 import { vh3 } from '@/lib/vh3'
 import './home.css'
 
 interface SettingsDialogProps {
   onClose: () => void
 }
+
+/** Onglets, dans leur ordre d'affichage. */
+type SettingsTab = 'profile' | 'appearance' | 'shortcuts' | 'network' | 'about'
+
+const TABS: ReadonlyArray<{ id: SettingsTab; labelKey: MessageKey; icon: LucideIcon }> = [
+  { id: 'profile', labelKey: 'settings.tabProfile', icon: UserRound },
+  { id: 'appearance', labelKey: 'settings.tabAppearance', icon: Palette },
+  { id: 'shortcuts', labelKey: 'settings.tabShortcuts', icon: Keyboard },
+  { id: 'network', labelKey: 'settings.tabNetwork', icon: Globe },
+  { id: 'about', labelKey: 'settings.tabAbout', icon: Info }
+]
 
 /** Copie de travail du profil (repli sûr si le store était vide). */
 function draftProfile(profile: UserProfile | null): UserProfile {
@@ -164,7 +202,9 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const setLocalUpdateCheck = useSettings((state) => state.setLocalUpdateCheck)
   const setSignalingToken = useSettings((state) => state.setSignalingToken)
   const pushToast = useToasts((state) => state.push)
+  const openTutorialIntro = useTutorial((state) => state.openIntro)
 
+  const [tab, setTab] = useState<SettingsTab>('profile')
   const [draft, setDraft] = useState<UserProfile>(() => draftProfile(profile))
   const [modeDraft, setModeDraft] = useState<NetworkMode>(networkMode)
   const [signalingUrl, setSignalingUrl] = useState(customSignalingUrl)
@@ -264,18 +304,22 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const handleSave = (): void => {
     const pseudo = draft.pseudo.trim()
     if (pseudo === '') {
+      // Le pseudo vit dans l'onglet Profil : l'y ramener, sinon l'erreur reste invisible.
+      setTab('profile')
       setPseudoError(true)
       return
     }
     // Plusieurs serveurs acceptés (v1.3, §1) : chaque URL doit être valide.
     const trimmedUrl = signalingUrl.trim()
     if (trimmedUrl !== '' && !parseSignalingUrls(trimmedUrl).every(isValidSignalingUrl)) {
+      setTab('network')
       setSignalingError(true)
       return
     }
     // Serveurs STUN/TURN : chaque ligne non vide doit être exacte (§réseau v1.7.1).
     const ice = parseIceServers(iceDraft)
     if (ice.invalid.length > 0) {
+      setTab('network')
       setIceErrorLines(ice.invalid)
       return
     }
@@ -291,6 +335,12 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     initialLanguage.current = language
     pushToast(t('settings.saved'), 'success')
     onClose()
+  }
+
+  /** Relance le parcours guidé : referme les réglages, puis propose de commencer. */
+  const replayTutorial = (): void => {
+    handleCancel()
+    openTutorialIntro()
   }
 
   const themeOption = (value: Theme, label: string): JSX.Element => (
@@ -330,7 +380,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
     <Modal
       title={t('settings.title')}
       onClose={handleCancel}
-      width={620}
+      width={760}
       footer={
         <>
           <button className="cm-btn" onClick={handleCancel}>
@@ -342,167 +392,240 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
         </>
       }
     >
-      <h3 className="hm-settings-section">{t('settings.sectionProfile')}</h3>
-      <ProfileEditor
-        value={draft}
-        onChange={(next) => {
-          setDraft(next)
-          setPseudoError(false)
-        }}
-      />
-      {pseudoError && (
-        <p className="hm-error" role="alert">
-          {t('profile.pseudoRequired')}
-        </p>
-      )}
+      <div className="hm-settings">
+        <nav className="hm-tabs" role="tablist" aria-label={t('settings.tabsLabel')}>
+          {TABS.map(({ id, labelKey, icon: Icon }) => (
+            <button
+              key={id}
+              role="tab"
+              type="button"
+              aria-selected={tab === id}
+              className={`hm-tab${tab === id ? ' hm-tab--on' : ''}`}
+              onClick={() => setTab(id)}
+            >
+              <Icon size={15} aria-hidden="true" />
+              {t(labelKey)}
+            </button>
+          ))}
+        </nav>
 
-      <h3 className="hm-settings-section">{t('settings.sectionAppearance')}</h3>
-      <span className="cm-label">{t('settings.theme')}</span>
-      <div className="hm-radios">
-        {themeOption('dark', t('settings.themeDark'))}
-        {themeOption('light', t('settings.themeLight'))}
-      </div>
+        <div className="hm-tabpanel" role="tabpanel">
+          {tab === 'profile' && (
+            <>
+              <p className="hm-tabpanel__lead">{t('settings.profileHint')}</p>
+              <ProfileEditor
+                value={draft}
+                onChange={(next) => {
+                  setDraft(next)
+                  setPseudoError(false)
+                }}
+              />
+              {pseudoError && (
+                <p className="hm-error" role="alert">
+                  {t('profile.pseudoRequired')}
+                </p>
+              )}
+            </>
+          )}
 
-      {/* §4 v1.8.6 : langue de l'interface (français / anglais / polonais). */}
-      <span className="cm-label hm-field-gap">{t('settings.language')}</span>
-      <div className="hm-seg" role="group" aria-label={t('settings.language')}>
-        {LOCALES.map((loc) => (
-          <button
-            key={loc}
-            type="button"
-            className={`hm-seg__btn${language === loc ? ' hm-seg__btn--on' : ''}`}
-            onClick={() => changeLanguage(loc)}
-          >
-            {LOCALE_LABELS[loc]}
-          </button>
-        ))}
-      </div>
-      <p className="cm-hint">{t('settings.languageHint')}</p>
-
-      <h3 className="hm-settings-section">{t('settings.sectionShortcuts')}</h3>
-      <p className="cm-hint">{t('settings.shortcutsHint')}</p>
-      <ShortcutsSettings />
-
-      <h3 className="hm-settings-section">{t('settings.sectionNetwork')}</h3>
-      <div className="hm-netmode">
-        {modeCard('standard', t('settings.modeStandard'), t('settings.modeStandardDesc'))}
-        {modeCard('local', t('settings.modeLocal'), t('settings.modeLocalDesc'))}
-      </div>
-
-      <label className="cm-label" htmlFor="hm-settings-signaling">
-        {modeDraft === 'local' ? t('settings.signalingLabelLocal') : t('settings.signalingLabel')}
-      </label>
-      <input
-        id="hm-settings-signaling"
-        className="cm-input cm-mono"
-        value={signalingUrl}
-        placeholder={
-          modeDraft === 'local'
-            ? t('settings.signalingPlaceholderLocal')
-            : t('settings.signalingPlaceholder')
-        }
-        spellCheck={false}
-        autoComplete="off"
-        onChange={(event) => {
-          setSignalingUrl(event.target.value)
-          setSignalingError(false)
-        }}
-      />
-      {signalingError && (
-        <p className="hm-error" role="alert">
-          {t('settings.signalingInvalid')}
-        </p>
-      )}
-      <p className="cm-hint">
-        {modeDraft === 'local' ? t('settings.signalingHintLocal') : t('settings.signalingHint')}
-      </p>
-
-      <label className="cm-label" htmlFor="hm-settings-ice">
-        {t('settings.iceLabel')}
-      </label>
-      <textarea
-        id="hm-settings-ice"
-        className="cm-input cm-mono hm-ice-input"
-        value={iceDraft}
-        rows={3}
-        placeholder={t('settings.icePlaceholder')}
-        spellCheck={false}
-        autoComplete="off"
-        onChange={(event) => {
-          setIceDraft(event.target.value)
-          setIceErrorLines([])
-        }}
-      />
-      {iceErrorLines.length > 0 && (
-        <p className="hm-error" role="alert">
-          {t('settings.iceInvalid', { lines: iceErrorLines.join(' · ') })}
-        </p>
-      )}
-      <p className="cm-hint">{t('settings.iceHint')}</p>
-
-      {/* §1 v1.8.7 : jeton d'accès + profil d'organisation — mode 100 % local uniquement. */}
-      {modeDraft === 'local' && (
-        <>
-          <label className="cm-label" htmlFor="hm-settings-token">
-            <KeyRound size={13} aria-hidden="true" /> {t('settings.tokenLabel')}
-          </label>
-          <input
-            id="hm-settings-token"
-            className="cm-input cm-mono"
-            type="password"
-            value={tokenDraft}
-            placeholder={t('settings.tokenPlaceholder')}
-            spellCheck={false}
-            autoComplete="off"
-            onChange={(event) => setTokenDraft(event.target.value)}
-          />
-          <p className="cm-hint">{t('settings.tokenHint')}</p>
-
-          <div className="hm-orgprofile">
-            <div className="hm-orgprofile__head">
-              <span className="cm-label hm-orgprofile__title">{t('settings.orgProfile')}</span>
-              <div className="hm-orgprofile__actions">
-                <button className="cm-btn cm-btn--sm" onClick={() => void importOrgProfile()}>
-                  <Upload size={14} /> {t('settings.importOrgProfile')}
-                </button>
-                <button className="cm-btn cm-btn--sm" onClick={() => void exportOrgProfile()}>
-                  <Download size={14} /> {t('settings.exportOrgProfile')}
-                </button>
+          {tab === 'appearance' && (
+            <>
+              <p className="hm-tabpanel__lead">{t('settings.appearanceHint')}</p>
+              <span className="cm-label">{t('settings.theme')}</span>
+              <div className="hm-radios">
+                {themeOption('dark', t('settings.themeDark'))}
+                {themeOption('light', t('settings.themeLight'))}
               </div>
+
+              {/* §4 v1.8.6 : langue de l'interface (français / anglais / polonais). */}
+              <span className="cm-label hm-field-gap">{t('settings.language')}</span>
+              <div className="hm-seg" role="group" aria-label={t('settings.language')}>
+                {LOCALES.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    className={`hm-seg__btn${language === loc ? ' hm-seg__btn--on' : ''}`}
+                    onClick={() => changeLanguage(loc)}
+                  >
+                    {LOCALE_LABELS[loc]}
+                  </button>
+                ))}
+              </div>
+              <p className="cm-hint">{t('settings.languageHint')}</p>
+            </>
+          )}
+
+          {tab === 'shortcuts' && (
+            <>
+              <p className="hm-tabpanel__lead">{t('settings.shortcutsHint')}</p>
+              <ShortcutsSettings />
+            </>
+          )}
+
+          {tab === 'network' && (
+            <>
+              <p className="hm-tabpanel__lead">{t('settings.networkHint')}</p>
+              <div className="hm-netmode">
+                {modeCard('standard', t('settings.modeStandard'), t('settings.modeStandardDesc'))}
+                {modeCard('local', t('settings.modeLocal'), t('settings.modeLocalDesc'))}
+              </div>
+
+              <label className="cm-label" htmlFor="hm-settings-signaling">
+                {modeDraft === 'local' ? t('settings.signalingLabelLocal') : t('settings.signalingLabel')}
+              </label>
+              <input
+                id="hm-settings-signaling"
+                className="cm-input cm-mono"
+                value={signalingUrl}
+                placeholder={
+                  modeDraft === 'local'
+                    ? t('settings.signalingPlaceholderLocal')
+                    : t('settings.signalingPlaceholder')
+                }
+                spellCheck={false}
+                autoComplete="off"
+                onChange={(event) => {
+                  setSignalingUrl(event.target.value)
+                  setSignalingError(false)
+                }}
+              />
+              {signalingError && (
+                <p className="hm-error" role="alert">
+                  {t('settings.signalingInvalid')}
+                </p>
+              )}
+              <p className="cm-hint">
+                {modeDraft === 'local' ? t('settings.signalingHintLocal') : t('settings.signalingHint')}
+              </p>
+
+              <label className="cm-label" htmlFor="hm-settings-ice">
+                {t('settings.iceLabel')}
+              </label>
+              <textarea
+                id="hm-settings-ice"
+                className="cm-input cm-mono hm-ice-input"
+                value={iceDraft}
+                rows={3}
+                placeholder={t('settings.icePlaceholder')}
+                spellCheck={false}
+                autoComplete="off"
+                onChange={(event) => {
+                  setIceDraft(event.target.value)
+                  setIceErrorLines([])
+                }}
+              />
+              {iceErrorLines.length > 0 && (
+                <p className="hm-error" role="alert">
+                  {t('settings.iceInvalid', { lines: iceErrorLines.join(' · ') })}
+                </p>
+              )}
+              <p className="cm-hint">{t('settings.iceHint')}</p>
+
+              {/* §1 v1.8.7 : jeton d'accès + profil d'organisation — mode 100 % local uniquement. */}
+              {modeDraft === 'local' && (
+                <>
+                  <label className="cm-label" htmlFor="hm-settings-token">
+                    <KeyRound size={13} aria-hidden="true" /> {t('settings.tokenLabel')}
+                  </label>
+                  <input
+                    id="hm-settings-token"
+                    className="cm-input cm-mono"
+                    type="password"
+                    value={tokenDraft}
+                    placeholder={t('settings.tokenPlaceholder')}
+                    spellCheck={false}
+                    autoComplete="off"
+                    onChange={(event) => setTokenDraft(event.target.value)}
+                  />
+                  <p className="cm-hint">{t('settings.tokenHint')}</p>
+
+                  <div className="hm-orgprofile">
+                    <div className="hm-orgprofile__head">
+                      <span className="cm-label hm-orgprofile__title">{t('settings.orgProfile')}</span>
+                      <div className="hm-orgprofile__actions">
+                        <button className="cm-btn cm-btn--sm" onClick={() => void importOrgProfile()}>
+                          <Upload size={14} /> {t('settings.importOrgProfile')}
+                        </button>
+                        <button className="cm-btn cm-btn--sm" onClick={() => void exportOrgProfile()}>
+                          <Download size={14} /> {t('settings.exportOrgProfile')}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="cm-hint">{t('settings.orgProfileHint')}</p>
+                  </div>
+                </>
+              )}
+
+              {modeDraft === 'standard' ? (
+                <label className="hm-radio hm-update-check">
+                  <input
+                    type="checkbox"
+                    checked={autoUpdateDraft}
+                    onChange={(event) => setAutoUpdateDraft(event.target.checked)}
+                  />
+                  {t('settings.autoUpdateLabel')}
+                </label>
+              ) : (
+                // §5 v1.8.6 / §3 v1.8.8 : même en 100 % local, les mises à jour restent
+                // ACTIVES par défaut (contacte GitHub) — le récapitulatif signale alors
+                // honnêtement ce contact public, et la case reste décochable.
+                <>
+                  <label className="hm-radio hm-update-check">
+                    <input
+                      type="checkbox"
+                      checked={localUpdateDraft}
+                      onChange={(event) => setLocalUpdateDraft(event.target.checked)}
+                    />
+                    {t('settings.autoUpdateLocalLabel')}
+                  </label>
+                  <p className="cm-hint hm-update-locked">{t('settings.autoUpdateLocalHint')}</p>
+                </>
+              )}
+
+              <NetworkRecap config={draftConfig} />
+            </>
+          )}
+
+          {tab === 'about' && (
+            <div className="hm-about-tab">
+              <div className="hm-about-tab__head">
+                <img className="hm-about-tab__logo" src={cosintLogo} alt="" aria-hidden="true" />
+                <div>
+                  <h3 className="hm-about-tab__name">{t('settings.aboutTitle')}</h3>
+                  <p className="hm-about-tab__version">
+                    {t('settings.aboutVersion', { version: version || '…' })}
+                  </p>
+                  <AuthorTag />
+                </div>
+              </div>
+              <p className="hm-about-tab__tagline">{t('settings.aboutTagline')}</p>
+
+              <div className="hm-about-tab__row">
+                <button className="cm-btn" onClick={replayTutorial}>
+                  <GraduationCap size={15} /> {t('settings.aboutTutorial')}
+                </button>
+                <p className="cm-hint">{t('settings.aboutTutorialHint')}</p>
+              </div>
+
+              <div className="hm-about-tab__row">
+                <button className="cm-btn" onClick={() => openExternal(REPO_URL)}>
+                  <ExternalLink size={15} /> {t('settings.aboutRepo')}
+                </button>
+                <p className="cm-hint">{t('settings.aboutRepoHint')}</p>
+              </div>
+
+              <div className="hm-about-tab__row">
+                <button className="cm-btn" onClick={() => openExternal(DEPLOY_GUIDE_URL)}>
+                  <Server size={15} /> {t('settings.aboutDeploy')}
+                </button>
+                <p className="cm-hint">{t('settings.aboutDeployHint')}</p>
+              </div>
+
+              <p className="hm-about">{t('settings.about', { version: version || '…' })}</p>
             </div>
-            <p className="cm-hint">{t('settings.orgProfileHint')}</p>
-          </div>
-        </>
-      )}
-
-      {modeDraft === 'standard' ? (
-        <label className="hm-radio hm-update-check">
-          <input
-            type="checkbox"
-            checked={autoUpdateDraft}
-            onChange={(event) => setAutoUpdateDraft(event.target.checked)}
-          />
-          {t('settings.autoUpdateLabel')}
-        </label>
-      ) : (
-        // §5 v1.8.6 : même en 100 % local, on peut garder les mises à jour activées
-        // (contacte GitHub) — le récapitulatif signale alors ce contact public.
-        <>
-          <label className="hm-radio hm-update-check">
-            <input
-              type="checkbox"
-              checked={localUpdateDraft}
-              onChange={(event) => setLocalUpdateDraft(event.target.checked)}
-            />
-            {t('settings.autoUpdateLocalLabel')}
-          </label>
-          <p className="cm-hint hm-update-locked">{t('settings.autoUpdateLocalHint')}</p>
-        </>
-      )}
-
-      <NetworkRecap config={draftConfig} />
-
-      <p className="hm-about">{t('settings.about', { version: version || '…' })}</p>
+          )}
+        </div>
+      </div>
     </Modal>
   )
 }

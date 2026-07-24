@@ -6,9 +6,17 @@
  * préservée à chaque `npm run build:win`. Ce repli ne sert que si aucune icône
  * n'est présente : il dessine alors un PNG 256x256 « graphe » (fond arrondi
  * sombre + disques bleus reliés), encodé à la main (IHDR/IDAT/IEND, deflateSync +
- * CRC32) puis enveloppé en ICO à une entrée. Pour REGÉNÉRER volontairement
- * l'icône depuis un nouveau PNG :
- *   magick build/icon.png -define icon:auto-resize=256,128,64,48,32,16 build/icon.ico
+ * CRC32) puis enveloppé en ICO à une entrée.
+ *
+ * SOURCE DE VÉRITÉ de l'icône du produit : `build/new_icon.png` (v1.8.8). Les deux
+ * fichiers livrés en sont DÉRIVÉS — `build/icon.png` (Linux : AppImage, .deb) et
+ * `build/icon.ico` (Windows). Pour les regénérer volontairement après un changement
+ * de logo :
+ *   magick build/new_icon.png -resize 512x512 -strip build/icon.png
+ *   magick build/new_icon.png -resize 256x256 \
+ *     -define icon:auto-resize=256,128,64,48,32,16 build/icon.ico
+ * Le visuel de l'accueil (src/renderer/src/assets/logo.png) en vient aussi :
+ *   magick build/new_icon.png -resize 128x128 -strip src/renderer/src/assets/logo.png
  * Usage : node scripts/generate-icon.mjs (idempotent, ne touche jamais un .ico existant).
  */
 import { deflateSync } from 'node:zlib'

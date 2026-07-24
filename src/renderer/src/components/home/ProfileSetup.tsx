@@ -9,6 +9,8 @@ import { useSettings } from '@/store/settings'
 import { USER_COLORS } from '@/lib/colors'
 import type { UserProfile } from '@/types'
 import { ProfileEditor } from '@/components/common/ProfileEditor'
+import { AuthorTag } from '@/components/common/AuthorTag'
+import cosintLogo from '@/assets/logo.png'
 import './home.css'
 
 /** Profil vierge proposé à la première ouverture. */
@@ -51,7 +53,7 @@ export function ProfileSetup(): JSX.Element {
       <div className="hm-setup-panel">
         <header className="hm-setup-brand">
           <div className="hm-setup-mark">
-            <span className="hm-setup-mark__glyph" aria-hidden="true" />
+            <img className="hm-setup-mark__logo" src={cosintLogo} alt="" aria-hidden="true" />
             <span className="hm-setup-mark__word">COSINT</span>
           </div>
           <div className="hm-seg hm-setup-lang" role="group" aria-label={t('profile.langLabel')}>
@@ -91,7 +93,10 @@ export function ProfileSetup(): JSX.Element {
           </button>
         </form>
 
-        <p className="hm-setup-foot">{t('profile.privacyNote')}</p>
+        <p className="hm-setup-foot">
+          {t('profile.privacyNote')}
+          <AuthorTag className="hm-setup-author" />
+        </p>
       </div>
     </div>
   )

@@ -1155,5 +1155,91 @@ export const en: Record<MessageKey, string> = {
   'settings.recapTokenOff': 'No token (open server)',
 
   // ——— v1.8.7: co-branding of the main screen (§1) ———
-  'home.onCosint': '· on COSINT'
+  'home.onCosint': '· on COSINT',
+
+  // ——— v1.8.8: author signature (§2) ———
+  'app.madeBy': 'made by',
+  'app.author': 'k0nrd',
+  'app.authorLink': 'Open k0nrd’s GitHub',
+
+  // ——— v1.8.8: tabbed settings (§4) ———
+  'settings.tabProfile': 'Profile',
+  'settings.tabAppearance': 'Appearance',
+  'settings.tabShortcuts': 'Shortcuts',
+  'settings.tabNetwork': 'Network',
+  'settings.tabAbout': 'About',
+  'settings.tabsLabel': 'Settings sections',
+  'settings.profileHint':
+    'Your local identity: what colleagues see when you work together. Nothing is sent to a server.',
+  'settings.appearanceHint': 'Interface theme and language, applied immediately.',
+  'settings.networkHint':
+    'Who introduces your computers to each other, and what the app is allowed to contact. Board content never goes through a server.',
+  'settings.aboutTitle': 'COSINT',
+  'settings.aboutVersion': 'Version {version}',
+  'settings.aboutTagline': 'Peer-to-peer collaborative OSINT board — no data on any server.',
+  'settings.aboutTutorial': 'Replay the tutorial',
+  'settings.aboutTutorialHint':
+    'Restarts the guided tour from the beginning: create a board, drop entities, link them, cite sources, read the timeline.',
+  'settings.aboutRepo': 'Source code and releases',
+  'settings.aboutRepoHint': 'The public repository: code, release notes and downloads.',
+  'settings.aboutDeploy': 'Deploy in 100% local mode',
+  'settings.aboutDeployHint':
+    'Step-by-step guide to install a signalling server on a closed network and provision the workstations.',
+
+  // ——— v1.8.8: guided tutorial (§1) ———
+  'tutorial.button': 'Tutorial',
+  'tutorial.buttonTitle': 'Learn how to use COSINT',
+  'tutorial.introTitle': 'Discover COSINT',
+  'tutorial.introText':
+    'A guided tour of the essentials: create a board, drop entities, link them, cite your sources and read the timeline.',
+  'tutorial.introBullet1': 'About a dozen short steps, at your own pace.',
+  'tutorial.introBullet2': 'You use the real application — nothing is simulated.',
+  'tutorial.introBullet3': 'You can leave at any time and pick it up later.',
+  'tutorial.start': 'Start',
+  'tutorial.later': 'Later',
+  'tutorial.progress': 'Step {current} / {total}',
+  'tutorial.next': 'Next',
+  'tutorial.prev': 'Back',
+  'tutorial.finish': 'Finish',
+  'tutorial.quit': 'Leave the tutorial',
+  'tutorial.done': 'Tutorial complete — happy hunting.',
+  'tutorial.waitBoard': 'Open or create a board to continue the tutorial.',
+  'tutorial.waitHome': 'Go back to the home screen to continue the tutorial.',
+
+  'tutorial.welcome.title': 'Welcome',
+  'tutorial.welcome.text':
+    'COSINT is an investigation board: you drop what you find, you link it, and the case takes shape. This tour covers the essentials in a few steps.',
+  'tutorial.create.title': 'Create a board',
+  'tutorial.create.text':
+    'One board = one investigation. Click “Create a board”: it starts private, on this computer only, with no network connection at all.',
+  'tutorial.canvas.title': 'The canvas',
+  'tutorial.canvas.text':
+    'Drag the background to pan, scroll to zoom. Everything you drop here is saved as you go, on your own machine.',
+  'tutorial.entity.title': 'Drop an entity',
+  'tutorial.entity.text':
+    'The entity is the basic building block: a person, an account, a number, a domain, an address… Open the entity picker, choose a type, and it appears on the canvas.',
+  'tutorial.details.title': 'Fill in the card',
+  'tutorial.details.text':
+    'Select an entity: the right-hand panel shows its name, the fields specific to its type, notes, tags and its status (to check, confirmed, ruled out).',
+  'tutorial.link.title': 'Link two entities',
+  'tutorial.link.text':
+    'Drop a second entity, then drag a line from the edge of the first one to the second. Select the link to qualify it: relation type, label, arrow direction.',
+  'tutorial.source.title': 'Cite your sources',
+  'tutorial.source.text':
+    'A claim without a source is worthless. Add a Source, grade it on the Admiralty scale (reliability A–F, credibility 1–6) and attach it to the elements it supports.',
+  'tutorial.timeline.title': 'The timeline',
+  'tutorial.timeline.text':
+    'Two readings of time: when items were added to the board, and when the events actually happened. Date your entities to see them appear there.',
+  'tutorial.search.title': 'Find an item',
+  'tutorial.search.text':
+    'Search ignores accents and case. Filters narrow the view by type, status or tag — handy once the board grows.',
+  'tutorial.share.title': 'Work together',
+  'tutorial.share.text':
+    'Sharing produces a 12-character code. Colleagues enter it, wait in the lobby, and you admit them. Content flows directly between computers, encrypted — never through a server.',
+  'tutorial.export.title': 'Take the work with you',
+  'tutorial.export.text':
+    'Export the whole board as a .trace file (portable, re-importable), as a PNG image, as CSV, or pull a Markdown source report.',
+  'tutorial.end.title': 'Over to you',
+  'tutorial.end.text':
+    'You have the essentials. The rest is learned by doing. This tutorial restarts from the home screen, or from Settings → About.'
 }

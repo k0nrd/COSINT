@@ -2209,6 +2209,7 @@ function BoardCanvas({
           onPointerLeave={() => setLocalCursor(handle, null)}
           onDrop={onDrop}
           onDragOver={(event) => event.preventDefault()}
+          data-tut="board-canvas"
         >
           <ReactFlow
             className={connecting ? 'fl-connecting' : undefined}

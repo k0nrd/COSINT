@@ -130,7 +130,7 @@ export function TopBar({
         />
         <PresenceList others={others} self={self} />
         {!solo && <AccessIndicator mode={accessMode} onClick={onShare} />}
-        <button className="cm-btn" onClick={onShare} title={t('share.title')}>
+        <button className="cm-btn" onClick={onShare} title={t('share.title')} data-tut="share">
           <Share2 size={15} />
           {t('toolbar.share')}
         </button>
@@ -142,6 +142,7 @@ export function TopBar({
             title={t('toolbar.export')}
             aria-label={t('toolbar.export')}
             aria-expanded={menuOpen}
+            data-tut="export"
           >
             <Download size={17} />
           </button>

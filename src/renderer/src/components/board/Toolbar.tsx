@@ -103,6 +103,7 @@ export function Toolbar({
             onClick={onOpenEntityPicker}
             title={t('toolbar.addEntity')}
             aria-label={t('toolbar.addEntity')}
+            data-tut="add-entity"
           >
             <Contact size={17} />
           </button>
@@ -113,6 +114,7 @@ export function Toolbar({
             onClick={() => onAddNode('source')}
             title={t('toolbar.addSource')}
             aria-label={t('toolbar.addSource')}
+            data-tut="add-source"
           >
             <FileText size={17} />
           </button>
@@ -175,6 +177,7 @@ export function Toolbar({
         title={t('toolbar.search')}
         aria-label={t('toolbar.search')}
         aria-pressed={searchActive}
+        data-tut="search"
       >
         <Search size={17} />
       </button>
@@ -215,6 +218,7 @@ export function Toolbar({
         title={t('toolbar.timeline')}
         aria-label={t('toolbar.timeline')}
         aria-pressed={timelineActive}
+        data-tut="timeline"
       >
         <CalendarClock size={17} />
       </button>

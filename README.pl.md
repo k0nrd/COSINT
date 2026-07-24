@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.8.7-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.8.8-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
-  <img src="https://img.shields.io/badge/testy-279%20zielone-3fbf6a" alt="Testy">
+  <img src="https://img.shields.io/badge/testy-288%20zielone-3fbf6a" alt="Testy">
   <img src="https://img.shields.io/badge/telemetria-brak-ef4444" alt="Brak telemetrii">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Zbudowano z">
 </p>
@@ -74,25 +74,28 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.8.7
+## 🚀 Nowości w 1.8.8
 
-- **🏷️ Marka Twojej organizacji (tryb w pełni lokalny)** — wskaż COSINT swój wewnętrzny serwer
-  sygnalizacyjny, a ekran główny wyświetli **Twoje logo, nazwę i hasło**, serwowane przez sam
-  serwer i opatrzone dopiskiem *„· na COSINT”*, aby pochodzenie pozostało jasne. Wyłącznie
-  kosmetyczne — bez wpływu na szyfrowanie.
-- **🔑 Zablokuj serwer do autoryzowanych stanowisk** — ustaw `COSINT_TOKEN`, a każdy komputer
-  bez wspólnego tokenu zostanie **odrzucony już przy nawiązywaniu połączenia**, zanim WebSocket
-  w ogóle się otworzy. Token porównywany w czasie stałym, **maskowany na ekranie** i **nigdy
-  nie wysyłany do serwerów publicznych**.
-- **📇 Konfiguracja jednym kliknięciem (profil `.cosint-org`)** — wyeksportuj przenośny profil
-  (adres wewnętrzny + token dostępu), który współpracownicy **importują**, aby za jednym razem
-  skonfigurować tryb w pełni lokalny, adres serwera i token.
-- **🔒 Prywatność potwierdzona** — nawet całkowicie otwarty serwer niczego nie ujawnia
-  (identyfikatory pokojów pochodzą z HKDF, treść szyfrowana end-to-end); nowa kontrola dostępu
-  decyduje o tym, *kto może korzystać z Twojego przekaźnika*. Cała granica sanityzacji
-  marki/profilu jest teraz pokryta testami.
+- **🎓 Samouczek prowadzony, prosto z ekranu głównego** — dyskretny przycisk *Samouczek*
+  wprowadza w podstawy w dwunastu krótkich krokach: utworzyć tablicę, dodać encję, uzupełnić
+  jej kartę, połączyć dwie encje, podać źródła, odczytać oś czasu, udostępnić i wyeksportować.
+  **Wskazuje prawdziwy interfejs** podczas pracy — nic nie jest symulowane — i można go
+  **zamknąć w każdej chwili**. Do powtórzenia z Ustawienia → O programie.
+- **🗂️ Ustawienia wreszcie uporządkowane** — jedna niekończąca się strona zamieniła się
+  w **pięć zakładek** (Profil, Wygląd, Skróty, Sieć, O programie). Jeden przycisk *Zapisz*,
+  niezależnie od zakładki; błąd wprowadzania przenosi z powrotem do niepoprawnego pola.
+- **🖼️ Nowa ikona aplikacji** — odświeżone logo: instalator, pasek zadań, okno i ekran główny.
+- **🔄 Aktualizacje pozostają włączone w trybie w pełni lokalnym** — przełączenie na tryb
+  lokalny nie odcina już po cichu od poprawek. GitHub Releases staje się **jedyną**
+  kontaktowaną usługą publiczną (żadne dane tablic przez nią nie przechodzą), podsumowanie
+  mówi o tym wprost, a jedno pole wyboru wyłącza to w sieci naprawdę odizolowanej.
+- **📘 Prawdziwy przewodnik wdrożeniowy** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md)
+  (po francusku): usługa systemd, token dostępu, zapora **wraz z IPv6**, marka organizacji,
+  weryfikacja end-to-end, konfiguracja stanowisk, rozwiązywanie problemów. Sprawdzony
+  w praktyce (Ubuntu 24.04), napisany na podstawie rzeczywistego wdrożenia, nie teorii.
+- **✍️ Autor: k0nrd** — ekran główny mówi teraz, kto to napisał, o jedno kliknięcie od źródeł.
 
-Pełne informacje: [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
+Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 
 ---
 
@@ -208,6 +211,12 @@ cd server
 npm install
 PORT=4444 npm start        # → ws://twoj-host:4444
 ```
+
+**Wdrożenie w sieci zamkniętej?** Skorzystaj z pełnego przewodnika krok po kroku
+(po francusku): [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — usługa
+systemd, token dostępu, reguły zapory **wraz z IPv6**, marka organizacji, weryfikacja
+end-to-end, konfiguracja stanowisk jednym kliknięciem (`.cosint-org`), rozwiązywanie
+problemów i codzienna eksploatacja. Sprawdzone na Ubuntu 24.04.
 
 ## 🛠️ Kompilacja ze źródeł
 

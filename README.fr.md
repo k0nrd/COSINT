@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.7-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-279%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-288%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -74,25 +74,29 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.7
+## 🚀 Nouveautés de la 1.8.8
 
-- **🏷️ La marque de votre organisation (mode 100 % local)** — pointez COSINT vers votre
-  serveur de signalisation interne et l'écran d'accueil affiche **votre logo, votre nom et
-  votre accroche**, servis par le serveur lui-même et co-marqués *« · sur COSINT »* pour que
-  l'origine reste claire. Purement cosmétique — sans aucun effet sur le chiffrement.
-- **🔑 Verrouillez votre serveur aux seuls postes autorisés** — définissez un `COSINT_TOKEN` et
-  tout poste sans le jeton partagé est **refusé dès la poignée de main**, avant même l'ouverture
-  de la WebSocket. Jeton comparé à temps constant, **masqué à l'écran**, et **jamais transmis
-  aux serveurs publics**.
-- **📇 Provisionnement en un clic (profil `.cosint-org`)** — exportez un profil portable
-  (adresse interne + jeton d'accès) que vos collègues **importent** pour configurer d'un coup le
-  mode 100 % local, l'adresse du serveur et le jeton.
-- **🔒 Confidentialité réaffirmée** — même entièrement ouvert, le serveur n'expose rien (rooms
-  dérivées par HKDF, contenu chiffré de bout en bout) ; le nouveau contrôle d'accès décide *qui
-  peut utiliser votre relais*. Toute la frontière d'assainissement marque/profil est désormais
-  couverte par des tests.
+- **🎓 Un tutoriel guidé, dès l'écran d'accueil** — un bouton *Tutoriel* discret fait
+  découvrir l'essentiel en douze étapes courtes : créer un tableau, poser une entité,
+  renseigner sa fiche, relier deux entités, citer ses sources, lire la frise, partager et
+  exporter. Il **désigne la vraie interface** pendant que vous la manipulez — rien n'est
+  simulé — et se **quitte à tout moment**. Rejouable depuis Paramètres → À propos.
+- **🗂️ Des paramètres enfin rangés** — la page unique à rallonge devient **cinq onglets**
+  (Profil, Apparence, Raccourcis, Réseau, À propos). Un seul *Enregistrer*, quel que soit
+  l'onglet ; une erreur de saisie vous ramène sur le champ fautif.
+- **🖼️ Nouvelle icône** — un logo repensé, de l'installeur à la barre des tâches, de la
+  fenêtre à l'écran d'accueil.
+- **🔄 Mises à jour maintenues en mode 100 % local** — basculer en local ne vous coupe plus
+  silencieusement des correctifs. GitHub Releases devient le **seul** service public
+  contacté (aucune donnée de tableau n'y transite), le récapitulatif le dit franchement, et
+  une case à décocher suffit pour un réseau réellement isolé.
+- **📘 Un vrai guide de déploiement** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) :
+  service systemd, jeton d'accès, pare-feu **y compris IPv6**, marque d'organisation,
+  vérification de bout en bout, provisionnement des postes, dépannage. Éprouvé sur le
+  terrain (Ubuntu 24.04), écrit depuis un déploiement réel et non depuis la théorie.
+- **✍️ Fait par k0nrd** — l'écran d'accueil dit désormais qui l'a écrit, à un clic des sources.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 
 ---
 
@@ -208,6 +212,12 @@ cd server
 npm install
 PORT=4444 npm start        # → ws://votre-machine:4444
 ```
+
+**Déploiement sur un réseau fermé ?** Suivez le guide complet, pas à pas :
+[`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — service systemd, jeton
+d'accès, règles de pare-feu **y compris IPv6**, marque d'organisation, vérification de bout
+en bout, provisionnement des postes en un clic (`.cosint-org`), dépannage et exploitation
+courante. Testé sur Ubuntu 24.04.
 
 ## 🛠️ Compiler depuis les sources
 

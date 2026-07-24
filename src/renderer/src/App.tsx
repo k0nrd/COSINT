@@ -33,6 +33,7 @@ import { effectiveNetworkConfig, useSettings } from '@/store/settings'
 import { fetchBranding, withToken } from '@/sync/branding'
 import { boardEntry, secretForBoard, useBoards } from '@/store/boards'
 import { useToasts } from '@/store/toasts'
+import { useTutorial } from '@/store/tutorial'
 import { BoardView, profileToPresence, type BoardMenuSignal } from '@/flow/BoardView'
 import { HomeScreen } from '@/components/home/HomeScreen'
 import { ProfileSetup } from '@/components/home/ProfileSetup'
@@ -42,6 +43,8 @@ import { ApprovalPrompt } from '@/components/board/ApprovalPrompt'
 import { Toasts } from '@/components/common/Toasts'
 import { UpdateBanner } from '@/components/common/UpdateBanner'
 import { UpdatePopup } from '@/components/common/UpdatePopup'
+import { TutorialCoach } from '@/components/tutorial/TutorialCoach'
+import { TutorialIntro } from '@/components/tutorial/TutorialIntro'
 
 interface BoardRoute {
   handle: BoardHandle
@@ -56,6 +59,9 @@ export default function App(): ReactElement {
   const settings = useSettings()
   const boards = useBoards()
   const pushToast = useToasts((state) => state.push)
+  // §1 v1.8.8 : parcours guidé — la fenêtre de présentation ne s'ouvre que sur
+  // action explicite (bouton de l'accueil, ou Paramètres → À propos).
+  const tutorialIntroOpen = useTutorial((state) => state.introOpen)
 
   // §4 v1.8.6 : langue de l'interface appliquée AVANT le rendu des enfants. Le changement
   // de langue re-rend App (abonné au store) ; les sous-arbres portant la langue dans leur
@@ -817,6 +823,11 @@ export default function App(): ReactElement {
       )}
       {/* La bannière discrète subsiste après fermeture de la fenêtre, comme rappel. */}
       {updateReady !== null && updatePopup === null && <UpdateBanner version={updateReady} />}
+
+      {/* §1 v1.8.8 : parcours guidé — le coach commente l'écran réellement affiché. */}
+      {tutorialIntroOpen && <TutorialIntro />}
+      <TutorialCoach scope={board ? 'board' : 'home'} />
+
       <Toasts />
     </>
   )

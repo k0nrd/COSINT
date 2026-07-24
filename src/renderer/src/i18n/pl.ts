@@ -1155,5 +1155,91 @@ export const pl: Record<MessageKey, string> = {
   'settings.recapTokenOff': 'Brak tokenu (serwer otwarty)',
 
   // ——— v1.8.7: współbranding ekranu głównego (§1) ———
-  'home.onCosint': '· na COSINT'
+  'home.onCosint': '· na COSINT',
+
+  // ——— v1.8.8: podpis autora (§2) ———
+  'app.madeBy': 'autor:',
+  'app.author': 'k0nrd',
+  'app.authorLink': 'Otwórz GitHub użytkownika k0nrd',
+
+  // ——— v1.8.8: ustawienia w zakładkach (§4) ———
+  'settings.tabProfile': 'Profil',
+  'settings.tabAppearance': 'Wygląd',
+  'settings.tabShortcuts': 'Skróty',
+  'settings.tabNetwork': 'Sieć',
+  'settings.tabAbout': 'O programie',
+  'settings.tabsLabel': 'Sekcje ustawień',
+  'settings.profileHint':
+    'Twoja lokalna tożsamość: to, co widzą współpracownicy podczas wspólnej pracy. Nic nie jest wysyłane na serwer.',
+  'settings.appearanceHint': 'Motyw i język interfejsu, stosowane natychmiast.',
+  'settings.networkHint':
+    'Kto łączy Twoje komputery ze sobą i z czym aplikacja może się kontaktować. Zawartość tablic nigdy nie przechodzi przez serwer.',
+  'settings.aboutTitle': 'COSINT',
+  'settings.aboutVersion': 'Wersja {version}',
+  'settings.aboutTagline': 'Wspólna tablica OSINT peer-to-peer — żadnych danych na serwerze.',
+  'settings.aboutTutorial': 'Powtórz samouczek',
+  'settings.aboutTutorialHint':
+    'Uruchamia przewodnik od początku: utworzyć tablicę, dodać encje, połączyć je, podać źródła, przejrzeć oś czasu.',
+  'settings.aboutRepo': 'Kod źródłowy i wydania',
+  'settings.aboutRepoHint': 'Publiczne repozytorium: kod, informacje o wydaniach i pliki do pobrania.',
+  'settings.aboutDeploy': 'Wdrożenie w trybie w pełni lokalnym',
+  'settings.aboutDeployHint':
+    'Przewodnik krok po kroku: instalacja serwera sygnalizacyjnego w sieci zamkniętej i konfiguracja stanowisk.',
+
+  // ——— v1.8.8: samouczek prowadzony (§1) ———
+  'tutorial.button': 'Samouczek',
+  'tutorial.buttonTitle': 'Naucz się korzystać z COSINT',
+  'tutorial.introTitle': 'Poznaj COSINT',
+  'tutorial.introText':
+    'Przewodnik po podstawach: utworzyć tablicę, dodać encje, połączyć je, podać źródła i odczytać oś czasu.',
+  'tutorial.introBullet1': 'Kilkanaście krótkich kroków, we własnym tempie.',
+  'tutorial.introBullet2': 'Korzystasz z prawdziwej aplikacji — nic nie jest symulowane.',
+  'tutorial.introBullet3': 'Możesz wyjść w każdej chwili i wrócić później.',
+  'tutorial.start': 'Rozpocznij',
+  'tutorial.later': 'Później',
+  'tutorial.progress': 'Krok {current} / {total}',
+  'tutorial.next': 'Dalej',
+  'tutorial.prev': 'Wstecz',
+  'tutorial.finish': 'Zakończ',
+  'tutorial.quit': 'Zamknij samouczek',
+  'tutorial.done': 'Samouczek ukończony — powodzenia w śledztwie.',
+  'tutorial.waitBoard': 'Otwórz lub utwórz tablicę, aby kontynuować samouczek.',
+  'tutorial.waitHome': 'Wróć do ekranu głównego, aby kontynuować samouczek.',
+
+  'tutorial.welcome.title': 'Witaj',
+  'tutorial.welcome.text':
+    'COSINT to tablica śledcza: umieszczasz na niej to, co znajdziesz, łączysz elementy i sprawa nabiera kształtu. Ten przewodnik pokazuje podstawy w kilku krokach.',
+  'tutorial.create.title': 'Utwórz tablicę',
+  'tutorial.create.text':
+    'Jedna tablica = jedno śledztwo. Kliknij „Utwórz tablicę”: powstaje prywatna, wyłącznie na tym komputerze, bez żadnego połączenia sieciowego.',
+  'tutorial.canvas.title': 'Obszar roboczy',
+  'tutorial.canvas.text':
+    'Przeciągnij tło, aby się przesuwać, użyj kółka, aby przybliżyć. Wszystko, co tu umieścisz, jest zapisywane na bieżąco na Twoim komputerze.',
+  'tutorial.entity.title': 'Dodaj encję',
+  'tutorial.entity.text':
+    'Encja to podstawowy element: osoba, konto, numer, domena, adres… Otwórz wybór encji, wskaż typ, a pojawi się na obszarze roboczym.',
+  'tutorial.details.title': 'Uzupełnij kartę',
+  'tutorial.details.text':
+    'Zaznacz encję: panel po prawej pokazuje jej nazwę, pola właściwe dla typu, notatki, tagi oraz status (do sprawdzenia, potwierdzone, odrzucone).',
+  'tutorial.link.title': 'Połącz dwie encje',
+  'tutorial.link.text':
+    'Dodaj drugą encję, a następnie przeciągnij linię od krawędzi pierwszej do drugiej. Zaznacz połączenie, aby je opisać: typ relacji, etykieta, kierunek strzałki.',
+  'tutorial.source.title': 'Podawaj źródła',
+  'tutorial.source.text':
+    'Twierdzenie bez źródła jest bezwartościowe. Dodaj Źródło, oceń je w skali Admiralicji (wiarygodność A–F, rzetelność 1–6) i przypnij do elementów, które potwierdza.',
+  'tutorial.timeline.title': 'Oś czasu',
+  'tutorial.timeline.text':
+    'Dwa odczyty czasu: kiedy elementy trafiły na tablicę i kiedy zdarzenia rzeczywiście miały miejsce. Nadaj encjom daty, aby się tam pojawiły.',
+  'tutorial.search.title': 'Znajdź element',
+  'tutorial.search.text':
+    'Wyszukiwanie pomija znaki diakrytyczne i wielkość liter. Filtry zawężają widok według typu, statusu lub tagu — przydatne, gdy tablica rośnie.',
+  'tutorial.share.title': 'Pracujcie razem',
+  'tutorial.share.text':
+    'Udostępnianie tworzy 12-znakowy kod. Współpracownicy go wpisują, czekają w poczekalni, a Ty ich wpuszczasz. Treść płynie bezpośrednio między komputerami, zaszyfrowana — nigdy przez serwer.',
+  'tutorial.export.title': 'Zabierz pracę ze sobą',
+  'tutorial.export.text':
+    'Wyeksportuj całą tablicę do pliku .trace (przenośny, można go zaimportować), do obrazu PNG, do CSV lub wygeneruj raport źródeł w formacie Markdown.',
+  'tutorial.end.title': 'Teraz Twoja kolej',
+  'tutorial.end.text':
+    'Masz podstawy. Reszty nauczysz się w praktyce. Ten samouczek uruchomisz ponownie z ekranu głównego lub z Ustawienia → O programie.'
 }

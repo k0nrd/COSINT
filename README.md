@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.7-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-279%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-288%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -73,24 +73,28 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.7
+## 🚀 What's new in 1.8.8
 
-- **🏷️ Your organization's branding (100 % local mode)** — point COSINT at your internal
-  signaling server and the home screen shows **your logo, name and tagline**, served by the
-  server itself and co-branded *"· on COSINT"* so the origin stays clear. Purely cosmetic —
-  it never touches the end-to-end encryption.
-- **🔑 Lock your signaling server to authorized stations** — set a `COSINT_TOKEN` and any
-  computer without the shared token is **refused at the handshake**, before the WebSocket
-  even opens. The token is checked in constant time, **masked on screen**, and **never sent
-  to public servers**.
-- **📇 One-click provisioning (`.cosint-org` profile)** — export a portable profile
-  (internal address + access token) and colleagues **import** it to set up 100 % local mode,
-  the server address and the token in one go.
-- **🔒 Privacy, reaffirmed** — even a fully open server exposes nothing (rooms are
-  HKDF-derived, content is end-to-end encrypted); the new access control is about *who may
-  use your relay*. The whole branding/profile sanitization boundary is now covered by tests.
+- **🎓 A guided tutorial, right on the home screen** — a discreet *Tutorial* button walks
+  newcomers through the essentials in twelve short steps: create a board, drop an entity,
+  fill in its card, link two entities, cite your sources, read the timeline, share and
+  export. It **highlights the real interface** while you use it — nothing is simulated —
+  and you can **leave at any time**. Replay it from Settings → About.
+- **🗂️ Settings, finally sorted** — one endless scrolling page became **five tabs**
+  (Profile, Appearance, Shortcuts, Network, About). Same single *Save*, whichever tab
+  you are on; validation errors jump you back to the offending field.
+- **🖼️ New app icon** — a fresh logo across the installer, taskbar, window and home screen.
+- **🔄 Updates stay on in 100 % local mode** — switching to local mode no longer silently
+  cuts you off from fixes. GitHub Releases becomes the **only** public service contacted
+  (no board data ever goes through it), the recap says so plainly, and a single checkbox
+  turns it off for genuinely air-gapped networks.
+- **📘 A real deployment guide** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md)
+  (French): systemd service, access token, firewall **including IPv6**, organization
+  branding, end-to-end verification, workstation provisioning, troubleshooting. Field-tested
+  on Ubuntu 24.04, written from an actual deployment rather than from theory.
+- **✍️ Made by k0nrd** — the home screen now says who wrote it, one click from the source.
 
-Full notes: [`docs/RELEASE_NOTES_v1.8.7.md`](docs/RELEASE_NOTES_v1.8.7.md).
+Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 
 ---
 
@@ -204,6 +208,12 @@ cd server
 npm install
 PORT=4444 npm start        # → ws://your-host:4444
 ```
+
+**Deploying to a closed network?** Follow the full step-by-step guide (French):
+[`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — systemd service, access
+token, firewall rules **including IPv6**, organization branding, end-to-end verification,
+one-click workstation provisioning (`.cosint-org`), troubleshooting and day-to-day
+operation. Tested on Ubuntu 24.04.
 
 ## 🛠️ Build from source
 

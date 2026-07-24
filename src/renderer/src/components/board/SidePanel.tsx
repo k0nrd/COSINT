@@ -136,7 +136,7 @@ export function SidePanel({ node, edge, onClose }: SidePanelProps): JSX.Element 
   const effectiveTab = node && tab === 'comments' ? 'comments' : 'details'
 
   return (
-    <aside className="bd-side" aria-label={t('details.title')}>
+    <aside className="bd-side" aria-label={t('details.title')} data-tut="side-panel">
       <div className="bd-side__tabs" role="tablist">
         <button
           className={`bd-side__tab${effectiveTab === 'details' ? ' bd-side__tab--active' : ''}`}

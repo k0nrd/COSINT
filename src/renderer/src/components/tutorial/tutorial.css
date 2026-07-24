@@ -1,0 +1,201 @@
+/*
+ * §1 v1.8.8 — parcours guidé (préfixe tu-).
+ *
+ * Deux pièces seulement : un repère qui entoure l'élément commenté (décoratif,
+ * jamais cliquable) et une fiche flottante. Même sobriété que le reste de
+ * l'application : bordure fine, pas de dégradé, accent rare.
+ *
+ * Empilement : au-dessus des modales (1000) pour rester lisible quand le
+ * tutoriel commente un sélecteur ouvert, sous les toasts (2000).
+ */
+
+/* ——— Repère autour de l'élément commenté ———
+   Volontairement SANS voile plein écran : plusieurs étapes invitent à ouvrir un
+   sélecteur ou une fenêtre de partage, qu'un assombrissement global rendrait
+   grisâtres et illisibles. Un liseré d'accent suffit à désigner sans gêner. */
+.tu-halo {
+  position: fixed;
+  z-index: 1490;
+  border: 2px solid var(--accent);
+  border-radius: var(--r-md);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 0 14px 2px var(--accent-soft);
+  /* Décoratif : l'utilisateur doit pouvoir cliquer l'élément réel au travers. */
+  pointer-events: none;
+  transition:
+    top var(--t-med),
+    left var(--t-med),
+    width var(--t-med),
+    height var(--t-med);
+}
+
+/* ——— Fiche flottante ——— */
+.tu-card {
+  position: fixed;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-pop);
+  transition:
+    top var(--t-med),
+    left var(--t-med);
+}
+
+.tu-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: 7px;
+}
+.tu-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.tu-card__close {
+  margin: -6px -6px -6px 0;
+}
+
+.tu-card__title {
+  margin: 0 0 6px;
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.tu-card__text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+/* Étape qui parle d'un autre écran : on invite à y revenir, sans bloquer. */
+.tu-card__nudge {
+  margin: 9px 0 0;
+  padding: 7px 9px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-mute);
+}
+
+/* ——— Progression ——— */
+.tu-card__rail {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 11px;
+}
+.tu-card__dot {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--panel-3);
+}
+.tu-card__dot--past {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.tu-card__dot--on {
+  background: var(--accent);
+}
+
+/* ——— Pied ——— */
+.tu-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.tu-card__quit {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-mute);
+}
+.tu-card__quit:hover {
+  background: var(--panel-2);
+  color: var(--text-dim);
+}
+.tu-card__nav {
+  display: flex;
+  gap: 6px;
+}
+.tu-card__nav .cm-btn {
+  gap: 3px;
+}
+
+/* ——— Fenêtre de présentation ——— */
+.tu-intro__lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.tu-intro__list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.tu-intro__count {
+  margin: 14px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+/* ——— Bouton d'appel discret (accueil) ——— */
+.tu-launch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast),
+    background var(--t-fast),
+    color var(--t-fast);
+}
+.tu-launch:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* Pastille tant que le tutoriel n'a jamais été ouvert : une invitation, pas une alerte. */
+.tu-launch__new {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .tu-card {
+    width: min(340px, calc(100vw - 24px)) !important;
+    left: 12px !important;
+  }
+}

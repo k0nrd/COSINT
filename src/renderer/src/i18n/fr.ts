@@ -1160,5 +1160,91 @@ export const fr = {
   'settings.recapTokenOff': 'Aucun jeton (serveur ouvert)',
 
   // ——— v1.8.7 : co-marquage de l'écran principal (§1) ———
-  'home.onCosint': '· sur COSINT'
+  'home.onCosint': '· sur COSINT',
+
+  // ——— v1.8.8 : signature de l'auteur (§2) ———
+  'app.madeBy': 'fait par',
+  'app.author': 'k0nrd',
+  'app.authorLink': 'Ouvrir le GitHub de k0nrd',
+
+  // ——— v1.8.8 : paramètres en onglets (§4) ———
+  'settings.tabProfile': 'Profil',
+  'settings.tabAppearance': 'Apparence',
+  'settings.tabShortcuts': 'Raccourcis',
+  'settings.tabNetwork': 'Réseau',
+  'settings.tabAbout': 'À propos',
+  'settings.tabsLabel': 'Sections des paramètres',
+  'settings.profileHint':
+    'Votre identité locale : ce que vos collègues voient quand vous travaillez à plusieurs. Rien n’est envoyé à un serveur.',
+  'settings.appearanceHint': 'Thème et langue de l’interface, appliqués immédiatement.',
+  'settings.networkHint':
+    'Qui met vos postes en relation, et ce que l’application a le droit de contacter. Le contenu des tableaux ne passe jamais par un serveur.',
+  'settings.aboutTitle': 'COSINT',
+  'settings.aboutVersion': 'Version {version}',
+  'settings.aboutTagline': 'Tableau collaboratif OSINT en pair-à-pair — aucune donnée sur serveur.',
+  'settings.aboutTutorial': 'Revoir le tutoriel',
+  'settings.aboutTutorialHint':
+    'Reprend le parcours guidé depuis le début : créer un tableau, poser des entités, les relier, sourcer, consulter la frise.',
+  'settings.aboutRepo': 'Code source et versions',
+  'settings.aboutRepoHint': 'Le dépôt public : code, notes de version et téléchargements.',
+  'settings.aboutDeploy': 'Déployer en 100 % local',
+  'settings.aboutDeployHint':
+    'Guide pas à pas pour installer un serveur de signalisation sur un réseau fermé et provisionner les postes.',
+
+  // ——— v1.8.8 : tutoriel guidé (§1) ———
+  'tutorial.button': 'Tutoriel',
+  'tutorial.buttonTitle': 'Apprendre à utiliser COSINT',
+  'tutorial.introTitle': 'Découvrir COSINT',
+  'tutorial.introText':
+    'Un parcours guidé qui montre l’essentiel : créer un tableau, poser des entités, les relier, citer vos sources et lire la frise.',
+  'tutorial.introBullet1': 'Une dizaine d’étapes courtes, à votre rythme.',
+  'tutorial.introBullet2': 'Vous manipulez la vraie application — rien n’est simulé.',
+  'tutorial.introBullet3': 'Vous pouvez le quitter à tout moment, et le reprendre plus tard.',
+  'tutorial.start': 'Commencer',
+  'tutorial.later': 'Plus tard',
+  'tutorial.progress': 'Étape {current} / {total}',
+  'tutorial.next': 'Suivant',
+  'tutorial.prev': 'Précédent',
+  'tutorial.finish': 'Terminer',
+  'tutorial.quit': 'Quitter le tutoriel',
+  'tutorial.done': 'Tutoriel terminé — bonne enquête.',
+  'tutorial.waitBoard': 'Ouvrez ou créez un tableau pour poursuivre le tutoriel.',
+  'tutorial.waitHome': 'Revenez à l’accueil pour poursuivre le tutoriel.',
+
+  'tutorial.welcome.title': 'Bienvenue',
+  'tutorial.welcome.text':
+    'COSINT est un tableau d’enquête : vous y posez ce que vous trouvez, vous le reliez, et l’affaire prend forme. Ce parcours montre l’essentiel en quelques étapes.',
+  'tutorial.create.title': 'Créer un tableau',
+  'tutorial.create.text':
+    'Un tableau = une enquête. Cliquez sur « Créer un tableau » : il naît privé, sur ce poste uniquement, sans aucune connexion réseau.',
+  'tutorial.canvas.title': 'Le plan de travail',
+  'tutorial.canvas.text':
+    'Glissez le fond pour vous déplacer, la molette pour zoomer. Tout ce que vous posez ici est enregistré au fur et à mesure sur votre poste.',
+  'tutorial.entity.title': 'Poser une entité',
+  'tutorial.entity.text':
+    'L’entité est la brique de base : une personne, un compte, un numéro, un domaine, une adresse… Ouvrez le sélecteur de fiche entité, choisissez un type, et elle apparaît sur le plan.',
+  'tutorial.details.title': 'Renseigner la fiche',
+  'tutorial.details.text':
+    'Sélectionnez une entité : le panneau de droite affiche son nom, les champs propres à son type, les notes, les tags et son statut (à vérifier, confirmé, écarté).',
+  'tutorial.link.title': 'Relier deux entités',
+  'tutorial.link.text':
+    'Posez une seconde entité, puis tirez un trait depuis le bord de la première jusqu’à la seconde. Sélectionnez le lien pour le qualifier : type de relation, libellé, sens de la flèche.',
+  'tutorial.source.title': 'Citer ses sources',
+  'tutorial.source.text':
+    'Une affirmation sans source ne vaut rien. Ajoutez une Source, notez-la sur l’échelle de l’Amirauté (fiabilité A–F, crédibilité 1–6) et rattachez-la aux éléments qu’elle appuie.',
+  'tutorial.timeline.title': 'La frise chronologique',
+  'tutorial.timeline.text':
+    'Deux lectures du temps : quand les éléments ont été ajoutés au tableau, et quand les faits se sont réellement produits. Datez vos entités pour les y voir apparaître.',
+  'tutorial.search.title': 'Retrouver un élément',
+  'tutorial.search.text':
+    'La recherche ignore les accents et la casse. Les filtres restreignent l’affichage par type, statut ou tag — pratique quand le tableau grossit.',
+  'tutorial.share.title': 'Travailler à plusieurs',
+  'tutorial.share.text':
+    'Le partage produit un code de 12 caractères. Vos collègues le saisissent, patientent en salle d’attente, et vous les admettez. Le contenu circule directement de poste à poste, chiffré — jamais par un serveur.',
+  'tutorial.export.title': 'Emporter le travail',
+  'tutorial.export.text':
+    'Exportez le tableau entier en .trace (fichier portable, ré-importable), en image PNG, en CSV, ou tirez un rapport de sources en Markdown.',
+  'tutorial.end.title': 'À vous de jouer',
+  'tutorial.end.text':
+    'Vous avez l’essentiel. Le reste s’apprend en faisant. Ce tutoriel se relance depuis l’accueil, ou depuis Paramètres → À propos.'
 } as const

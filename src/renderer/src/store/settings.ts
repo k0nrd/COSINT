@@ -74,7 +74,10 @@ interface SettingsState {
   /** Vérification de mise à jour au démarrage (GitHub Releases), en mode standard. */
   autoUpdateCheck: boolean
   /** §5 v1.8.6 : en mode 100 % local, autoriser malgré tout la vérification de mise à
-   * jour (contacte GitHub Releases). Sans effet en mode standard. */
+   * jour (contacte GitHub Releases). Sans effet en mode standard.
+   * §3 v1.8.8 : ACTIVÉ PAR DÉFAUT — basculer en 100 % local ne doit plus priver
+   * silencieusement le poste des correctifs. Le récapitulatif signale honnêtement ce
+   * seul contact public, et un refus EXPLICITE de l'utilisateur reste respecté. */
   localUpdateCheck: boolean
   /** §1 v1.8.7 : jeton d'accès pré-partagé du serveur de signalisation interne (mode
    * 100 % local). Vide = serveur ouvert. Ajouté aux connexions (`?token=`). */
@@ -147,7 +150,7 @@ export const useSettings = create<SettingsState>()(
       customSignalingUrl: '',
       customIceServers: '',
       autoUpdateCheck: true,
-      localUpdateCheck: false,
+      localUpdateCheck: true,
       signalingToken: '',
       orgBranding: null,
       colorHistory: [],
@@ -214,7 +217,11 @@ export const useSettings = create<SettingsState>()(
           networkMode: state.networkMode === 'local' ? 'local' : 'standard',
           customIceServers: typeof state.customIceServers === 'string' ? state.customIceServers : '',
           autoUpdateCheck: state.autoUpdateCheck !== false,
-          localUpdateCheck: state.localUpdateCheck === true,
+          // §3 v1.8.8 : défaut passé à VRAI. `!== false` conserve le refus EXPLICITE
+          // d'un utilisateur qui avait décoché la case ; tous les autres (dont les
+          // installations antérieures qui n'ont jamais touché au réglage) gardent
+          // les mises à jour actives en 100 % local.
+          localUpdateCheck: state.localUpdateCheck !== false,
           signalingToken: typeof state.signalingToken === 'string' ? state.signalingToken : '',
           orgBranding:
             state.orgBranding && typeof state.orgBranding === 'object' ? state.orgBranding : null,

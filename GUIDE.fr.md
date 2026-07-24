@@ -14,6 +14,18 @@ d'Obsidian Canvas et de Miro.
 
 ## Fonctionnalités
 
+### Prise en main (v1.8.8)
+
+Un **parcours guidé** est proposé par un bouton *Tutoriel* discret sur l'écran d'accueil
+(rejouable ensuite depuis **Paramètres → À propos**). En douze étapes courtes, il fait
+faire l'essentiel — créer un tableau, poser une entité, renseigner sa fiche, relier deux
+entités, citer ses sources, lire la frise, partager, exporter — en **désignant l'interface
+réelle** pendant que l'utilisateur la manipule : rien n'est simulé, aucune interaction
+n'est bloquée, et l'on quitte à tout moment. Les étapes vivent dans
+`src/renderer/src/lib/tutorialSteps.ts` ; chacune s'ancre à un élément via un attribut
+`data-tut="…"` posé dans le composant correspondant (un test vérifie que toute ancre
+déclarée existe bien dans le code de l'interface).
+
 ### Types de nœuds
 
 - **Nœuds libres** : note texte (markdown simple), lien URL (ouverture uniquement dans
@@ -438,7 +450,10 @@ dossier programme : elles **survivent à toute mise à jour**.
 - **Signalisation** : pour se *trouver*, les pairs passent par un serveur de
   signalisation WebSocket. Il ne voit que l'identifiant de room (une valeur dérivée,
   non réversible) et des messages de négociation **chiffrés en AES-GCM** avec une clé
-  dérivée du code de partage. Aucune donnée du tableau n'y transite.
+  dérivée du code de partage. Aucune donnée du tableau n'y transite. Pour héberger ce
+  serveur sur un réseau fermé, suivre le guide pas à pas
+  [`docs/DEPLOIEMENT_LOCAL.fr.md`](./docs/DEPLOIEMENT_LOCAL.fr.md) (service systemd, jeton
+  d'accès, pare-feu **IPv6 compris**, provisionnement des postes, dépannage).
 - **STUN** : pour découvrir leur adresse publique, les pairs interrogent des serveurs
   STUN (Google, Cloudflare, Twilio). Le STUN ne voit passer aucune donnée non plus.
 - **Hors ligne** : sans réseau (ou sans pair en ligne), on travaille seul ; tout est
