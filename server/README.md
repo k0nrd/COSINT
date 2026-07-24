@@ -5,10 +5,11 @@ dépendance : `ws`) compatible avec le protocole y-webrtc utilisé par COSINT.
 
 > ## 📘 Déploiement en réseau fermé : suivez le guide complet
 >
-> **[docs/DEPLOIEMENT_LOCAL.fr.md](../docs/DEPLOIEMENT_LOCAL.fr.md)** — installation pas à
+> **[docs/DEPLOY_LOCAL.fr.md](../docs/DEPLOY_LOCAL.fr.md)** — installation pas à
 > pas testée sur Ubuntu 24.04 : service systemd, jeton d'accès, pare-feu (**y compris
 > IPv6**), marque d'organisation, vérification de bout en bout, provisionnement des postes
 > par fichier `.cosint-org`, dépannage et exploitation courante.
+> Également en [anglais](../docs/DEPLOY_LOCAL.md) et en [polonais](../docs/DEPLOY_LOCAL.pl.md).
 >
 > La présente page reste la **référence courte** : ce que le serveur voit, un test en
 > 30 secondes, et les variables d'environnement. Pour mettre un parc en production,
@@ -108,7 +109,7 @@ un VPS, ou Cloudflare Workers + Durable Objects (nécessite d'adapter le script)
 > « Y a-t-il un moyen d'empêcher tout poste extérieur d'utiliser notre serveur ? »
 > Oui — et plusieurs couches se combinent. Le détail opérationnel (règles de pare-feu,
 > persistance, IPv6, TLS, mTLS) est dans le
-> **[guide de déploiement](../docs/DEPLOIEMENT_LOCAL.fr.md)**.
+> **[guide de déploiement](../docs/DEPLOY_LOCAL.fr.md)**.
 
 **D'abord, le point rassurant.** Même un serveur **entièrement ouvert** ne compromet
 aucune enquête : un intrus ne peut ni lire ni rejoindre un tableau. Les identifiants de
@@ -155,7 +156,7 @@ l'agent fait **Importer un profil**, vérifie, enregistre — le mode 100 % loca
 le jeton sont configurés d'un coup, et le logo/titre apparaissent automatiquement.
 
 Le fichier peut aussi être **généré côté serveur** sans jamais afficher le jeton : voir la
-[section « Provisionnement des postes »](../docs/DEPLOIEMENT_LOCAL.fr.md#9-provisionnement-des-postes)
+[section « Provisionnement des postes »](../docs/DEPLOY_LOCAL.fr.md#9-provisionnement-des-postes)
 du guide.
 
 > Ce fichier contient le jeton en clair : distribuez-le par un canal de confiance.

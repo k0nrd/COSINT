@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="./DEPLOY_LOCAL.md">English</a> · <b>Français</b> · <a href="./DEPLOY_LOCAL.pl.md">Polski</a>
+</p>
+
 # Déployer COSINT en mode 100 % local
 
 Guide d'installation d'un serveur de signalisation COSINT sur un réseau fermé, et de

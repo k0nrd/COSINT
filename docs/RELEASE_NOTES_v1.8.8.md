@@ -51,8 +51,8 @@ the setting get the new default.
 
 ### 📘 A real deployment guide
 
-[`docs/DEPLOIEMENT_LOCAL.fr.md`](DEPLOIEMENT_LOCAL.fr.md) (French) replaces the thin
-self-hosting notes: systemd service, access token hygiene, firewall rules **including the
+[`docs/DEPLOY_LOCAL.md`](DEPLOY_LOCAL.md) — **in English, French and Polish** — replaces the
+thin self-hosting notes: systemd service, access token hygiene, firewall rules **including the
 IPv6 hole everyone forgets**, organization branding, layered end-to-end verification,
 one-click workstation provisioning, a symptom-to-cause troubleshooting table and day-to-day
 operation. Field-tested on Ubuntu 24.04, with the traps called out where they bite —
@@ -74,7 +74,7 @@ the name opens the author's GitHub in your system browser.
 - New tests also lock the three translation dictionaries to an **identical key set with no
   empty strings**, catching a silently dropped or duplicated key.
 - The `.trace` format is **unchanged (v7)**, fully backward compatible; no data-model change.
-- **288 tests total**, production build OK, Windows + Linux packaged.
+- **290 tests total**, production build OK, Windows + Linux packaged.
 
 ---
 
@@ -125,8 +125,9 @@ n'avaient jamais touché au réglage héritent du nouveau défaut.
 
 ### 📘 Un vrai guide de déploiement
 
-[`docs/DEPLOIEMENT_LOCAL.fr.md`](DEPLOIEMENT_LOCAL.fr.md) remplace les quelques notes
-d'auto-hébergement : service systemd, hygiène du jeton d'accès, règles de pare-feu **y compris
+[`docs/DEPLOY_LOCAL.fr.md`](DEPLOY_LOCAL.fr.md) — **en français, anglais et polonais** —
+remplace les quelques notes d'auto-hébergement : service systemd, hygiène du jeton d'accès,
+règles de pare-feu **y compris
 le trou IPv6 que tout le monde oublie**, marque d'organisation, vérification de bout en bout
 couche par couche, provisionnement des postes en un clic, tableau symptôme → cause pour le
 dépannage et exploitation courante. Éprouvé sur Ubuntu 24.04, avec les pièges signalés là où
@@ -150,4 +151,4 @@ k0nrd »** ; un clic sur le pseudo ouvre le GitHub de l'auteur dans le navigateu
   clés identique et sans chaîne vide**, ce qui attrape une clé perdue ou dupliquée en silence.
 - Le format `.trace` est **inchangé (v7)**, totalement rétro-compatible ; aucun changement de
   modèle de données.
-- **288 tests au total**, build de production OK, packaging Windows + Linux.
+- **290 tests au total**, build de production OK, packaging Windows + Linux.

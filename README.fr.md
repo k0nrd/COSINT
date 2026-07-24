@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-288%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-290%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -90,7 +90,7 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
   silencieusement des correctifs. GitHub Releases devient le **seul** service public
   contacté (aucune donnée de tableau n'y transite), le récapitulatif le dit franchement, et
   une case à décocher suffit pour un réseau réellement isolé.
-- **📘 Un vrai guide de déploiement** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) :
+- **📘 Un vrai guide de déploiement, dans les trois langues** — [`docs/DEPLOY_LOCAL.fr.md`](docs/DEPLOY_LOCAL.fr.md) :
   service systemd, jeton d'accès, pare-feu **y compris IPv6**, marque d'organisation,
   vérification de bout en bout, provisionnement des postes, dépannage. Éprouvé sur le
   terrain (Ubuntu 24.04), écrit depuis un déploiement réel et non depuis la théorie.
@@ -143,7 +143,7 @@ Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 | Mise en relation (handshake chiffré) | Serveur de signalisation (public par défaut, auto-hébergeable) | Non — salon opaque + blobs chiffrés |
 | Découverte de l'IP publique | STUN (Google/Cloudflare/Twilio par défaut, remplaçables) | Aucune donnée |
 | Relais des données (TURN) | **N'existe pas** par conception | — |
-| Vérification de mise à jour | GitHub Releases (optionnelle, coupée en mode local) | — |
+| Vérification de mise à jour | GitHub Releases (optionnelle, une case — seul service public joignable en mode local) | — |
 
 - Code de partage → identifiant de salon + clé sont dérivés **localement** (HKDF-SHA-256,
   contextes séparés) ; le code lui-même n'est jamais transmis.
@@ -153,11 +153,16 @@ Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 
 ### Mode 100 % local (réseaux fermés)
 
-**Paramètres → Réseau & confidentialité** ne contacte **que** les adresses internes saisies —
-votre serveur de signalisation, STUN/TURN internes optionnels — avec **mises à jour coupées**.
-Adresse vide ou invalide → les tableaux partagés restent **hors ligne**, *sans aucun repli
-silencieux* vers les serveurs publics. Un récapitulatif en direct *« Ce que l'application
-contactera »*, calculé par la même fonction que celle qui ouvre les vraies connexions, le prouve.
+**Paramètres → Réseau** ne contacte **que** les adresses internes saisies — votre serveur de
+signalisation, STUN/TURN internes optionnels. Adresse vide ou invalide → les tableaux
+partagés restent **hors ligne**, *sans aucun repli silencieux* vers les serveurs publics. Un
+récapitulatif en direct *« Ce que l'application contactera »*, calculé par la même fonction
+que celle qui ouvre les vraies connexions, le prouve.
+
+Depuis la **1.8.8**, la vérification de mise à jour reste **active** en mode local pour
+qu'un poste ne s'enlise pas sur une version ancienne — GitHub Releases est alors le *seul*
+service public contacté, aucune donnée de tableau n'y transite, et **décocher une case**
+restaure une configuration entièrement close.
 
 ---
 
@@ -214,10 +219,11 @@ PORT=4444 npm start        # → ws://votre-machine:4444
 ```
 
 **Déploiement sur un réseau fermé ?** Suivez le guide complet, pas à pas :
-[`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — service systemd, jeton
+[`docs/DEPLOY_LOCAL.fr.md`](docs/DEPLOY_LOCAL.fr.md) — service systemd, jeton
 d'accès, règles de pare-feu **y compris IPv6**, marque d'organisation, vérification de bout
 en bout, provisionnement des postes en un clic (`.cosint-org`), dépannage et exploitation
-courante. Testé sur Ubuntu 24.04.
+courante. Testé sur Ubuntu 24.04. Également en
+[anglais](docs/DEPLOY_LOCAL.md) et en [polonais](docs/DEPLOY_LOCAL.pl.md).
 
 ## 🛠️ Compiler depuis les sources
 

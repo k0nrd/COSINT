@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/version-1.8.8-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-288%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-290%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -88,10 +88,10 @@ whole subgraphs to the clipboard and paste them anywhere.
   cuts you off from fixes. GitHub Releases becomes the **only** public service contacted
   (no board data ever goes through it), the recap says so plainly, and a single checkbox
   turns it off for genuinely air-gapped networks.
-- **📘 A real deployment guide** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md)
-  (French): systemd service, access token, firewall **including IPv6**, organization
-  branding, end-to-end verification, workstation provisioning, troubleshooting. Field-tested
-  on Ubuntu 24.04, written from an actual deployment rather than from theory.
+- **📘 A real deployment guide, in all three languages** — [`docs/DEPLOY_LOCAL.md`](docs/DEPLOY_LOCAL.md):
+  systemd service, access token, firewall **including IPv6**, organization branding,
+  end-to-end verification, workstation provisioning, troubleshooting. Field-tested on
+  Ubuntu 24.04, written from an actual deployment rather than from theory.
 - **✍️ Made by k0nrd** — the home screen now says who wrote it, one click from the source.
 
 Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
@@ -140,7 +140,7 @@ Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 | Peer-discovery handshake (encrypted) | Signaling server (public by default, self-hostable) | No — opaque room ID + encrypted blobs |
 | Public-IP discovery | STUN (Google/Cloudflare/Twilio by default, replaceable) | No data at all |
 | Data relay (TURN) | **Does not exist** by design | — |
-| Update check | GitHub Releases (optional, off in local mode) | — |
+| Update check | GitHub Releases (optional, one checkbox — the only public service reachable in local mode) | — |
 
 - Share code → room ID and encryption key are derived **locally** (HKDF-SHA-256, separate
   contexts); the code itself is never transmitted.
@@ -150,11 +150,14 @@ Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 
 ### 100 % local mode (closed networks)
 
-**Settings → Network & privacy** contacts **only** the internal addresses you enter — your
-signaling server, optional internal STUN/TURN — with **update checks disabled**. Empty or
-invalid → shared boards stay **offline**, with *no silent fallback* to public servers. A
-live *"What the app will contact"* recap, computed by the same function that opens the real
-connections, proves it.
+**Settings → Network** contacts **only** the internal addresses you enter — your signaling
+server, optional internal STUN/TURN. Empty or invalid → shared boards stay **offline**, with
+*no silent fallback* to public servers. A live *"What the app will contact"* recap, computed
+by the same function that opens the real connections, proves it.
+
+Since **1.8.8**, update checking stays **on** in local mode so stations don't quietly rot on
+an old version — GitHub Releases is then the *only* public service contacted, no board data
+passes through it, and **unticking one checkbox** restores a fully sealed configuration.
 
 ---
 
@@ -209,11 +212,12 @@ npm install
 PORT=4444 npm start        # → ws://your-host:4444
 ```
 
-**Deploying to a closed network?** Follow the full step-by-step guide (French):
-[`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — systemd service, access
-token, firewall rules **including IPv6**, organization branding, end-to-end verification,
-one-click workstation provisioning (`.cosint-org`), troubleshooting and day-to-day
-operation. Tested on Ubuntu 24.04.
+**Deploying to a closed network?** Follow the full step-by-step guide:
+[`docs/DEPLOY_LOCAL.md`](docs/DEPLOY_LOCAL.md) — systemd service, access token, firewall
+rules **including IPv6**, organization branding, end-to-end verification, one-click
+workstation provisioning (`.cosint-org`), troubleshooting and day-to-day operation. Tested
+on Ubuntu 24.04. Also available in
+[French](docs/DEPLOY_LOCAL.fr.md) and [Polish](docs/DEPLOY_LOCAL.pl.md).
 
 ## 🛠️ Build from source
 

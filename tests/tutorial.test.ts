@@ -14,11 +14,12 @@
  *     n'appartient qu'à une étape d'accueil, la dernière étape conclut) ;
  *  4. les adresses publiques ne partent qu'en https, vers le dépôt de l'auteur.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { TUTORIAL_STEPS } from '@/lib/tutorialSteps'
-import { AUTHOR_URL, DEPLOY_GUIDE_URL, REPO_URL } from '@/lib/project'
+import { AUTHOR_URL, DEPLOY_GUIDE_URLS, REPO_URL, deployGuideUrl } from '@/lib/project'
+import { LOCALES, setLocale } from '@/i18n'
 import { fr } from '@/i18n/fr'
 import { en } from '@/i18n/en'
 import { pl } from '@/i18n/pl'
@@ -89,12 +90,30 @@ describe('parcours guidé — étapes', () => {
 
 describe('adresses publiques du projet', () => {
   it('ne sortent qu’en https, vers le dépôt de l’auteur', () => {
-    for (const url of [AUTHOR_URL, REPO_URL, DEPLOY_GUIDE_URL]) {
+    for (const url of [AUTHOR_URL, REPO_URL, ...Object.values(DEPLOY_GUIDE_URLS)]) {
       const parsed = new URL(url)
       expect(parsed.protocol).toBe('https:')
       expect(parsed.hostname).toBe('github.com')
       expect(parsed.pathname.startsWith('/k0nrd')).toBe(true)
     }
+  })
+
+  it('le guide de déploiement existe dans les trois langues', () => {
+    // Une URL par langue de l'interface, et le fichier VISÉ doit exister dans le dépôt :
+    // un lien mort dans « Paramètres → À propos » ne se verrait qu'en production.
+    expect(Object.keys(DEPLOY_GUIDE_URLS).sort()).toEqual([...LOCALES].sort())
+    for (const url of Object.values(DEPLOY_GUIDE_URLS)) {
+      const file = url.slice(url.indexOf('/docs/') + 1)
+      expect(existsSync(resolve(__dirname, '..', file)), `fichier manquant : ${file}`).toBe(true)
+    }
+  })
+
+  it('le lien du guide suit la langue de l’interface', () => {
+    for (const locale of LOCALES) {
+      setLocale(locale)
+      expect(deployGuideUrl()).toBe(DEPLOY_GUIDE_URLS[locale])
+    }
+    setLocale('fr')
   })
 })
 

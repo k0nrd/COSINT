@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/wersja-1.8.8-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
-  <img src="https://img.shields.io/badge/testy-288%20zielone-3fbf6a" alt="Testy">
+  <img src="https://img.shields.io/badge/testy-290%20zielone-3fbf6a" alt="Testy">
   <img src="https://img.shields.io/badge/telemetria-brak-ef4444" alt="Brak telemetrii">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Zbudowano z">
 </p>
@@ -89,10 +89,11 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
   lokalny nie odcina już po cichu od poprawek. GitHub Releases staje się **jedyną**
   kontaktowaną usługą publiczną (żadne dane tablic przez nią nie przechodzą), podsumowanie
   mówi o tym wprost, a jedno pole wyboru wyłącza to w sieci naprawdę odizolowanej.
-- **📘 Prawdziwy przewodnik wdrożeniowy** — [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md)
-  (po francusku): usługa systemd, token dostępu, zapora **wraz z IPv6**, marka organizacji,
-  weryfikacja end-to-end, konfiguracja stanowisk, rozwiązywanie problemów. Sprawdzony
-  w praktyce (Ubuntu 24.04), napisany na podstawie rzeczywistego wdrożenia, nie teorii.
+- **📘 Prawdziwy przewodnik wdrożeniowy, we wszystkich trzech językach** —
+  [`docs/DEPLOY_LOCAL.pl.md`](docs/DEPLOY_LOCAL.pl.md): usługa systemd, token dostępu, zapora
+  **wraz z IPv6**, marka organizacji, weryfikacja end-to-end, konfiguracja stanowisk,
+  rozwiązywanie problemów. Sprawdzony w praktyce (Ubuntu 24.04), napisany na podstawie
+  rzeczywistego wdrożenia, nie teorii.
 - **✍️ Autor: k0nrd** — ekran główny mówi teraz, kto to napisał, o jedno kliknięcie od źródeł.
 
 Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
@@ -142,7 +143,7 @@ Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 | Nawiązanie połączenia (zaszyfrowany handshake) | Serwer sygnalizacyjny (domyślnie publiczny, można hostować własny) | Nie — nieprzejrzysty identyfikator pokoju + zaszyfrowane bloby |
 | Wykrycie publicznego IP | STUN (domyślnie Google/Cloudflare/Twilio, do zastąpienia) | Żadnych danych |
 | Przekazywanie danych (TURN) | **Nie istnieje** z założenia | — |
-| Sprawdzanie aktualizacji | GitHub Releases (opcjonalne, wyłączone w trybie lokalnym) | — |
+| Sprawdzanie aktualizacji | GitHub Releases (opcjonalne, jedno pole — jedyna usługa publiczna osiągalna w trybie lokalnym) | — |
 
 - Kod udostępniania → identyfikator pokoju i klucz szyfrowania są wyprowadzane **lokalnie**
   (HKDF-SHA-256, osobne konteksty); sam kod nigdy nie jest przesyłany.
@@ -152,11 +153,16 @@ Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 
 ### Tryb w pełni lokalny (sieci zamknięte)
 
-**Ustawienia → Sieć i prywatność** kontaktuje **tylko** wprowadzone adresy wewnętrzne — Twój
-serwer sygnalizacyjny, opcjonalne wewnętrzne STUN/TURN — z **wyłączonym sprawdzaniem
-aktualizacji**. Puste lub nieprawidłowe → udostępnione tablice pozostają **offline**, *bez
-cichego przełączenia* na serwery publiczne. Podsumowanie na żywo *„Z czym aplikacja się
-połączy”*, obliczane tą samą funkcją, która otwiera prawdziwe połączenia, to potwierdza.
+**Ustawienia → Sieć** kontaktuje **tylko** wprowadzone adresy wewnętrzne — Twój serwer
+sygnalizacyjny, opcjonalne wewnętrzne STUN/TURN. Puste lub nieprawidłowe → udostępnione
+tablice pozostają **offline**, *bez cichego przełączenia* na serwery publiczne. Podsumowanie
+na żywo *„Z czym aplikacja się połączy”*, obliczane tą samą funkcją, która otwiera prawdziwe
+połączenia, to potwierdza.
+
+Od **1.8.8** sprawdzanie aktualizacji pozostaje **włączone** w trybie lokalnym, aby
+stanowisko nie utknęło po cichu na starej wersji — GitHub Releases jest wtedy *jedyną*
+kontaktowaną usługą publiczną, żadne dane tablic przez nią nie przechodzą, a **odznaczenie
+jednego pola** przywraca całkowicie zamkniętą konfigurację.
 
 ---
 
@@ -212,11 +218,12 @@ npm install
 PORT=4444 npm start        # → ws://twoj-host:4444
 ```
 
-**Wdrożenie w sieci zamkniętej?** Skorzystaj z pełnego przewodnika krok po kroku
-(po francusku): [`docs/DEPLOIEMENT_LOCAL.fr.md`](docs/DEPLOIEMENT_LOCAL.fr.md) — usługa
-systemd, token dostępu, reguły zapory **wraz z IPv6**, marka organizacji, weryfikacja
-end-to-end, konfiguracja stanowisk jednym kliknięciem (`.cosint-org`), rozwiązywanie
-problemów i codzienna eksploatacja. Sprawdzone na Ubuntu 24.04.
+**Wdrożenie w sieci zamkniętej?** Skorzystaj z pełnego przewodnika krok po kroku:
+[`docs/DEPLOY_LOCAL.pl.md`](docs/DEPLOY_LOCAL.pl.md) — usługa systemd, token dostępu, reguły
+zapory **wraz z IPv6**, marka organizacji, weryfikacja end-to-end, konfiguracja stanowisk
+jednym kliknięciem (`.cosint-org`), rozwiązywanie problemów i codzienna eksploatacja.
+Sprawdzone na Ubuntu 24.04. Dostępne także po
+[angielsku](docs/DEPLOY_LOCAL.md) i [francusku](docs/DEPLOY_LOCAL.fr.md).
 
 ## 🛠️ Kompilacja ze źródeł
 

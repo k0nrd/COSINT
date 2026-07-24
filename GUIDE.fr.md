@@ -452,7 +452,7 @@ dossier programme : elles **survivent à toute mise à jour**.
   non réversible) et des messages de négociation **chiffrés en AES-GCM** avec une clé
   dérivée du code de partage. Aucune donnée du tableau n'y transite. Pour héberger ce
   serveur sur un réseau fermé, suivre le guide pas à pas
-  [`docs/DEPLOIEMENT_LOCAL.fr.md`](./docs/DEPLOIEMENT_LOCAL.fr.md) (service systemd, jeton
+  [`docs/DEPLOY_LOCAL.fr.md`](./docs/DEPLOY_LOCAL.fr.md) (service systemd, jeton
   d'accès, pare-feu **IPv6 compris**, provisionnement des postes, dépannage).
 - **STUN** : pour découvrir leur adresse publique, les pairs interrogent des serveurs
   STUN (Google, Cloudflare, Twilio). Le STUN ne voit passer aucune donnée non plus.

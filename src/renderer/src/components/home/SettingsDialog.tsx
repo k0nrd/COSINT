@@ -51,7 +51,7 @@ import {
 } from '@/store/settings'
 import { ICE_SERVERS } from '@/sync/network'
 import { parseOrgProfile, serializeOrgProfile } from '@/lib/orgProfile'
-import { DEPLOY_GUIDE_URL, REPO_URL, openExternal } from '@/lib/project'
+import { REPO_URL, deployGuideUrl, openExternal } from '@/lib/project'
 import { useToasts } from '@/store/toasts'
 import { useTutorial } from '@/store/tutorial'
 import { USER_COLORS } from '@/lib/colors'
@@ -615,7 +615,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
               </div>
 
               <div className="hm-about-tab__row">
-                <button className="cm-btn" onClick={() => openExternal(DEPLOY_GUIDE_URL)}>
+                <button className="cm-btn" onClick={() => openExternal(deployGuideUrl())}>
                   <Server size={15} /> {t('settings.aboutDeploy')}
                 </button>
                 <p className="cm-hint">{t('settings.aboutDeployHint')}</p>
