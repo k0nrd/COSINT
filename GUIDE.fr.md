@@ -221,6 +221,56 @@ déclarée existe bien dans le code de l'interface).
 > être en **1.8.0 ou plus récent** pour rejoindre un tableau 1.8 (les versions antérieures
 > ne comprennent pas les nouveaux champs).
 
+### Nouveautés v1.9
+
+- **Copier une image vers une autre application** : sélectionnez un nœud image (ou une
+  image d'entité) puis **Ctrl+C**, ou **clic droit › Copier l'image** ; collez-la dans
+  n'importe quel logiciel (dessin, traitement de texte, messagerie). **Clic droit ›
+  Enregistrer l'image sous…** l'écrit en PNG sur le disque, et on peut aussi **glisser
+  l'image hors du tableau** vers le bureau ou une autre fenêtre. Le message affiché reflète
+  le résultat réel : COSINT écrit l'image **une seule fois** puis **relit le
+  presse-papiers** pour vérifier (sous Windows, l'historique du presse-papiers Win+V peut le
+  verrouiller un instant — COSINT réessaie). Recollée dans COSINT, l'image redevient le même
+  nœud (titre, étiquettes, taille).
+- **Ajouter des images à une entité** : panneau **Détails › Images › Ajouter des
+  images…** (ou déposer des images dans la zone, ou cliquer la zone puis Ctrl+V), clic
+  droit sur l'entité, bouton de la barre d'outils du nœud, ou simplement **déposer des
+  fichiers image sur l'entité** dans le tableau. Jusqu'à **12 images** ; la première est la
+  **couverture** affichée sur le nœud (badge **+N** s'il y en a d'autres). Un clic ouvre la
+  **visionneuse** (← →, *Définir comme couverture*, copier, enregistrer) ; le panneau
+  Détails permet de réordonner et de retirer.
+- **Aperçu d'un document** : importez un fichier (glisser-déposer, trombone de la barre
+  d'outils ou menu d'ajout, 25 Mo max). Un **PDF** affiche sa première page et son nombre
+  de pages, un **fichier texte** un extrait ; **double-cliquez** le nœud pour ouvrir la
+  visionneuse (← → pour les pages, + / − pour le zoom, Échap pour fermer). Sont aussi
+  prévisualisés :
+  - **Word, Excel, PowerPoint** (`.docx`, `.xlsx`, `.pptx`) : texte, tableaux, feuilles et
+    diapositives ; les anciens `.doc`, `.xls`, `.ppt` sont lus au mieux (texte seul,
+    signalé « approximatif ») ;
+  - **LibreOffice / OpenOffice** (`.odt`, `.ods`, `.odp`, `.odg`) et **RTF** ; les fichiers
+    **Apple iWork** (Pages, Numbers, Keynote) montrent leur miniature intégrée ;
+  - **audio** (`.mp3`, `.wav`, `.ogg`, `.flac`, `.m4a`…) : lecteur avec durée et tags
+    (titre, artiste, album, pochette) ; **vidéo** (`.mp4`, `.webm`…) lue dans la
+    visionneuse ;
+  - **code et scripts** (`.bat`, `.ps1`, `.sh`, `.py`…) : affichés avec coloration
+    syntaxique, **jamais exécutés** — un script reçu d'un pair ne peut rien lancer.
+
+  Les autres fichiers ont une carte avec un bouton **Enregistrer**. L'aperçu est calculé
+  sur votre poste : rien de plus n'est synchronisé. Un document trop gros ou malformé
+  affiche simplement un aperçu tronqué ou la carte par défaut.
+- **Préréglages de lien** : **Paramètres › Préréglages de lien › Nouveau préréglage** —
+  nommez-le, cochez les réglages à reprendre (relation, y compris « Autre » en texte libre,
+  libellé, couleur, épaisseur, style de trait, flèches, tracé, statut, côtés d'ancrage) et
+  vérifiez l'aperçu. Plus rapide : réglez un lien à la main puis, dans sa barre d'outils,
+  **Préréglage › Enregistrer comme préréglage…**. Pour **appliquer** : barre d'outils du lien
+  › Préréglage, ou clic droit sur plusieurs liens sélectionnés ; juste après avoir relié deux
+  entités, un choix propose « Automatique » et vos préréglages (↑ ↓ puis Entrée, Échap =
+  automatique). Les préréglages sont propres au poste ; le style appliqué est visible de tous.
+
+> **Compatibilité.** Le format `.trace` reste en **version 7** : un tableau 1.9 s'ouvre en
+> 1.8.9, qui ignore simplement les galeries d'images. Un pair 1.8.9 peut rejoindre un tableau
+> 1.9 mais voit les nœuds fichier comme des notes vides : mettez tous les postes à jour.
+
 ## Import / export CSV (v1.7)
 
 ### Import
@@ -425,16 +475,31 @@ Pour publier une version :
 1. Dans `electron-builder.yml`, renseignez `publish.owner` (votre compte GitHub) et
    `publish.repo` (le dépôt).
 2. Exportez un jeton GitHub avec le droit `repo` : `export GH_TOKEN=ghp_...`
-3. Incrémentez la version dans `package.json` (ex. `1.3.1`).
-4. Publiez :
+3. Incrémentez la version dans `package.json` (ex. `1.9.0`).
+4. Publiez **Windows et Linux en une seule commande** (à lancer sous Linux ou WSL, où
+   electron-builder sait produire les deux) :
 
    ```bash
-   npm run release      # build + electron-builder --publish always
+   npm run release      # build + electron-builder --win --linux --x64 --publish always
    ```
 
-   Cela crée une *release* GitHub (en brouillon par défaut) avec l'installeur et le
-   fichier `latest.yml` qu'electron-updater lit. Publiez la release : les clients
-   existants la détectent au prochain démarrage.
+   Cela crée une *release* GitHub (en brouillon par défaut). Vérifiez qu'elle contient bien
+   les **7 fichiers** attendus, sinon une partie des clients ne verra pas la mise à jour :
+
+   | Fichier | Rôle |
+   |---|---|
+   | `COSINT-Setup-<version>.exe` | installeur Windows |
+   | `COSINT-Setup-<version>.exe.blockmap` | téléchargement différentiel des mises à jour Windows |
+   | `COSINT-Portable-<version>.exe` | version portable Windows (sans installation, sans mise à jour auto) |
+   | `COSINT-<version>-x86_64.AppImage` | Linux, un seul fichier exécutable |
+   | `COSINT-<version>-amd64.deb` | Linux Debian/Ubuntu (apt/dpkg) |
+   | `latest.yml` | ce qu'electron-updater lit sous **Windows** |
+   | `latest-linux.yml` | ce qu'electron-updater lit sous **Linux** (AppImage) |
+
+   Si vous construisez les deux plates-formes séparément (`npm run build:win` puis
+   `npm run build:linux`), téléversez ces 7 fichiers à la main dans la même release — sans
+   `latest.yml` les postes Windows ne voient rien, sans `latest-linux.yml` les postes Linux
+   non plus. Publiez la release : les clients existants la détectent au prochain démarrage.
 
 Les données locales (tableaux, profil) vivent dans `%APPDATA%/COSINT`, **hors** du
 dossier programme : elles **survivent à toute mise à jour**.

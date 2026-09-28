@@ -59,9 +59,22 @@ import {
   parseClip,
   remapClip,
   serializeClip,
+  singleImageDataUrl,
   type ClipData,
   type ClipFile
 } from '@/lib/clipboard'
+// §1 v1.9 (copie d'image) : sortir une image du tableau (presse-papiers, enregistrer).
+import {
+  clipboardChordOf,
+  copyImageToClipboard,
+  imageCopyTarget,
+  imageKeyAction,
+  type ImageCopyTarget,
+  isLastCopiedImage,
+  lastImageCopyId,
+  saveImageAs
+} from '@/lib/imageClipboard'
+import type { LinkPresetDef } from '@/lib/linkPresets'
 import { newId } from '@/lib/id'
 import {
   edgeColumns,
@@ -76,7 +89,11 @@ import { CsvExportDialog } from '@/components/board/CsvExportDialog'
 import { TimelinePanel } from '@/components/board/TimelinePanel'
 import type { AddTiming } from '@/lib/timeline'
 import { BOARD_IMAGE_PROFILE, initialImageNodeSize, processImage } from '@/lib/image'
-import { exportBoardData, serializeTrace } from '@/lib/serialization'
+import {
+  countUnexportableEntityImages,
+  exportBoardData,
+  serializeTrace
+} from '@/lib/serialization'
 import { buildSourceReport } from '@/lib/sourceReport'
 import { renderBoardToPng } from '@/lib/exportPng'
 import type { BoardHandle } from '@/sync/BoardDoc'
@@ -87,7 +104,7 @@ import {
   setLocalSelection,
   watchParticipantLimit
 } from '@/sync/BoardDoc'
-import { hasCompleteFile, readFileStatus, registerFile } from '@/sync/files'
+import { hasCompleteFile, migrateInlineImages, readFileStatus, registerFile } from '@/sync/files'
 import { installRoleGuard } from '@/sync/roleGuard'
 import { publishRekey } from '@/sync/rotation'
 import {
@@ -128,11 +145,16 @@ import {
   setEdgesStatus,
   setEventTiming,
   setNodesStatus,
+  setNodeIcon,
+  // §2 v1.9 (galerie) : retrait / déplacement / couverture d'une image d'entité.
+  editEntityImages,
   setParticipantLimit,
   setParticipantRole,
   transferAdmin,
   updateEdge,
-  updateNode
+  updateNode,
+  // §7 v1.9 : application d'un préréglage de lien (lot, une transaction).
+  applyEdgePreset
 } from '@/sync/boardOps'
 import { useBoards } from '@/store/boards'
 import { useToasts } from '@/store/toasts'
@@ -162,7 +184,16 @@ import { ZoomCompensator } from './ZoomCompensator'
 import type { CosintFlowEdge, CosintFlowNode } from './flowTypes'
 import { AddNodeMenu, type AddSelection } from './AddNodeMenu'
 import { EdgeContextMenu } from './EdgeContextMenu'
+import { EdgePresetChooser } from './EdgePresetChooser'
+import { LinkPresetDialog } from '@/components/board/LinkPresetDialog'
 import { SelectionContextMenu } from './SelectionContextMenu'
+// §2 v1.9 (galerie) : images attachées aux entités (ajout, dépôt sur le nœud, visionneuse).
+import { attachEntityImageFiles, entityIdAtPoint, pickAndAttachEntityImages } from './entityImageActions'
+import { entityImageFileRefs, isInlineImageRef, pruneUnavailableImages } from '@/lib/entityImages'
+import { EntityLightbox } from '@/components/board/EntityLightbox'
+// §5 v1.9 (aperçu) : aperçu des fichiers (taille initiale selon le type, visionneuse).
+import { detectPreviewKind, fileGridPosition, initialFileNodeSize } from '@/lib/filePreview'
+import { FileViewer } from '@/components/board/FileViewer'
 import './canvas.css'
 
 /**
@@ -173,8 +204,36 @@ import './canvas.css'
  * fidélité, images incluses) quand le nonce correspond. */
 let internalClip: ClipData | null = null
 
+/**
+ * §1 v1.9 (copie d'image) : dernière copie d'une IMAGE SEULE. Le presse-papiers système
+ * ne porte alors QUE le bitmap (aucun JSON, pour que Word/Paint/une messagerie collent
+ * bien l'image) ; au recollage DANS COSINT, si l'image collée est bien celle-ci
+ * (empreinte), on recrée le nœud en pleine fidélité (titre, tags, taille) plutôt qu'un
+ * nœud image nu. Variable de module : survit au changement de tableau. */
+let lastImageClip: { copyId: number; clip: ClipData } | null = null
+
+/** §1 v1.9 : instant de la dernière copie d'image lancée au CLAVIER — ignore un éventuel
+ *  évènement `copy`/`cut` redondant émis pour le même geste (menu natif). */
+let lastKeyboardImageCopyAt = 0
+/** Fenêtre (ms) pendant laquelle un évènement `copy`/`cut` suivant la touche est ignoré. */
+const KEYBOARD_COPY_DEDUP_MS = 600
+
 /** Budget d'octets pour embarquer les data-URL d'images dans une copie (§2). */
 const CLIP_FILE_BUDGET = 4 * 1024 * 1024
+
+/** §5 v1.9 : taille binaire maximale d'un fichier importé (25 Mo) — au-delà, refus
+ *  poli, pour garder le document et la synchro P2P sains (chunks bornés). */
+const FILE_HARD_LIMIT = 25 * 1024 * 1024
+
+/** Lit un fichier en data-URL base64 (import de fichier, §5 v1.9). */
+function fileToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
+}
 
 /** Convertit le profil local en identité de présence diffusée aux pairs (§5/§7). */
 export function profileToPresence(profile: UserProfile): PresenceUser {
@@ -365,6 +424,13 @@ function BoardCanvas({
     screenY: number
     edgeId: string
   } | null>(null)
+  // §7 v1.9 : sélecteur de préréglage de lien, ouvert juste après avoir relié deux
+  // entités (Automatique + préréglages nommés) ; null = fermé.
+  const [presetChooser, setPresetChooser] = useState<{
+    screenX: number
+    screenY: number
+    edgeId: string
+  } | null>(null)
   // §1 v1.7.1 : mode « Dessiner le tracé » d'un lien — null = inactif.
   // Étape 'source' : choix du côté de départ (pastilles sur le nœud source) ;
   // étape 'path' : pose des points de passage, puis choix du côté d'arrivée.
@@ -389,6 +455,10 @@ function BoardCanvas({
     screenX: number
     screenY: number
     count: number
+    /** §2 v1.9 (galerie) : entité visée par un clic droit sur UNE entité (« Ajouter une image… »). */
+    entityId?: string
+    /** §1 v1.9 (copie d'image) : nœud image visé par un clic droit (Copier / Enregistrer). */
+    imageNodeId?: string
   } | null>(null)
   // Presse-style de la pipette (§4) : style copié en attente d'application.
   const [copiedStyle, setCopiedStyle] = useState<EntityStyle | null>(null)
@@ -413,6 +483,9 @@ function BoardCanvas({
   // chaud) — sélection, permission et dernière position écran de la souris.
   const selectedNodeIdsRef = useRef(selectedNodeIds)
   selectedNodeIdsRef.current = selectedNodeIds
+  // §1 v1.9 (copie d'image) : copie d'un nœud image désigné — fournie par l'effet
+  // presse-papiers (même chemin que Ctrl+C), utilisée par le bouton du nœud et le clic droit.
+  const copyImageNodeRef = useRef<((nodeId: string) => void) | null>(null)
   const selectedEdgeIdsRef = useRef(selectedEdgeIds)
   selectedEdgeIdsRef.current = selectedEdgeIds
   const canEditRef = useRef(canEdit)
@@ -691,10 +764,10 @@ function BoardCanvas({
       // Filtre par catégorie : ne retient que les entités de la catégorie choisie.
       if (searchCategory !== null && category !== searchCategory) continue
       const comments = commentsByNode.get(node.id) ?? ''
-      // Le contenu base64 d'une image n'est pas cherché (faux positifs) ;
-      // seuls titre, tags et commentaires le sont pour ce type.
+      // Le contenu (hash/base64) d'une image ou d'un fichier n'est pas cherché (faux
+      // positifs) ; seuls titre, tags et commentaires le sont pour ces types.
       const base =
-        node.kind === 'image'
+        node.kind === 'image' || node.kind === 'file'
           ? `${node.title} ${node.tags.join(' ')}`
           : `${node.content} ${node.title} ${node.tags.join(' ')}`
       // Champs de fiche non vides (§3) : seuls les champs renseignés sont indexés,
@@ -1075,16 +1148,30 @@ function BoardCanvas({
       const sourceNode = boardNodesRef.current.find((node) => node.id === source)
       const targetNode = boardNodesRef.current.find((node) => node.id === target)
       let edgeId: string | null
+      let isSourceLink = false
       if (sourceNode?.kind === 'source') {
         edgeId = linkToSource(handle, target, source, author)
+        isSourceLink = true
       } else if (targetNode?.kind === 'source') {
         edgeId = linkToSource(handle, source, target, author)
+        isSourceLink = true
       } else {
         edgeId = createEdge(handle, { source, target }, author)
       }
       if (edgeId) {
         setSelectedNodeIds(new Set())
         setSelectedEdgeIds(new Set([edgeId]))
+        // §7 v1.9 : pour un lien standard (hors « source de »), propose les préréglages
+        // près du curseur. Le lien existe déjà (style « automatique ») et reste
+        // sélectionné → la barre du lien permet aussi de l'ajuster ensuite.
+        if (!isSourceLink && wrapperRef.current && lastPointerScreen.current) {
+          const rect = wrapperRef.current.getBoundingClientRect()
+          setPresetChooser({
+            edgeId,
+            screenX: lastPointerScreen.current.x - rect.left,
+            screenY: lastPointerScreen.current.y - rect.top
+          })
+        }
       }
     },
     [handle, author]
@@ -1195,6 +1282,15 @@ function BoardCanvas({
     if (!routeDraw) return
     if (!canEdit || !boardEdges.some((edge) => edge.id === routeDraw.edgeId)) setRouteDraw(null)
   }, [routeDraw, boardEdges, canEdit])
+
+  // §7 v1.9 : ferme le sélecteur de préréglage si le lien disparaît (suppression par
+  // un pair) ou si le rôle passe en lecture seule.
+  useEffect(() => {
+    if (!presetChooser) return
+    if (!canEdit || !boardEdges.some((edge) => edge.id === presetChooser.edgeId)) {
+      setPresetChooser(null)
+    }
+  }, [presetChooser, boardEdges, canEdit])
 
   // Reconnexion d'une extrémité de lien (§1 v1.6) : tirer l'extrémité vers une AUTRE
   // poignée du MÊME nœud fixe le côté d'ancrage. On ne fixe QUE l'extrémité réellement
@@ -1339,16 +1435,30 @@ function BoardCanvas({
   )
 
   /** Ajoute un nœud simple ou une source au centre (barre d'outils). */
+  // §5 v1.9 : dialogue de choix de fichier (barre d'outils / menu d'ajout). La
+  // position de dépôt est mémorisée le temps de la sélection. Déclaré AVANT
+  // addFromToolbar, qui le référence.
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingFilePos = useRef<{ x: number; y: number } | null>(null)
+  const openFilePicker = useCallback((pos?: { x: number; y: number }) => {
+    if (!canEditRef.current) return
+    pendingFilePos.current = pos ?? null
+    fileInputRef.current?.click()
+  }, [])
+
   const addFromToolbar = useCallback(
     (kind: NodeKind) => {
       if (kind === 'source') {
         const center = canvasCenterFlow()
         addSourceAt(center.x, center.y)
+      } else if (kind === 'file') {
+        // §5 v1.9 : ouvre un dialogue de fichier (le bouton n'a pas d'octets à lui seul).
+        openFilePicker()
       } else if (kind !== 'entity') {
         addNodeCenter(kind)
       }
     },
-    [addNodeCenter, addSourceAt, canvasCenterFlow]
+    [addNodeCenter, addSourceAt, canvasCenterFlow, openFilePicker]
   )
 
   /** §2 v1.8.2 : ajoute un élément DATÉ depuis la frise. La date d'événement est déjà
@@ -1427,6 +1537,36 @@ function BoardCanvas({
     [addNodeAt, canvasCenterFlow, pushToast, handle, canEdit]
   )
 
+  // ——— §5 v1.9 : import de fichiers quelconques (.pdf, .txt…) ———
+  // Non compressés (contrairement aux images) : la data-URL brute est découpée en
+  // chunks dans `files` comme une image ; le nœud « file » ne référence que le hash.
+  const insertFileBlob = useCallback(
+    async (file: File, flowPos?: { x: number; y: number }) => {
+      if (!canEdit) return
+      if (file.size > FILE_HARD_LIMIT) {
+        pushToast(t('file.tooLarge', { size: formatNumber(FILE_HARD_LIMIT / 1024 / 1024, 0) }), 'error')
+        return
+      }
+      let dataUrl: string
+      try {
+        dataUrl = await fileToDataUrl(file)
+      } catch {
+        pushToast(t('file.readError'), 'error')
+        return
+      }
+      const hash = await registerFile(handle, dataUrl)
+      if (!hash) {
+        pushToast(t('file.readError'), 'error')
+        return
+      }
+      const position = flowPos ?? canvasCenterFlow()
+      // §5 v1.9 (aperçu) : taille initiale adaptée à l'aperçu (page PDF, extrait texte…).
+      const size = initialFileNodeSize(detectPreviewKind(file.type, file.name))
+      addNodeAt('file', position.x, position.y, { content: hash, title: file.name, ...size })
+    },
+    [addNodeAt, canvasCenterFlow, pushToast, handle, canEdit]
+  )
+
   // ——— Copier / couper / coller natifs du canvas (§2 v1.7) ———
   // On passe par les évènements presse-papiers du DOM (copy/cut/paste), et NON par le
   // répartiteur de raccourcis : (a) ils donnent accès au `clipboardData` (lecture
@@ -1449,6 +1589,8 @@ function BoardCanvas({
 
     // Fragment de presse-papiers depuis la sélection courante (nœuds + liens
     // internes + data-URL des images, sous budget d'octets, dédupliquées par hash).
+    // Nombre d'images d'entité laissées hors du DERNIER fragment construit.
+    let lastClipSkippedImages = 0
     const buildSelectionClip = (): ClipData | null => {
       const nodeIdSet = selectedNodeIdsRef.current
       if (nodeIdSet.size === 0) return null
@@ -1460,17 +1602,48 @@ function BoardCanvas({
       const files: ClipFile[] = []
       const seenHashes = new Set<string>()
       let budget = CLIP_FILE_BUDGET
+      // §2 v1.9 (galerie) : images d'entité NON embarquées (budget dépassé / pas encore
+      // reçues), dédupliquées par hash — annoncées dès la copie (notifyClipSkipped).
+      const skippedImages = new Set<string>()
+      // §2/§5 v1.9 : on embarque les octets référencés par hash — nœud image OU
+      // fichier (`content`), ET toutes les images de la galerie d'une entité
+      // (`images`) — pour que le collage entre tableaux ne perde jamais la pièce jointe.
       for (const node of nodes) {
-        if (node.kind !== 'image' || node.content === '' || node.content.startsWith('data:')) continue
-        if (seenHashes.has(node.content)) continue // même image partagée → une seule fois
-        const status = readFileStatus(handle.doc, node.content)
-        if (status.status === 'complete' && status.dataUrl.length <= budget) {
-          files.push({ hash: node.content, dataUrl: status.dataUrl })
-          seenHashes.add(node.content)
-          budget -= status.dataUrl.length
+        const refs: string[] = []
+        if (
+          (node.kind === 'image' || node.kind === 'file') &&
+          node.content !== '' &&
+          !node.content.startsWith('data:')
+        ) {
+          refs.push(node.content)
+        }
+        // Ordre du budget = ordre de la galerie (couverture d'abord, puis ordre d'ajout,
+        // donc les plus anciennes d'abord) : ce sont les dernières ajoutées qui sautent.
+        const galleryRefs = entityImageFileRefs(node.images)
+        const galleryRefSet = new Set(galleryRefs)
+        refs.push(...galleryRefs)
+        for (const hash of refs) {
+          if (seenHashes.has(hash)) continue // fichier partagé → une seule fois
+          const status = readFileStatus(handle.doc, hash)
+          if (status.status === 'complete' && status.dataUrl.length <= budget) {
+            files.push({ hash, dataUrl: status.dataUrl })
+            seenHashes.add(hash)
+            skippedImages.delete(hash)
+            budget -= status.dataUrl.length
+          } else if (galleryRefSet.has(hash)) {
+            skippedImages.add(hash)
+          }
         }
       }
+      lastClipSkippedImages = skippedImages.size
       return buildClip(nodes, edges, files, newId())
+    }
+    // Annonce, au moment de la copie, les images d'entité qui ne suivront pas un
+    // collage dans un AUTRE tableau (le collage dans ce tableau les retrouve).
+    const notifyClipSkipped = (): void => {
+      if (lastClipSkippedImages > 0) {
+        pushToast(t('entity.imagesNotCopied', { count: lastClipSkippedImages }), 'info')
+      }
     }
 
     // Position (coordonnées canvas) où coller : sous la souris si connue, sinon null.
@@ -1495,10 +1668,32 @@ function BoardCanvas({
       for (const file of clip.files) {
         if (!hasCompleteFile(handle.doc, file.hash)) void registerFile(handle, file.dataUrl)
       }
+      // §2 v1.9 (galerie) : une image d'entité dont les octets ne sont ni dans le
+      // fragment ni dans ce tableau (budget de copie dépassé) est retirée du collage —
+      // plutôt qu'une vignette « réception… » qui n'aboutirait jamais.
+      const clipHashes = new Set(clip.files.map((file) => file.hash))
+      let droppedImages = 0
+      for (const node of remapped.nodes) {
+        if (!node.images) continue
+        const before = node.images.length
+        node.images = pruneUnavailableImages(
+          node.images,
+          (hash) => clipHashes.has(hash) || readFileStatus(handle.doc, hash).status !== 'missing'
+        )
+        droppedImages += before - (node.images?.length ?? 0)
+      }
       createGraph(handle, remapped.nodes, remapped.edges)
+      // §2 v1.9 (galerie) : un fragment externe peut porter des images d'entité en
+      // data-URL inline — re-découpées aussitôt en chunks (jamais laissées dans la
+      // Y.Map du nœud jusqu'à la prochaine ouverture du tableau).
+      if (remapped.nodes.some((node) => node.images?.some((image) => isInlineImageRef(image.hash)))) {
+        void migrateInlineImages(handle)
+      }
       setSelectedEdgeIds(new Set())
       setSelectedNodeIds(new Set(remapped.nodes.map((node) => node.id)))
       pushToast(t('clipboard.pasted', { count: remapped.nodes.length }), 'success')
+      // §2 v1.9 (galerie) : on DIT ce qui n'a pas suivi (budget de copie dépassé).
+      if (droppedImages > 0) pushToast(t('entity.imagesNotPasted', { count: droppedImages }), 'info')
     }
 
     // Colle du texte externe : e-mail/téléphone → entité typée ; URL → nœud lien ;
@@ -1530,37 +1725,136 @@ function BoardCanvas({
       }
     }
 
-    // §2 v1.8.1 : data-URL de l'UNIQUE nœud image sélectionné (ou null). Sert à poser
-    // le BITMAP sur le presse-papiers système en plus du fragment, pour le coller dans
-    // un autre document.
-    const singleSelectedImageDataUrl = (): string | null => {
-      const ids = [...selectedNodeIdsRef.current]
-      if (ids.length !== 1) return null
-      const node = boardNodesRef.current.find((candidate) => candidate.id === ids[0])
-      if (!node || node.kind !== 'image' || node.content === '') return null
-      if (node.content.startsWith('data:image/')) return node.content
-      const status = readFileStatus(handle.doc, node.content)
-      return status.status === 'complete' ? status.dataUrl : null
+    // §1 v1.9 (copie d'image) : la sélection est-elle UNE image (complète → bitmap ; en
+    // réception → toast) ou autre chose (fragment COSINT) ? Voir `imageCopyTarget`.
+    const selectedImageTarget = (): ImageCopyTarget =>
+      imageCopyTarget(
+        boardNodesRef.current.filter((node) => selectedNodeIdsRef.current.has(node.id)),
+        (hash) => {
+          const status = readFileStatus(handle.doc, hash)
+          if (status.status === 'complete') return status.dataUrl
+          // §1 v1.9 : en réception → null (toast) ; manquante/corrompue → false (fragment).
+          return status.status === 'loading' ? null : false
+        }
+      )
+
+    // §1 v1.9 (copie d'image) — UNE image sélectionnée : on pose SEULEMENT le bitmap
+    // (PNG) sur le presse-papiers système — coller dans Word, Paint, une messagerie ou
+    // un e-mail donne l'IMAGE, jamais le JSON `cosint-clip`. L'écriture est faite ET
+    // vérifiée par le processus principal ; le toast reflète le VRAI résultat. `cut` :
+    // le nœud n'est supprimé QUE si l'image est bien sur le presse-papiers (jamais de
+    // perte). La copie interne + `lastImageClip` permettent de recoller le nœud entier.
+    const copyImageClip = async (
+      imageDataUrl: string,
+      clip: ClipData | null,
+      cut: boolean
+    ): Promise<void> => {
+      if (!clip) return
+      internalClip = clip
+      const ok = await copyImageToClipboard(imageDataUrl)
+      if (!ok) {
+        pushToast(t('image.copyError'), 'error')
+        return
+      }
+      lastImageClip = { copyId: lastImageCopyId(), clip }
+      if (cut && canEditRef.current) {
+        deleteNodes(handle, clip.nodes.map((node) => node.id))
+        setSelectedNodeIds(new Set())
+        setSelectedEdgeIds(new Set())
+        pushToast(t('clipboard.cut', { count: clip.nodes.length }), 'success')
+      } else {
+        pushToast(t('image.copied'), 'success')
+      }
+    }
+    const copySelectedImage = (imageDataUrl: string, cut: boolean): Promise<void> =>
+      copyImageClip(imageDataUrl, buildSelectionClip(), cut)
+
+    // §1 v1.9 : copie d'UN nœud image désigné (bouton du nœud, clic droit), quelle que
+    // soit la sélection : fragment limité à ce nœud (+ son image, sous budget).
+    copyImageNodeRef.current = (nodeId: string): void => {
+      const node = boardNodesRef.current.find((candidate) => candidate.id === nodeId)
+      if (!node || node.kind !== 'image') return
+      const imageDataUrl = singleImageDataUrl([node], (hash) => {
+        const status = readFileStatus(handle.doc, hash)
+        return status.status === 'complete' ? status.dataUrl : null
+      })
+      if (!imageDataUrl) {
+        // §1 v1.9 : image manquante/corrompue ≠ image en réception (message exact).
+        const status = node.content.startsWith('data:')
+          ? 'complete'
+          : readFileStatus(handle.doc, node.content).status
+        if (status === 'missing' || status === 'error') {
+          pushToast(t('image.unavailable'), 'error')
+        } else pushToast(t('image.copyEmpty'), 'info')
+        return
+      }
+      const files: ClipFile[] = []
+      if (!node.content.startsWith('data:')) {
+        const status = readFileStatus(handle.doc, node.content)
+        if (status.status === 'complete' && status.dataUrl.length <= CLIP_FILE_BUDGET) {
+          files.push({ hash: node.content, dataUrl: status.dataUrl })
+        }
+      }
+      void copyImageClip(imageDataUrl, buildClip([node], [], files, newId()), false)
+    }
+
+    // §1 v1.9 — Ctrl/Cmd+C (ou Ctrl+X, Ctrl+Inser) sur UNE image : on intercepte la
+    // TOUCHE (keydown, phase de capture) et on l'annule. Ainsi NI la commande « Copier »
+    // de Chromium NI l'accélérateur « Copier » du menu natif ne s'exécutent : aucun
+    // évènement `copy` intermédiaire, aucune écriture concurrente du presse-papiers —
+    // une seule écriture, déterministe, identique sous Windows, macOS et Linux.
+    // Sélection multiple / non-image : on laisse passer (évènements copy/cut ci-dessous).
+    const onClipboardKey = (event: KeyboardEvent): void => {
+      const chord = clipboardChordOf(event)
+      if (!chord) return // chemin rapide : toute autre touche
+      // §x v1.9 : champ de saisie → copie texte native, SANS reconstruire l'image
+      // (selectedImageTarget recolle tous les fragments en une data URL de plusieurs Mo).
+      if (inEditableField(event.target)) return
+      const decision = imageKeyAction(chord, false, selectedImageTarget())
+      if (!decision) return
+      event.preventDefault()
+      if (event.repeat) return // touche maintenue : une seule copie
+      lastKeyboardImageCopyAt = Date.now()
+      // Image encore en réception : rien n'est copié (ni bitmap, ni fragment) — on le dit.
+      if (decision.action === 'pending') pushToast(t('image.copyEmpty'), 'info')
+      else void copySelectedImage(decision.dataUrl, decision.action === 'cut')
+    }
+
+    // §1 v1.9 : image seule via un évènement `copy`/`cut` (menu Édition › Copier/Couper,
+    // Maj+Suppr…) → même chemin que la touche. `preventDefault` sans données : Chromium
+    // n'écrit RIEN (vérifié), l'écriture du bitmap par le main reste donc la seule.
+    // true = évènement pris en charge (image ou image en réception).
+    const handleImageClipboardEvent = (event: ClipboardEvent, cut: boolean): boolean => {
+      const target = selectedImageTarget()
+      if (!target) return false
+      event.preventDefault()
+      if (Date.now() - lastKeyboardImageCopyAt > KEYBOARD_COPY_DEDUP_MS) {
+        if (target.kind === 'pending') pushToast(t('image.copyEmpty'), 'info')
+        else void copySelectedImage(target.dataUrl, cut)
+      }
+      return true
     }
 
     const onCopy = (event: ClipboardEvent): void => {
       if (inEditableField(event.target)) return
+      if (handleImageClipboardEvent(event, false)) return
       const clip = buildSelectionClip()
       if (!clip) return
       event.preventDefault()
+      // Copie interne pleine fidélité conservée (survit au remontage → collage entre
+      // tableaux DANS l'appli).
       internalClip = clip
-      const text = serializeClip(clip)
-      // Fragment texte TOUJOURS posé (collage interne fiable, même si la copie image
-      // échoue). Pour une image UNIQUE, on pose EN PLUS le bitmap (write multi-format
-      // côté main) → collage externe = image, collage interne = nœud (pleine fidélité).
-      event.clipboardData?.setData('text/plain', text)
-      const imageDataUrl = singleSelectedImageDataUrl()
-      if (imageDataUrl) void window.cosint.copyImage(imageDataUrl, text)
+      // Sélection multiple / non-image : le fragment texte permet le collage interne
+      // (nœuds + liens, pleine fidélité) et reste inoffensif à l'extérieur.
+      event.clipboardData?.setData('text/plain', serializeClip(clip))
       pushToast(t('clipboard.copied', { count: clip.nodes.length }), 'info')
+      notifyClipSkipped()
     }
 
     const onCut = (event: ClipboardEvent): void => {
       if (inEditableField(event.target)) return
+      // §1 v1.9 : image seule → bitmap, puis suppression SEULEMENT si la copie a réussi.
+      if (handleImageClipboardEvent(event, true)) return
       const clip = buildSelectionClip()
       if (!clip) return
       event.preventDefault()
@@ -1576,6 +1870,7 @@ function BoardCanvas({
       } else {
         pushToast(t('clipboard.copied', { count: clip.nodes.length }), 'info')
       }
+      notifyClipSkipped()
     }
 
     const onPaste = (event: ClipboardEvent): void => {
@@ -1600,7 +1895,19 @@ function BoardCanvas({
       const blob = imageItem?.getAsFile()
       if (blob) {
         event.preventDefault()
-        void insertImageBlob(blob, pointerFlow() ?? undefined)
+        const position = pointerFlow() ?? undefined
+        // §1 v1.9 (copie d'image) : NOTRE image, copiée depuis un nœud image (même
+        // empreinte) → le nœud est recréé en pleine fidélité (titre, tags, taille) ;
+        // toute autre image → nouveau nœud image (pipeline v1.4).
+        const imageClip = lastImageClip
+        if (imageClip) {
+          void isLastCopiedImage(blob, imageClip.copyId).then((same) => {
+            if (same) pasteClip(imageClip.clip)
+            else void insertImageBlob(blob, position)
+          })
+          return
+        }
+        void insertImageBlob(blob, position)
         return
       }
       // 3) Texte externe (e-mail/téléphone → entité, URL → lien, sinon note).
@@ -1609,10 +1916,14 @@ function BoardCanvas({
       pasteText(text)
     }
 
+    // §1 v1.9 : phase de CAPTURE — avant tout autre gestionnaire de touches.
+    window.addEventListener('keydown', onClipboardKey, true)
     window.addEventListener('copy', onCopy)
     window.addEventListener('cut', onCut)
     window.addEventListener('paste', onPaste)
     return () => {
+      copyImageNodeRef.current = null
+      window.removeEventListener('keydown', onClipboardKey, true)
       window.removeEventListener('copy', onCopy)
       window.removeEventListener('cut', onCut)
       window.removeEventListener('paste', onPaste)
@@ -1633,12 +1944,25 @@ function BoardCanvas({
         return
       }
       const images = dropped.filter((file) => file.type.startsWith('image/'))
-      if (images.length === 0) return
+      // §5 v1.9 : tout autre fichier déposé (hors CSV, déjà traité) devient un nœud fichier.
+      const others = dropped.filter((file) => !file.type.startsWith('image/'))
+      if (images.length === 0 && others.length === 0) return
       event.preventDefault()
       const flow = reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY })
-      for (const file of images) void insertImageBlob(file, flow)
+      // §2 v1.9 (galerie) : des images déposées SUR une entité s'attachent à sa galerie
+      // (au lieu de créer des nœuds image) ; sur le fond du canvas, rien ne change.
+      const dropEntityId =
+        canEdit && images.length > 0 ? entityIdAtPoint(event.clientX, event.clientY) : null
+      if (dropEntityId) void attachEntityImageFiles(handle, dropEntityId, images, author)
+      // Plusieurs fichiers déposés d'un coup : disposés en grille (sinon empilés).
+      const placed = dropEntityId ? others : [...images, ...others]
+      placed.forEach((file, index) => {
+        const pos = fileGridPosition(flow, index, placed.length)
+        if (file.type.startsWith('image/')) void insertImageBlob(file, pos)
+        else void insertFileBlob(file, pos)
+      })
     },
-    [insertImageBlob, reactFlow, canEdit]
+    [insertImageBlob, insertFileBlob, reactFlow, canEdit, handle, author]
   )
 
   // ——— Pan manuel au Ctrl+glisser sur le FOND (§3) ———
@@ -1778,19 +2102,62 @@ function BoardCanvas({
     setSelectedEdgeIds(new Set())
   }, [handle, selectedNodeIds, selectedEdgeIds, canEdit])
 
+  // §1 v1.9 (copie d'image) : l'image d'un nœud est-elle DÉFINITIVEMENT indisponible
+  // (fichier manquant ou corrompu, pas « en cours de réception ») ? Data-URL inline : non.
+  const imageBytesUnavailable = useCallback(
+    (content: string): boolean => {
+      if (content === '' || content.startsWith('data:')) return false
+      const status = readFileStatus(handle.doc, content).status
+      return status === 'missing' || status === 'error'
+    },
+    [handle]
+  )
+
+  // §1 v1.9 (copie d'image) : image complète (data-URL ; null si pas encore entièrement
+  // reçue) et titre d'un nœud image — actions « Copier / Enregistrer » du clic droit.
+  const imageNodeSource = useCallback(
+    (nodeId: string): { dataUrl: string | null; title: string; unavailable: boolean } => {
+      const node = boardNodesRef.current.find((candidate) => candidate.id === nodeId)
+      if (!node) return { dataUrl: null, title: '', unavailable: true }
+      const dataUrl = singleImageDataUrl([node], (hash) => {
+        const status = readFileStatus(handle.doc, hash)
+        return status.status === 'complete' ? status.dataUrl : null
+      })
+      return {
+        dataUrl,
+        title: node.title,
+        unavailable: dataUrl === null && imageBytesUnavailable(node.content)
+      }
+    },
+    [handle, imageBytesUnavailable]
+  )
+
   // Clic droit sur un nœud / une sélection → menu « Supprimer N élément(s) ».
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: CosintFlowNode) => {
-      if (!canEdit) return
+      // §1 v1.9 (copie d'image) : un nœud image garde son menu (Copier / Enregistrer
+      // l'image) même pour un visiteur ; tout autre nœud reste réservé aux éditeurs.
+      const isImage = node.data.board.kind === 'image' && node.data.board.content !== ''
+      if (!canEdit && !isImage) return
       event.preventDefault()
-      const alreadySelected = selectedNodeIds.has(node.id)
+      const alreadySelected = canEdit && selectedNodeIds.has(node.id)
       const count = alreadySelected ? selectedNodeIds.size + selectedEdgeIds.size : 1
       if (!alreadySelected) {
         setSelectedNodeIds(new Set([node.id]))
         setSelectedEdgeIds(new Set())
       }
       const rect = wrapperRef.current!.getBoundingClientRect()
-      setSelectionMenu({ screenX: event.clientX - rect.left, screenY: event.clientY - rect.top, count })
+      // §2 v1.9 (galerie) : clic droit sur une entité seule → entrée « Ajouter une image… ».
+      const entityId = count === 1 && node.data.board.kind === 'entity' ? node.id : undefined
+      // §1 v1.9 (copie d'image) : clic droit sur une image seule → Copier / Enregistrer.
+      const imageNodeId = count === 1 && isImage ? node.id : undefined
+      setSelectionMenu({
+        screenX: event.clientX - rect.left,
+        screenY: event.clientY - rect.top,
+        count,
+        entityId,
+        imageNodeId
+      })
     },
     [canEdit, selectedNodeIds, selectedEdgeIds]
   )
@@ -1909,9 +2276,16 @@ function BoardCanvas({
   // ——— Exports (§7) ———
   const doExportTrace = useCallback(async () => {
     try {
+      // §2 v1.9 — images d'entité pas encore reçues : absentes du fichier, on le dit.
+      const notExported = countUnexportableEntityImages(handle.doc)
       const json = serializeTrace(exportBoardData(handle.doc))
       const result = await window.cosint.saveTrace(toFileName(meta.title, 'trace'), json)
-      if (result.saved) pushToast(t('export.traceDone'), 'success')
+      if (result.saved) {
+        pushToast(t('export.traceDone'), 'success')
+        if (notExported > 0) {
+          pushToast(t('entity.imagesNotExported', { count: notExported }), 'info')
+        }
+      }
       else if (result.error) pushToast(t('export.failed'), 'error')
     } catch (error) {
       pushToast(t('export.error', { message: String(error) }), 'error')
@@ -2105,6 +2479,12 @@ function BoardCanvas({
       customTypes,
       customTypeMap: customTypeMapValue,
       updateNodeData: (id, patch) => canEdit && updateNode(handle, id, patch, author),
+      setNodeIcon: (id, icon) => canEdit && setNodeIcon(handle, id, icon, author),
+      // §2 v1.9 (galerie) : images d'entité — neutralisées pour un visiteur (§6).
+      attachEntityImages: (id, files) =>
+        canEdit && void attachEntityImageFiles(handle, id, files, author),
+      pickEntityImages: (id) => canEdit && pickAndAttachEntityImages(handle, id, author),
+      editEntityImages: (id, action) => canEdit && editEntityImages(handle, id, action, author),
       deleteNodes: (ids) => canEdit && deleteNodes(handle, ids),
       duplicateNodes: (ids) => canEdit && void duplicateNodes(handle, ids, author),
       updateEdgeData: (id, patch) => canEdit && updateEdge(handle, id, patch, author),
@@ -2116,6 +2496,9 @@ function BoardCanvas({
       addComment: (nodeId, text) => canEdit && void addComment(handle, nodeId, text, author),
       deleteComment: (commentId) => canEdit && deleteComment(handle, commentId),
       openExternal: (url) => void window.cosint.openExternal(url),
+      // §1 v1.9 (copie d'image) : même chemin que Ctrl+C (visiteur inclus : copier une
+      // image n'écrit rien dans le tableau). Ref → identité stable.
+      copyImageNode: (id) => copyImageNodeRef.current?.(id),
       // §3 v1.8.1 : détection d'information partagée + liaison suggérée. Les deux
       // lisent les refs de nœuds/liens (toujours à jour) → identités stables, pas
       // de re-création du contexte à chaque changement de nœud.
@@ -2232,13 +2615,22 @@ function BoardCanvas({
             onReconnectEnd={onReconnectEnd}
             onNodeContextMenu={onNodeContextMenu}
             onSelectionContextMenu={(event) => {
-              if (!canEdit) return
+              // §1 v1.9 (copie d'image) : sélection (rectangle) réduite à UNE image →
+              // Copier / Enregistrer l'image, visiteur inclus (comme le clic droit sur le nœud).
+              const onlyNode =
+                selectedNodeIds.size === 1 && selectedEdgeIds.size === 0
+                  ? boardNodesRef.current.find((node) => selectedNodeIds.has(node.id))
+                  : undefined
+              const imageNodeId =
+                onlyNode && onlyNode.kind === 'image' && onlyNode.content !== '' ? onlyNode.id : undefined
+              if (!canEdit && !imageNodeId) return
               event.preventDefault()
               const rect = wrapperRef.current!.getBoundingClientRect()
               setSelectionMenu({
                 screenX: event.clientX - rect.left,
                 screenY: event.clientY - rect.top,
-                count: selectedNodeIds.size + selectedEdgeIds.size
+                count: selectedNodeIds.size + selectedEdgeIds.size,
+                imageNodeId
               })
             }}
             onNodesDelete={onNodesDelete}
@@ -2401,6 +2793,24 @@ function BoardCanvas({
           />
           )}
 
+          {/* §5 v1.9 : dialogue de fichier natif (barre d'outils / menu d'ajout). */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            onChange={(event) => {
+              const picked = [...(event.target.files ?? [])]
+              const pos = pendingFilePos.current ?? canvasCenterFlow()
+              pendingFilePos.current = null
+              // Plusieurs fichiers choisis d'un coup : disposés en grille (sinon empilés).
+              picked.forEach((file, index) => {
+                void insertFileBlob(file, fileGridPosition(pos, index, picked.length))
+              })
+              event.target.value = ''
+            }}
+          />
+
           {searchOpen && (
             <SearchBar
               query={query}
@@ -2491,6 +2901,9 @@ function BoardCanvas({
                   openEntityPicker({ x: addMenu.flowX, y: addMenu.flowY })
                 } else if (selection.kind === 'source') {
                   addSourceAt(addMenu.flowX, addMenu.flowY)
+                } else if (selection.kind === 'file') {
+                  // §5 v1.9 : import de fichier à l'emplacement du double-clic.
+                  openFilePicker({ x: addMenu.flowX, y: addMenu.flowY })
                 } else {
                   addNodeAt(selection.kind, addMenu.flowX, addMenu.flowY)
                 }
@@ -2538,6 +2951,27 @@ function BoardCanvas({
                 setEdgeMenu(null)
               }}
               onClose={() => setEdgeMenu(null)}
+              // §7 v1.9 : préréglage appliqué à ce lien, ou à TOUS les liens sélectionnés
+              // si le lien cliqué fait partie d'une sélection de plusieurs liens.
+              presetEdgeIds={
+                selectedEdgeIds.has(edgeMenu.edgeId) && selectedEdgeIds.size > 1
+                  ? [...selectedEdgeIds]
+                  : [edgeMenu.edgeId]
+              }
+            />
+          )}
+
+          {presetChooser && (
+            <EdgePresetChooser
+              screenX={presetChooser.screenX}
+              screenY={presetChooser.screenY}
+              edgeId={presetChooser.edgeId}
+              onPickAutomatique={() => setPresetChooser(null)}
+              onPickPreset={(preset: LinkPresetDef) => {
+                applyEdgePreset(handle, [presetChooser.edgeId], preset, author)
+                setPresetChooser(null)
+              }}
+              onClose={() => setPresetChooser(null)}
             />
           )}
 
@@ -2549,6 +2983,29 @@ function BoardCanvas({
               status={selectionStatus}
               onSetStatus={setSelectionStatus}
               onDelete={deleteSelection}
+              // §7 v1.9 : « Appliquer un préréglage » à tous les liens de la sélection.
+              edgeIds={[...selectedEdgeIds]}
+              onAddImages={
+                selectionMenu.entityId
+                  ? () => contextValue.pickEntityImages(selectionMenu.entityId!)
+                  : undefined
+              }
+              // §1 v1.9 (copie d'image) : Copier / Enregistrer l'image (visiteur inclus).
+              onCopyImage={
+                selectionMenu.imageNodeId
+                  ? () => copyImageNodeRef.current?.(selectionMenu.imageNodeId!)
+                  : undefined
+              }
+              onSaveImage={
+                selectionMenu.imageNodeId
+                  ? () => {
+                      const source = imageNodeSource(selectionMenu.imageNodeId!)
+                      if (source.unavailable) pushToast(t('image.unavailable'), 'error')
+                      else void saveImageAs(source.dataUrl, source.title)
+                    }
+                  : undefined
+              }
+              readOnly={!canEdit}
               onClose={() => setSelectionMenu(null)}
             />
           )}
@@ -2591,6 +3048,14 @@ function BoardCanvas({
               onClose={() => setSelectedNodeIds(new Set())}
             />
           )}
+
+          {/* §2 v1.9 (galerie) : visionneuse des images d'une entité (clic sur la
+              couverture du nœud ou sur une vignette du panneau Détails). */}
+          <EntityLightbox />
+
+          {/* §5 v1.9 (aperçu) : visionneuse d'un fichier (double-clic sur un nœud
+              fichier, bouton « Aperçu » du nœud ou du panneau Détails). */}
+          <FileViewer />
 
           {(selectedNode || selectedEdge) && (
             <SidePanel
@@ -2676,6 +3141,9 @@ function BoardCanvas({
             onConfirm={runCsvExport}
           />
         )}
+
+        {/* §7 v1.9 : fenêtre des préréglages de lien (gérer / créer, appliquer). */}
+        <LinkPresetDialog />
       </div>
     </BoardContext.Provider>
   )

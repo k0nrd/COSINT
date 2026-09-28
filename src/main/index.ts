@@ -9,6 +9,8 @@ import { setupSecurity } from './security'
 import { setupIpc } from './ipc'
 import { setupAutoUpdater } from './updater'
 import { buildMenu } from './menu'
+// §1 v1.9 : glisser une image hors de l'application (fichier PNG temporaire).
+import { setupImageExport } from './imageExport'
 
 // Environnements sans GPU utilisable (CI, WSL) : rendu logiciel sur demande.
 if (process.env['COSINT_DISABLE_GPU'] === '1') {
@@ -82,6 +84,7 @@ function createWindow(): void {
 void app.whenReady().then(() => {
   setupSecurity()
   setupIpc()
+  setupImageExport()
   setupAutoUpdater()
   buildMenu()
   createWindow()

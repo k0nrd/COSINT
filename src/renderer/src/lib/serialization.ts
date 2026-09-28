@@ -22,6 +22,7 @@ import { normalizeEntityType } from '@/lib/taxonomy'
 import { sanitizeEventMarks } from '@/lib/timeline'
 import { asStatus, hasStatusBadge } from '@/lib/status'
 import { readFileStatus } from '@/sync/files'
+import { inlineEntityImages, readEntityImages } from '@/lib/entityImages'
 import {
   asEdgeAnchor,
   edgeToYMap,
@@ -78,14 +79,48 @@ export interface TraceFile {
  * `files`). Un fichier incomplet donne un nœud image vide plutôt qu'une référence
  * pendante. À l'import, ces data-URLs sont re-converties en chunks (migration).
  */
+/**
+ * §2 v1.9 (galerie) — nombre d'images d'entité que `exportBoardData` ne pourra pas
+ * inliner (encore en réception depuis un pair, manquantes ou en erreur) : l'export
+ * les retire du `.trace`, l'appelant prévient l'utilisateur.
+ */
+export function countUnexportableEntityImages(doc: Y.Doc): number {
+  let missing = 0
+  for (const node of readAllNodes(doc)) {
+    if (!node.images || node.images.length === 0) continue
+    const kept = inlineEntityImages(node.images, (hash) => {
+      const file = readFileStatus(doc, hash)
+      return file.status === 'complete' ? file.dataUrl : null
+    })
+    missing += node.images.length - kept.length
+  }
+  return missing
+}
+
 export function exportBoardData(doc: Y.Doc, exportedAt: number = Date.now()): TraceFile {
   const nodes = readAllNodes(doc).map((node) => {
-    if (node.kind !== 'image') return node
-    // Déjà inline (import non encore migré) : conservé tel quel.
-    if (node.content.startsWith('data:image/')) return node
-    if (node.content === '') return node
-    const file = readFileStatus(doc, node.content)
-    return { ...node, content: file.status === 'complete' ? file.dataUrl : '' }
+    let out = node
+    // §1 v1.4 / §5 v1.9 : les nœuds image ET fichier référencent un hash → on
+    // réintègre la data-URL inline pour que le .trace reste PORTABLE et
+    // auto-suffisant. Un contenu déjà inline (import non migré) est conservé.
+    if (
+      (node.kind === 'image' || node.kind === 'file') &&
+      node.content !== '' &&
+      !node.content.startsWith('data:')
+    ) {
+      const file = readFileStatus(doc, node.content)
+      out = { ...out, content: file.status === 'complete' ? file.dataUrl : '' }
+    }
+    // §2 v1.9 (galerie) : images attachées à une entité — même principe (chaque hash →
+    // data-URL inline ; une image incomplète est retirée, jamais de référence pendante).
+    if (out.images && out.images.length > 0) {
+      const images = inlineEntityImages(out.images, (hash) => {
+        const file = readFileStatus(doc, hash)
+        return file.status === 'complete' ? file.dataUrl : null
+      })
+      out = { ...out, images: images.length > 0 ? images : undefined }
+    }
+    return out
   })
   const customTypes = readCustomTypes(doc)
   return {
@@ -165,6 +200,18 @@ export function sanitizeNode(raw: unknown): BoardNodeData | null {
   if (record.kind === 'entity' || record.kind === 'source') {
     const style = sanitizeEntityStyle(record.style)
     if (style) node.style = style
+  }
+  // §6/§2 v1.9 — icône propre + galerie d'images (entités). Une image peut être un
+  // hash OU une data-URL inline (dans un .trace portable) → migrée à l'import.
+  if (record.kind === 'entity') {
+    if (typeof record.icon === 'string' && /^[A-Za-z0-9]{1,40}$/.test(record.icon)) {
+      node.icon = record.icon
+    }
+    // §2 v1.9 (galerie) : liste `images` assainie (hash OU data-URL image inline,
+    // doublons retirés, bornée) ; un .trace du build de travail (image unique
+    // `imageHash`) est relu comme première image de la galerie.
+    const images = readEntityImages(record)
+    if (images.length > 0) node.images = images
   }
   // Badge de statut (§3 v1.5).
   const status = asStatus(record.status)

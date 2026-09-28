@@ -11,3 +11,15 @@ Thumbs.db
 .env
 .env.*
 *.pfx
+
+# Outils locaux, caches et couverture
+.claude/
+*.tsbuildinfo
+coverage/
+
+# Artefacts de build empaquetés
+*.exe
+*.AppImage
+*.deb
+*.blockmap
+builder-debug.yml

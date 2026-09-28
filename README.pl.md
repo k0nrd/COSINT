@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.8.9-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.9.0-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
-  <img src="https://img.shields.io/badge/testy-306%20zielone-3fbf6a" alt="Testy">
+  <img src="https://img.shields.io/badge/testy-578%20zielone-3fbf6a" alt="Testy">
   <img src="https://img.shields.io/badge/telemetria-brak-ef4444" alt="Brak telemetrii">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Zbudowano z">
 </p>
@@ -74,7 +74,40 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.8.9
+## 🚀 Nowości w 1.9.0
+
+- **🖼️ Kopiowanie obrazu, które naprawdę działa w Windows** — Ctrl+C na obrazie umieszcza
+  w schowku **sam obraz**, gotowy do wklejenia w dowolnej innej aplikacji. Wcześniej system
+  nie potrafił odczytać zapisanego WebP, a schowek był czyszczony, a potem blokowany przez
+  programy, które go nasłuchują (historia schowka Windows): teraz COSINT zapisuje go raz
+  i sprawdza wynik. Do tego **prawy przycisk › Kopiuj obraz / Zapisz obraz jako**,
+  **przeciąganie obrazu poza tablicę** na pulpit lub do innej aplikacji, a ponowne wklejenie
+  w COSINT zachowuje tytuł, tagi i rozmiar.
+- **🧷 Obrazy w jednostkach** — **galeria do 12 obrazów** na jednostkę, pierwszy jako
+  **okładka** na węźle (z odznaką **+N**). Dodawanie z panelu Szczegóły, menu kontekstowego,
+  paska narzędzi węzła lub przez **upuszczenie plików obrazów na jednostkę**; podgląd
+  pełnoekranowy, wybór okładki, zmiana kolejności, kopiowanie, zapis.
+- **📄 Podgląd dokumentów** — PDF pokazuje **pierwszą stronę i liczbę stron** i otwiera się
+  w **przeglądarce** (strony, powiększenie); **Word / Excel / PowerPoint** (docx, xlsx, pptx
+  — starsze doc, xls, ppt w miarę możliwości), **LibreOffice / OpenOffice** (odt, ods, odp,
+  odg) i **RTF** pokazują swoją treść, pliki **Apple iWork** swoją miniaturę; **audio** (mp3,
+  wav, ogg, flac, m4a…) ma odtwarzacz z tagami, **wideo** (mp4, webm…) odtwarza się
+  w przeglądarce; **kod i skrypty** (.bat, .ps1, .sh, .py…) są podświetlane i **nigdy nie są
+  uruchamiane**; plik tekstowy pokazuje fragment; pozostałe pliki czytelną kartę. Renderowane
+  lokalnie, nic dodatkowego nie jest synchronizowane.
+- **🔗 Pełne ustawienia wstępne połączeń** — preset zapisuje **każde ustawienie połączenia**
+  (relacja, w tym dowolna *„Inne”*, etykieta, kolor, grubość, kreski, strzałki, ścieżka,
+  status, strony zakotwiczenia). Zarządzanie w Ustawieniach z podglądem na żywo, stosowanie
+  lub zapis z paska narzędzi połączenia, stosowanie do wielu połączeń naraz i wybór zaraz po
+  połączeniu dwóch jednostek.
+- **📎 Poza tym** — import **dowolnego pliku** (przycisk Zapisz, 25 MB na plik), **pasek
+  narzędzi w wybranym miejscu** (lewo/prawo/góra/dół), **ikona dla każdej jednostki**,
+  **wielowierszowe pola jednostek**.
+
+Pełne informacje: [`docs/RELEASE_NOTES_v1.9.0.md`](docs/RELEASE_NOTES_v1.9.0.md).
+
+<details>
+<summary>1.8.9 — automatyczne odnajdywanie serwera w DHCP, samouczek wyjaśniający model</summary>
 
 - **📡 Twój serwer w DHCP, odnajdywany automatycznie** — własny serwer sygnalizacyjny, którego
   adres zmieniał się w nocy, oznaczał odtwarzanie profilu i import na każdym stanowisku,
@@ -90,6 +123,8 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
   serwer widzi, a czego nie) oraz praca offline z plikiem `.trace` jako kopią zapasową.
 
 Pełne informacje: [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+</details>
 
 <details>
 <summary>1.8.8 — samouczek prowadzony, ustawienia w zakładkach, nowa ikona</summary>
@@ -124,6 +159,12 @@ Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
   lub dokładny czas trwania *od → do*.
 - Notatki (markdown), notatki z datą, obrazy, bloki kodu z podświetleniem składni, karty
   linków, strefy grupujące.
+- **Obrazy w jednostkach (1.9)** — galeria dla każdej jednostki z okładką na węźle,
+  podgląd pełnoekranowy, kopiowanie / zapis / przeciąganie obrazu do innej aplikacji.
+- **Pliki z podglądem (1.9)** — import dowolnego pliku; PDF pokazuje pierwszą stronę
+  i otwiera się w przeglądarce ze stronami i powiększeniem; dokumenty biurowe (Word, Excel,
+  PowerPoint, LibreOffice, RTF), audio z odtwarzaczem, wideo, podświetlony kod (nigdy nie
+  uruchamiany) i fragmenty tekstu — renderowane lokalnie, z ograniczonymi parserami.
 - Źródła oceniane w **skali Admiralicji** (wiarygodność A–F / wiarygodność informacji 1–6),
   do dołączenia do dowolnego elementu, z raportem źródeł w Markdown.
 - Odznaki statusu, tagi, dowolne kolory, wyszukiwanie pełnotekstowe niewrażliwe na akcenty,
@@ -137,6 +178,8 @@ Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 - Tryb **„Narysuj własną ścieżkę”**: wybierz dokładną stronę wyjścia na A, kliknij punkty
   pośrednie, wybierz stronę wejścia na B — podgląd na żywo, jedno cofnięcie, trasowanie
   automatyczne jako domyślne.
+- **Ustawienia wstępne połączeń (1.9)** — zapisz dowolny zestaw ustawień pod nazwą, zastosuj
+  go do jednego lub wielu połączeń albo wybierz zaraz po połączeniu dwóch jednostek.
 
 **Współpraca w czasie rzeczywistym (P2P)**
 - Udostępnianie **12-znakowym kodem** (60 bitów entropii). Nowi uczestnicy czekają w
@@ -150,7 +193,7 @@ Pełne informacje: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 
 | Co | Którędy | Czy strona trzecia widzi treść? |
 |---|---|---|
-| Treść tablicy (jednostki, połączenia, obrazy…) | **Bezpośrednio uczestnik ↔ uczestnik** (WebRTC, AES-GCM E2E) | Nigdy — nie dotyka żadnego serwera |
+| Treść tablicy (jednostki, połączenia, obrazy, pliki…) | **Bezpośrednio uczestnik ↔ uczestnik** (WebRTC, AES-GCM E2E) | Nigdy — nie dotyka żadnego serwera |
 | Nawiązanie połączenia (zaszyfrowany handshake) | Serwer sygnalizacyjny (domyślnie publiczny, można hostować własny) | Nie — nieprzejrzysty identyfikator pokoju + zaszyfrowane bloby |
 | Wykrycie publicznego IP | STUN (domyślnie Google/Cloudflare/Twilio, do zastąpienia) | Żadnych danych |
 | Przekazywanie danych (TURN) | **Nie istnieje** z założenia | — |
@@ -238,7 +281,7 @@ Sprawdzone na Ubuntu 24.04. Dostępne także po
 
 ## 🛠️ Kompilacja ze źródeł
 
-Wymagania: Node.js ≥ 18, npm.
+Wymagania: Node.js ≥ 20, npm.
 
 ```bash
 npm install

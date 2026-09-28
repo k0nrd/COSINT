@@ -1,10 +1,10 @@
 {
   "name": "cosint",
-  "version": "1.8.9",
+  "version": "1.9.0",
   "description": "Tableau collaboratif OSINT en pair-à-pair — aucune donnée sur serveur",
   "main": "./out/main/index.js",
   "author": "COSINT",
-  "homepage": "https://cosint.interne.local",
+  "homepage": "https://github.com/k0nrd/COSINT",
   "repository": {
     "type": "git",
     "url": "https://github.com/k0nrd/COSINT.git"
@@ -23,7 +23,7 @@
     "build:icon": "node scripts/generate-icon.mjs",
     "build:win": "npm run build:icon && npm run build && electron-builder --win --x64",
     "build:linux": "npm run build && electron-builder --linux --x64",
-    "release": "npm run build:icon && npm run build && electron-builder --win --x64 --publish always"
+    "release": "npm run build:icon && npm run build && electron-builder --win --linux --x64 --publish always"
   },
   "dependencies": {
     "@xyflow/react": "^12.4.2",
@@ -48,6 +48,7 @@
     "electron": "^33.3.1",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.1.0",
+    "pdfjs-dist": "4.10.38",
     "typescript": "^5.7.2",
     "vite": "^6.2.0",
     "vitest": "^3.0.5"

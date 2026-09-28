@@ -42,6 +42,11 @@ const api = {
   copyImage: (dataUrl: string, text?: string): Promise<boolean> =>
     ipcRenderer.invoke('app:copy-image', { dataUrl, text }),
 
+  /** §1 v1.9 : glisser une image HORS de l'application (bureau, autre logiciel). Le
+   * main écrit un PNG temporaire (nom assaini) puis lance le glisser natif. */
+  startImageDrag: (dataUrl: string, name: string): Promise<boolean> =>
+    ipcRenderer.invoke('app:start-image-drag', { dataUrl, name }),
+
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:version'),
 
   /** Abonnement à l'état des mises à jour automatiques (§5). */
@@ -78,6 +83,11 @@ const api = {
   /** Dialogue « Enregistrer sous » pour un export CSV (§1 v1.7). */
   saveCsv: (defaultName: string, csv: string): Promise<SaveResult> =>
     ipcRenderer.invoke('file:save-csv', { defaultName, csv }),
+
+  /** §5 v1.9 : Dialogue « Enregistrer sous » pour une pièce jointe importée
+   * (fichier de tout type MIME, transmis en data-URL base64). */
+  saveAttachment: (defaultName: string, dataUrl: string): Promise<SaveResult> =>
+    ipcRenderer.invoke('file:save-attachment', { defaultName, dataUrl }),
 
   /** Dialogue « Ouvrir » pour un fichier CSV (encodage détecté côté main). */
   openCsv: (): Promise<OpenTextResult> => ipcRenderer.invoke('file:open-csv'),

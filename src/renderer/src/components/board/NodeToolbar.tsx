@@ -5,7 +5,7 @@
  * pipette de style (copier / appliquer).
  */
 import { useEffect, useRef, useState } from 'react'
-import { Minus, Paintbrush, Pilcrow, RotateCcw, SquareDashedBottom } from 'lucide-react'
+import { ImagePlus, Minus, Paintbrush, Pilcrow, RotateCcw, SquareDashedBottom } from 'lucide-react'
 import type { BoardNodeData, EdgeStyle, EdgeWidth, EntityStyle, NodeTextSize } from '@/types'
 import { useBoardContext } from '@/flow/BoardContext'
 import { applyNodeStyle, resetNodeStyle, setNodeStyle } from '@/sync/boardOps'
@@ -51,7 +51,7 @@ function Segmented<T extends string>({
 }
 
 export function NodeToolbar({ node, copiedStyle, onCopyStyle, onClose }: NodeToolbarProps): JSX.Element {
-  const { handle, author, canEdit, setNodesStatus } = useBoardContext()
+  const { handle, author, canEdit, setNodesStatus, pickEntityImages } = useBoardContext()
   const [borderOpen, setBorderOpen] = useState(false)
   const [fillOpen, setFillOpen] = useState(false)
   const borderRef = useRef<HTMLDivElement>(null)
@@ -182,6 +182,21 @@ export function NodeToolbar({ node, copiedStyle, onCopyStyle, onClose }: NodeToo
         compact
         onChange={(status) => setNodesStatus([node.id], status)}
       />
+
+      {/* §2 v1.9 (galerie) : attacher des images à l'entité (sélecteur multiple). */}
+      {node.kind === 'entity' && (
+        <>
+          <span className="et-sep" />
+          <button
+            className="et-btn"
+            onClick={() => pickEntityImages(node.id)}
+            title={t('entity.addImage')}
+            aria-label={t('entity.addImage')}
+          >
+            <ImagePlus size={15} />
+          </button>
+        </>
+      )}
 
       <span className="et-sep" />
 

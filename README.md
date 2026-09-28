@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.9-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.0-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-306%20passing-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-578%20passing-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/telemetry-none-ef4444" alt="No telemetry">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Built with">
 </p>
@@ -73,7 +73,36 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.8.9
+## 🚀 What's new in 1.9.0
+
+- **🖼️ Image copy that really works on Windows** — Ctrl+C on an image puts the **actual
+  picture** on the clipboard for any other app. It used to fail because the stored WebP
+  could not be read by the system and the clipboard was cleared, then locked by clipboard
+  listeners (Windows clipboard history): COSINT now writes it once and verifies. Plus
+  **right-click › Copy image / Save image as**, **drag an image out** to the desktop or
+  another app, and pasting back into COSINT keeps title, tags and size.
+- **🧷 Images inside entities** — a **gallery of up to 12 images** per entity, the first as
+  the **cover** on the node (with a **+N** badge). Add them from the Details panel, the
+  right-click menu, the node toolbar or by **dropping image files onto the entity**; browse
+  them in a lightbox, set the cover, reorder, copy, save.
+- **📄 Document preview** — a PDF shows its **first page and page count** and opens in a
+  **viewer** (pages, zoom); **Word / Excel / PowerPoint** (docx, xlsx, pptx — legacy doc,
+  xls, ppt best-effort), **LibreOffice / OpenOffice** (odt, ods, odp, odg) and **RTF** show
+  their content, **Apple iWork** files their thumbnail; **audio** (mp3, wav, ogg, flac,
+  m4a…) gets a player with its tags, **video** (mp4, webm…) plays in the viewer; **code and
+  scripts** (.bat, .ps1, .sh, .py…) are highlighted and **never executed**; text files show
+  an excerpt; other files a clean card. Rendered locally, nothing extra synced.
+- **🔗 Complete link presets** — a preset captures **every link setting** (relation incl.
+  free *"Other"*, label, colour, thickness, dashes, arrows, path, status, anchor sides).
+  Manage them in Settings with a live preview, apply or save them from the link toolbar,
+  apply to several links at once, and pick one right after connecting two entities.
+- **📎 Also** — import **any file** (Save button, 25 MB per file), a **toolbar you place
+  yourself** (left/right/top/bottom), **per-entity icons**, **multi-line entity fields**.
+
+Full notes: [`docs/RELEASE_NOTES_v1.9.0.md`](docs/RELEASE_NOTES_v1.9.0.md).
+
+<details>
+<summary>1.8.9 — automatic DHCP-server discovery, a tutorial that explains the model</summary>
 
 - **📡 Your DHCP server, found automatically** — a self-hosted signaling server whose address
   changed overnight used to mean rebuilding and re-importing a profile on every workstation,
@@ -88,6 +117,8 @@ whole subgraphs to the clipboard and paste them anywhere.
   what a server can and cannot see), and working offline with `.trace` as your backup.
 
 Full notes: [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+</details>
 
 <details>
 <summary>1.8.8 — guided tutorial, tabbed settings, new icon</summary>
@@ -121,6 +152,12 @@ Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
   precise *from → to* duration.
 - Notes (markdown), timestamped notes, images, syntax-highlighted code blocks, link
   cards, group zones.
+- **Images inside entities (1.9)** — a gallery per entity with a cover on the node, a
+  lightbox, copy / save / drag the picture to any other app.
+- **Files with preview (1.9)** — import any file; PDFs show their first page and open in a
+  paged, zoomable viewer; office documents (Word, Excel, PowerPoint, LibreOffice, RTF), audio
+  with a player, video, highlighted code (never executed) and text excerpts — rendered
+  locally, with bounded parsers.
 - Sources graded on the **Admiralty scale** (reliability A–F / credibility 1–6), attachable
   to any element, with a Markdown source report.
 - Status badges, tags, free colors, accent-insensitive full-text search, filters, legend,
@@ -133,6 +170,8 @@ Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 - Relation types, free labels, direction arrows, color/width/dash, curve/straight/step.
 - **Draw-your-own-path** mode: pick the exact exit side on A, click the waypoints, pick
   the entry side on B — live preview, one undo step, automatic routing as the default.
+- **Link presets (1.9)** — save any combination of link settings under a name, apply it to
+  one or many links, or pick it right after connecting two entities.
 
 **Real-time collaboration (P2P)**
 - Share with a **12-character code** (60 bits of entropy). New participants wait in a
@@ -146,7 +185,7 @@ Full notes: [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md).
 
 | What | Where it goes | Third party sees content? |
 |---|---|---|
-| Board content (entities, links, images…) | **Directly peer ↔ peer** (WebRTC, AES-GCM E2E) | Never — it touches no server |
+| Board content (entities, links, images, files…) | **Directly peer ↔ peer** (WebRTC, AES-GCM E2E) | Never — it touches no server |
 | Peer-discovery handshake (encrypted) | Signaling server (public by default, self-hostable) | No — opaque room ID + encrypted blobs |
 | Public-IP discovery | STUN (Google/Cloudflare/Twilio by default, replaceable) | No data at all |
 | Data relay (TURN) | **Does not exist** by design | — |
@@ -231,7 +270,7 @@ on Ubuntu 24.04. Also available in
 
 ## 🛠️ Build from source
 
-Requirements: Node.js ≥ 18, npm.
+Requirements: Node.js ≥ 20, npm.
 
 ```bash
 npm install

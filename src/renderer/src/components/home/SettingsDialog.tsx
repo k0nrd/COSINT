@@ -29,6 +29,7 @@ import {
   Info,
   KeyRound,
   Keyboard,
+  Spline,
   Palette,
   Radar,
   Server,
@@ -48,7 +49,8 @@ import {
   useSettings,
   type EffectiveNetworkConfig,
   type NetworkMode,
-  type Theme
+  type Theme,
+  type ToolbarPosition
 } from '@/store/settings'
 import { ICE_SERVERS } from '@/sync/network'
 import { parseOrgProfile, serializeOrgProfile } from '@/lib/orgProfile'
@@ -62,6 +64,8 @@ import { Modal } from '@/components/common/Modal'
 import { AuthorTag } from '@/components/common/AuthorTag'
 import { ProfileEditor } from '@/components/common/ProfileEditor'
 import { ShortcutsSettings } from '@/components/home/ShortcutsSettings'
+// §7 v1.9 : onglet « Liens » — gestion des préréglages de lien (réglage local).
+import { LinkPresetManager } from '@/components/board/LinkPresetManager'
 import cosintLogo from '@/assets/logo.png'
 import { vh3 } from '@/lib/vh3'
 import './home.css'
@@ -71,12 +75,14 @@ interface SettingsDialogProps {
 }
 
 /** Onglets, dans leur ordre d'affichage. */
-type SettingsTab = 'profile' | 'appearance' | 'shortcuts' | 'network' | 'about'
+type SettingsTab = 'profile' | 'appearance' | 'shortcuts' | 'links' | 'network' | 'about'
 
 const TABS: ReadonlyArray<{ id: SettingsTab; labelKey: MessageKey; icon: LucideIcon }> = [
   { id: 'profile', labelKey: 'settings.tabProfile', icon: UserRound },
   { id: 'appearance', labelKey: 'settings.tabAppearance', icon: Palette },
   { id: 'shortcuts', labelKey: 'settings.tabShortcuts', icon: Keyboard },
+  // §7 v1.9 : préréglages de lien (enregistrés immédiatement, propres au poste).
+  { id: 'links', labelKey: 'settings.tabLinks', icon: Spline },
   { id: 'network', labelKey: 'settings.tabNetwork', icon: Globe },
   { id: 'about', labelKey: 'settings.tabAbout', icon: Info }
 ]
@@ -187,6 +193,8 @@ function NetworkRecap({ config }: { config: EffectiveNetworkConfig }): JSX.Eleme
 export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const profile = useSettings((state) => state.profile)
   const theme = useSettings((state) => state.theme)
+  const toolbarPosition = useSettings((state) => state.toolbarPosition)
+  const setToolbarPosition = useSettings((state) => state.setToolbarPosition)
   const language = useSettings((state) => state.language)
   const networkMode = useSettings((state) => state.networkMode)
   const customSignalingUrl = useSettings((state) => state.customSignalingUrl)
@@ -226,6 +234,8 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   /** Thème & langue à l'ouverture — appliqués en direct, restaurés si l'on annule. */
   const initialTheme = useRef(theme)
   const initialLanguage = useRef(language)
+  // §3 v1.9 : position de la barre d'outils, appliquée en direct, restaurée si annulé.
+  const initialToolbarPosition = useRef(toolbarPosition)
 
   const zq = useRef('')
   zq.current = draft.pseudo
@@ -266,6 +276,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
   const handleCancel = (): void => {
     setTheme(initialTheme.current)
     changeLanguage(initialLanguage.current)
+    setToolbarPosition(initialToolbarPosition.current)
     onClose()
   }
 
@@ -482,6 +493,22 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
                 ))}
               </div>
               <p className="cm-hint">{t('settings.languageHint')}</p>
+
+              {/* §3 v1.9 : position de la barre d'outils du tableau (façon barre des tâches). */}
+              <span className="cm-label hm-field-gap">{t('settings.toolbarPosition')}</span>
+              <div className="hm-seg" role="group" aria-label={t('settings.toolbarPosition')}>
+                {(['left', 'right', 'top', 'bottom'] as ToolbarPosition[]).map((pos) => (
+                  <button
+                    key={pos}
+                    type="button"
+                    className={`hm-seg__btn${toolbarPosition === pos ? ' hm-seg__btn--on' : ''}`}
+                    onClick={() => setToolbarPosition(pos)}
+                  >
+                    {t(`settings.toolbarPos_${pos}` as MessageKey)}
+                  </button>
+                ))}
+              </div>
+              <p className="cm-hint">{t('settings.toolbarPositionHint')}</p>
             </>
           )}
 
@@ -491,6 +518,11 @@ export function SettingsDialog({ onClose }: SettingsDialogProps): JSX.Element {
               <ShortcutsSettings />
             </>
           )}
+
+          {/* §7 v1.9 : préréglages de lien — créer, modifier, renommer, dupliquer,
+              supprimer, réordonner (avec aperçu). Enregistrés IMMÉDIATEMENT sur ce poste
+              (indépendamment des boutons Annuler / Enregistrer). */}
+          {tab === 'links' && <LinkPresetManager />}
 
           {tab === 'network' && (
             <>

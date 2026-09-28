@@ -543,3 +543,32 @@
 .bd-field-suggest__dismiss:hover {
   color: var(--text);
 }
+
+/* ——— §2 v1.9 : image attachée à une entité (panneau Détails) ——— */
+.bd-entity-image {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.bd-entity-image__thumb {
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.bd-entity-image__actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+/* ——— §5 v1.9 : bouton « Enregistrer » d'un nœud fichier ——— */
+.bd-file-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-2);
+}

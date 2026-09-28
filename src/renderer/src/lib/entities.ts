@@ -23,6 +23,25 @@ export function visibleNodeFields(fields: EntityField[]): EntityField[] {
   return fields.filter((field) => field.value.trim() !== '')
 }
 
+/**
+ * §6 v1.9 : nom d'icône lucide valide (même contrainte que les types personnalisés,
+ * `sanitizeCustomType`). Borne à un identifiant PascalCase court ; un nom inconnu est
+ * de toute façon rattrapé par le repli « cercle » de `EntityIcon`.
+ */
+export const ICON_NAME_RE = /^[A-Za-z0-9]{1,40}$/
+
+export function isValidIconName(name: unknown): name is string {
+  return typeof name === 'string' && ICON_NAME_RE.test(name)
+}
+
+/**
+ * §6 v1.9 : icône EFFECTIVE d'un nœud entité — l'override propre au nœud (s'il est un
+ * nom valide) prime sur l'icône par défaut du type. Pur (testable sans React/lucide).
+ */
+export function resolveNodeIcon(override: string | undefined, typeIcon: string): string {
+  return isValidIconName(override) ? override : typeIcon
+}
+
 export interface FieldTemplate {
   /** Clé i18n du libellé. */
   labelKey: MessageKey

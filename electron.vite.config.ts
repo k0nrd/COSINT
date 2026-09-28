@@ -21,6 +21,8 @@ const CSP_PROD = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
+  // §R2 v1.9 — lecture des sons/vidéos importés (blob: locaux, jamais de réseau)
+  "media-src 'self' blob:",
   // wss: uniquement pour la signalisation WebRTC (voir README, section réseau)
   "connect-src 'self' ws: wss:",
   "worker-src 'self' blob:",

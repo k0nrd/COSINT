@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Copy,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -27,7 +28,7 @@ import type {
   NodeKind
 } from '@/types'
 import { useBoardContext } from '@/flow/BoardContext'
-import { useNodeComments } from '@/sync/hooks'
+import { useFile, useNodeComments } from '@/sync/hooks'
 import {
   addEntityField,
   addFieldValue,
@@ -39,7 +40,9 @@ import {
   updateEntityFieldLabel,
   updateEntityFieldValue
 } from '@/sync/boardOps'
-import { visibleNodeFields } from '@/lib/entities'
+import { resolveNodeIcon, visibleNodeFields } from '@/lib/entities'
+import { IconPicker } from '@/components/board/IconPicker'
+import { EntityGallery } from '@/components/board/EntityGallery'
 import { datationMode, type DatationMode } from '@/lib/timeline'
 import {
   buildSocialUrl,
@@ -63,6 +66,8 @@ import { TagInput } from '@/components/common/TagInput'
 import { EntityIcon } from '@/components/nodes/entityIcons'
 import { entityTypeLabelKey } from '@/components/nodes/EntityNode'
 import { useToasts } from '@/store/toasts'
+// §5 v1.9 (aperçu) : ouverture de la visionneuse de fichier depuis le panneau Détails.
+import { useFilePreview } from '@/store/filePreview'
 import { t, formatDateTime, type MessageKey } from '@/i18n'
 import './details.css'
 
@@ -80,7 +85,8 @@ const KIND_LABEL: Record<NodeKind, MessageKey> = {
   group: 'nodeType.group',
   entity: 'nodeType.entity',
   source: 'nodeType.source',
-  code: 'nodeType.code'
+  code: 'nodeType.code',
+  file: 'nodeType.file'
 }
 
 const FIELD_KINDS: FieldKind[] = [
@@ -288,7 +294,7 @@ export function NodeDetails({ node }: { node: BoardNodeData }): JSX.Element {
           <div className="bd-detail-row">
             <span className="bd-detail-key">{t('entity.type')}</span>
             <span className="bd-detail-val bd-details-entitytype">
-              <EntityIcon icon={resolvedType.icon} size={13} />
+              <EntityIcon icon={resolveNodeIcon(node.icon, resolvedType.icon)} size={13} />
               {/* §6 : « Catégorie · Type » avec un séparateur propre (types personnalisés inclus §2 v1.8). */}
               {resolvedType.categoryLabel
                 ? `${resolvedType.categoryLabel} · ${resolvedType.label}`
@@ -301,6 +307,7 @@ export function NodeDetails({ node }: { node: BoardNodeData }): JSX.Element {
       {node.kind === 'link' && <LinkSection node={node} />}
       {node.kind === 'entity' && <EntitySection node={node} />}
       {node.kind === 'source' && <SourceSection node={node} />}
+      {node.kind === 'file' && <FileSection node={node} />}
       {node.kind === 'text' && <ConvertSection node={node} />}
 
       <label className="cm-label">{t('details.color')}</label>
@@ -584,7 +591,9 @@ function LinkSection({ node }: { node: BoardNodeData }): JSX.Element {
 }
 
 function EntitySection({ node }: { node: BoardNodeData }): JSX.Element {
-  const { updateNodeData } = useBoardContext()
+  const { updateNodeData, setNodeIcon, customTypeMap } = useBoardContext()
+  // §6 v1.9 : icône par défaut du type (pour la précédence override → type).
+  const resolved = resolveType(node.entityType ?? 'generic_other', customTypeMap)
   return (
     <>
       <label className="cm-label">{t('entity.title')}</label>
@@ -593,7 +602,62 @@ function EntitySection({ node }: { node: BoardNodeData }): JSX.Element {
         placeholder={t('field.name')}
         onCommit={(title) => updateNodeData(node.id, { title })}
       />
+
+      {/* §6 v1.9 : icône propre au nœud (choisir l'icône du type = pas d'override). */}
+      <label className="cm-label">{t('customType.icon')}</label>
+      <IconPicker
+        value={node.icon ?? resolved.icon}
+        onChange={(name) => setNodeIcon(node.id, name === resolved.icon ? null : name)}
+        onReset={node.icon ? () => setNodeIcon(node.id, null) : undefined}
+      />
+
+      {/* §2 v1.9 (galerie) : images attachées à l'entité (la 1re = couverture du nœud). */}
+      <EntityGallery node={node} />
+
       <FieldList node={node} />
+    </>
+  )
+}
+
+/** §5 v1.9 : détails d'un nœud fichier importé — renommage + enregistrement sur disque. */
+function FileSection({ node }: { node: BoardNodeData }): JSX.Element {
+  const { updateNodeData, handle } = useBoardContext()
+  const pushToast = useToasts((state) => state.push)
+  const content = node.content
+  const isInline = content.startsWith('data:')
+  const file = useFile(handle, isInline || content === '' ? null : content)
+  const dataUrl = isInline ? content : file.status === 'complete' ? file.dataUrl : null
+
+  const download = (): void => {
+    if (!dataUrl) return
+    void window.cosint.saveAttachment(node.title.trim() || t('file.untitled'), dataUrl).then((result) => {
+      if (result.saved) pushToast(t('file.saved'), 'success')
+      else if (result.error) pushToast(t('file.saveError'), 'error')
+    })
+  }
+
+  return (
+    <>
+      <label className="cm-label">{t('file.name')}</label>
+      <CommitInput
+        value={node.title}
+        placeholder={t('file.name')}
+        onCommit={(title) => updateNodeData(node.id, { title })}
+      />
+      <button className="cm-btn cm-btn--sm bd-file-download" disabled={!dataUrl} onClick={download}>
+        <Download size={14} />
+        {t('file.save')}
+      </button>
+      {/* §5 v1.9 (aperçu) */}
+      <button
+        className="cm-btn cm-btn--sm bd-file-download"
+        style={{ marginLeft: 'var(--sp-2)' }}
+        disabled={!dataUrl}
+        onClick={() => useFilePreview.getState().open(node.id)}
+      >
+        <Eye size={14} />
+        {t('file.preview')}
+      </button>
     </>
   )
 }

@@ -1,6 +1,6 @@
 /** Menu d'ajout de nœud, ouvert par double-clic sur le canvas (§6). */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Clock, Code2, Contact, FileText, Image, Link, Square, StickyNote } from 'lucide-react'
+import { Clock, Code2, Contact, FileText, Image, Link, Paperclip, Square, StickyNote } from 'lucide-react'
 import type { NodeKind } from '@/types'
 import { t } from '@/i18n'
 
@@ -14,6 +14,7 @@ const ENTRIES: Array<{ kind: NodeKind; icon: typeof StickyNote; labelKey: Parame
   { kind: 'text', icon: StickyNote, labelKey: 'nodeType.text' },
   { kind: 'link', icon: Link, labelKey: 'nodeType.link' },
   { kind: 'image', icon: Image, labelKey: 'nodeType.image' },
+  { kind: 'file', icon: Paperclip, labelKey: 'nodeType.file' },
   { kind: 'timestamped', icon: Clock, labelKey: 'nodeType.timestamped' },
   { kind: 'group', icon: Square, labelKey: 'nodeType.group' },
   { kind: 'code', icon: Code2, labelKey: 'nodeType.code' },

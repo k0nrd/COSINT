@@ -16,6 +16,7 @@ import type {
   EdgeWaypoint,
   ElementStatus,
   EntityField,
+  EntityImage,
   EntityStyle,
   EntityType,
   EventMark,
@@ -39,6 +40,21 @@ import {
   visibleNodeFields
 } from '@/lib/entities'
 import { typeColor } from '@/lib/taxonomy'
+// §7 v1.9 : préréglages de lien (application en lot).
+import {
+  resolvePresetPatch,
+  sanitizeEdgePatch,
+  type LinkPresetDef,
+  type LinkPresetProps
+} from '@/lib/linkPresets'
+import {
+  appendEntityImages,
+  applyEntityImageAction,
+  cloneEntityImages,
+  readEntityImages,
+  type AppendResult,
+  type EntityImageAction
+} from '@/lib/entityImages'
 import { t } from '@/i18n'
 import type { BoardHandle } from './BoardDoc'
 import {
@@ -66,7 +82,8 @@ export const DEFAULT_SIZES: Record<NodeKind, { width: number; height: number }> 
   group: { width: 420, height: 300 },
   entity: { width: 260, height: 190 },
   source: { width: 280, height: 170 },
-  code: { width: 380, height: 240 }
+  code: { width: 380, height: 240 },
+  file: { width: 260, height: 96 }
 }
 
 export interface NodeInit {
@@ -123,6 +140,7 @@ export type EdgePatch = Partial<
     | 'waypoints'
     | 'sourceAnchor'
     | 'targetAnchor'
+    | 'status'
   >
 >
 
@@ -359,6 +377,91 @@ export function setEventTiming(
     }
     map.set('updatedBy', author)
     map.set('updatedAt', Date.now())
+  })
+}
+
+/**
+ * §6 v1.9 : fixe (ou EFFACE avec `null`/'') l'icône PROPRE d'un nœud entité — elle
+ * prime sur l'icône du type. Comme `setEventDate`, un op dédié est nécessaire car
+ * `updateNode` ne sait pas SUPPRIMER une clé (il ignore `undefined`) : effacer =
+ * revenir à l'icône par défaut du type.
+ */
+export function setNodeIcon(handle: BoardHandle, id: string, icon: string | null, author: string): void {
+  const map = getNodesMap(handle.doc).get(id)
+  if (!map) return
+  transact(handle, () => {
+    if (icon === null || icon === '') map.delete('icon')
+    else map.set('icon', icon)
+    map.set('updatedBy', author)
+    map.set('updatedAt', Date.now())
+  })
+}
+
+// ——— §2 v1.9 (galerie) : images attachées à une entité ———
+// Les OCTETS sont déjà enregistrés dans `files` (via `registerFile`, transactions
+// FILE_ORIGIN séparées, bornées) : ces ops n'écrivent que la LISTE de références
+// (`images`) via `localOrigin` → annulables, filtrées par rôle à la réception. La liste
+// est relue DANS la transaction (état CRDT le plus récent) puis réécrite en entier,
+// comme `fields`. La première écriture retire les clés héritées de l'image unique.
+
+/** Galerie courante d'un nœud, relue depuis sa Y.Map (clé `images` ou héritage). */
+function readNodeImages(map: Y.Map<unknown>): EntityImage[] {
+  return readEntityImages({
+    images: map.get('images'),
+    imageHash: map.get('imageHash'),
+    imageWidth: map.get('imageWidth'),
+    imageHeight: map.get('imageHeight')
+  })
+}
+
+/** Écrit la galerie (clé retirée si vide) et purge les clés de l'image unique héritée. */
+function writeNodeImages(map: Y.Map<unknown>, images: EntityImage[], author: string): void {
+  if (images.length > 0) map.set('images', cloneEntityImages(images))
+  else if (map.has('images')) map.delete('images')
+  for (const legacy of ['imageHash', 'imageWidth', 'imageHeight']) {
+    if (map.has(legacy)) map.delete(legacy)
+  }
+  map.set('updatedBy', author)
+  map.set('updatedAt', Date.now())
+}
+
+/**
+ * Ajoute des images (déjà enregistrées dans `files`) en fin de galerie d'une entité.
+ * Doublons ignorés, limite MAX_ENTITY_IMAGES respectée. Un seul pas d'annulation.
+ * Retourne le bilan (null si le nœud n'existe pas ou n'est pas une entité).
+ */
+export function addEntityImages(
+  handle: BoardHandle,
+  id: string,
+  additions: EntityImage[],
+  author: string
+): AppendResult | null {
+  const map = getNodesMap(handle.doc).get(id)
+  if (!(map instanceof Y.Map) || map.get('kind') !== 'entity') return null
+  let result: AppendResult | null = null
+  transact(handle, () => {
+    const outcome = appendEntityImages(readNodeImages(map), additions)
+    result = outcome
+    if (outcome.added > 0) writeNodeImages(map, outcome.images, author)
+  })
+  return result
+}
+
+/** Retire / déplace / passe en couverture une image de la galerie d'une entité. */
+export function editEntityImages(
+  handle: BoardHandle,
+  id: string,
+  action: EntityImageAction,
+  author: string
+): void {
+  const map = getNodesMap(handle.doc).get(id)
+  if (!(map instanceof Y.Map) || map.get('kind') !== 'entity') return
+  transact(handle, () => {
+    const before = readNodeImages(map)
+    const after = applyEntityImageAction(before, action)
+    const unchanged =
+      after.length === before.length && after.every((image, i) => image.hash === before[i].hash)
+    if (!unchanged) writeNodeImages(map, after, author)
   })
 }
 
@@ -853,6 +956,10 @@ export interface EdgeInit {
   width?: BoardEdgeData['width']
   pathType?: BoardEdgeData['pathType']
   color?: string
+  /** § préréglages v1.9 : badge de statut et ancres (absents = aucun / automatique). */
+  status?: BoardEdgeData['status']
+  sourceAnchor?: EdgeAnchor
+  targetAnchor?: EdgeAnchor
 }
 
 /** Crée une connexion entre deux nœuds ; retourne son id (null si invalide). */
@@ -862,22 +969,27 @@ export function createEdge(handle: BoardHandle, init: EdgeInit, author: string):
   if (init.source === init.target) return null
   const id = newId()
   const now = Date.now()
+  // § préréglages v1.9 : chaque réglage est validé ; une valeur invalide → défaut.
+  const valid = sanitizeEdgePatch(init)
   const edge: BoardEdgeData = {
     id,
     source: init.source,
     target: init.target,
-    label: init.label ?? '',
-    relationType: init.relationType ?? '',
-    style: init.style ?? 'solid',
-    direction: init.direction ?? 'single',
-    width: init.width ?? 'normal',
-    pathType: init.pathType ?? 'bezier',
-    color: init.color ? colorHex(init.color) : DEFAULT_EDGE_COLOR,
+    label: valid.label ?? '',
+    relationType: valid.relationType ?? '',
+    style: valid.style ?? 'solid',
+    direction: valid.direction ?? 'single',
+    width: valid.width ?? 'normal',
+    pathType: valid.pathType ?? 'bezier',
+    color: valid.color ? colorHex(valid.color) : DEFAULT_EDGE_COLOR,
     createdBy: author,
     createdAt: now,
     updatedBy: author,
     updatedAt: now
   }
+  if (hasStatusBadge(valid.status)) edge.status = valid.status
+  if (valid.sourceAnchor) edge.sourceAnchor = valid.sourceAnchor
+  if (valid.targetAnchor) edge.targetAnchor = valid.targetAnchor
   transact(handle, () => {
     getEdgesMap(handle.doc).set(id, edgeToYMap(edge))
   })
@@ -945,13 +1057,21 @@ export function updateEdge(
 ): void {
   const map = getEdgesMap(handle.doc).get(id)
   if (!map) return
+  // § préréglages v1.9 : toute valeur invalide (hors énumération, mal typée) est
+  // abandonnée ; `status: 'none'` et une ancre `null` suppriment la clé.
+  const valid = sanitizeEdgePatch(patch)
   transact(handle, () => {
-    for (const [key, value] of Object.entries(patch)) {
+    for (const [key, value] of Object.entries(valid)) {
       if (value === undefined) continue
       if (key === 'color') map.set(key, colorHex(value as string))
-      // Waypoints (§1 v1.6) : on clone la liste pour ne pas partager la référence.
-      else if (key === 'waypoints') {
-        map.set(key, (value as EdgeWaypoint[]).map((point) => ({ x: point.x, y: point.y })))
+      // Waypoints (§1 v1.6) : liste déjà clonée par la validation.
+      else if (key === 'waypoints') map.set(key, value)
+      else if (key === 'status') {
+        if (hasStatusBadge(value as ElementStatus)) map.set(key, value)
+        else map.delete(key)
+      } else if (key === 'sourceAnchor' || key === 'targetAnchor') {
+        if (value) map.set(key, value)
+        else map.delete(key)
       } else map.set(key, value)
     }
     map.set('updatedBy', author)
@@ -1030,6 +1150,76 @@ export function resetEdgeRouting(handle: BoardHandle, id: string, author: string
     map.set('updatedBy', author)
     map.set('updatedAt', Date.now())
   })
+}
+
+// ——— §7 v1.9 : préréglages de lien ———
+
+/**
+ * Applique un préréglage de lien à un LOT de liens, en UNE transaction (un seul pas
+ * d'annulation Ctrl+Z). N'écrit QUE les réglages DÉFINIS du préréglage
+ * (`resolvePresetPatch`) : tout le reste de chaque lien — dont ses points de passage —
+ * est conservé. Les valeurs sont re-validées (défense en profondeur : la source est un
+ * réglage LOCAL, éventuellement modifié à la main) et n'utilisent que des clés Yjs
+ * EXISTANTES (compatibles 1.8.9). `status: 'none'` et une ancre `null` SUPPRIMENT la
+ * clé, comme `setEdgesStatus` / `setEdgeAnchor`. Renvoie le nombre de liens modifiés.
+ */
+export function applyEdgePreset(
+  handle: BoardHandle,
+  ids: string[],
+  preset: LinkPresetDef | LinkPresetProps,
+  author: string
+): number {
+  const patch = resolvePresetPatch(preset)
+  if (ids.length === 0 || Object.keys(patch).length === 0) return 0
+  const edges = getEdgesMap(handle.doc)
+  let count = 0
+  transact(handle, () => {
+    const now = Date.now()
+    // §7 v1.9 — `changed` : un lien déjà conforme n'est ni horodaté ni compté (pas de
+    // faux toast « appliqué », pas d'étape d'annulation qui ne défait rien de visible).
+    let changed = false
+    const put = (map: Y.Map<unknown>, key: string, value: unknown): void => {
+      if (map.get(key) !== value) {
+        map.set(key, value)
+        changed = true
+      }
+    }
+    const drop = (map: Y.Map<unknown>, key: string): void => {
+      if (map.has(key)) {
+        map.delete(key)
+        changed = true
+      }
+    }
+    for (const id of new Set(ids)) {
+      const map = edges.get(id)
+      if (!map) continue
+      changed = false
+      if (patch.relationType !== undefined) put(map, 'relationType', patch.relationType)
+      if (patch.label !== undefined) put(map, 'label', patch.label)
+      if (patch.color !== undefined) put(map, 'color', colorHex(patch.color))
+      if (patch.width !== undefined) put(map, 'width', patch.width)
+      if (patch.style !== undefined) put(map, 'style', patch.style)
+      if (patch.direction !== undefined) put(map, 'direction', patch.direction)
+      if (patch.pathType !== undefined) put(map, 'pathType', patch.pathType)
+      if (patch.status !== undefined) {
+        if (hasStatusBadge(patch.status)) put(map, 'status', patch.status)
+        else drop(map, 'status')
+      }
+      if (patch.sourceAnchor !== undefined) {
+        if (patch.sourceAnchor) put(map, 'sourceAnchor', patch.sourceAnchor)
+        else drop(map, 'sourceAnchor')
+      }
+      if (patch.targetAnchor !== undefined) {
+        if (patch.targetAnchor) put(map, 'targetAnchor', patch.targetAnchor)
+        else drop(map, 'targetAnchor')
+      }
+      if (!changed) continue
+      map.set('updatedBy', author)
+      map.set('updatedAt', now)
+      count++
+    }
+  })
+  return count
 }
 
 export function deleteEdges(handle: BoardHandle, ids: string[]): void {

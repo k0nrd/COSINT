@@ -1,0 +1,451 @@
+/* §7 v1.9 — préréglages de lien : aperçu, liste de choix, éditeur, gestionnaire.
+   Couleurs exclusivement via les jetons de thème (clair ET sombre) ; seule la couleur
+   du trait d'aperçu est celle du préréglage (choisie par l'utilisateur). */
+
+/* ——— Aperçu ——— */
+.lp-preview--sm {
+  flex: 0 0 auto;
+  display: block;
+}
+.lp-preview--lg {
+  position: relative;
+  height: 108px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background:
+    radial-gradient(circle, var(--canvas-dots) 1px, transparent 1.2px) 0 0 / 14px 14px,
+    var(--canvas-bg);
+  overflow: hidden;
+}
+.lp-preview--lg svg {
+  display: block;
+}
+.lp-preview__node {
+  fill: var(--node-bg);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.lp-preview__node-text {
+  fill: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  font-family: var(--font-ui);
+}
+/* Libellé centré sur le lien, au-dessus du trait — miroir de .nd-edge-label. */
+.lp-preview__label {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  max-width: 60%;
+  padding: 1px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.lp-preview__status {
+  position: absolute;
+  left: 50%;
+  top: 66%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  pointer-events: none;
+}
+
+/* ——— Liste de choix (sélecteur, barre du lien, menus) ——— */
+.lp-pick {
+  display: flex;
+  flex-direction: column;
+}
+.lp-pick__item {
+  gap: 10px;
+}
+.lp-pick__item:focus-visible {
+  outline: none;
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+.lp-pick__auto {
+  width: 64px;
+  display: flex;
+  justify-content: center;
+  color: var(--text-dim);
+  flex: 0 0 auto;
+}
+.lp-pick__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.lp-pick__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-pick__summary {
+  font-size: 11px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-pick__empty {
+  padding: 6px 9px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+/* Popover de la barre du lien (Appliquer / Enregistrer / Gérer). */
+.lp-pop {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 300px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: var(--sp-1);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 40;
+}
+.lp-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+.lp-menu-sub {
+  max-width: 300px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-left: 6px;
+  border-left: 2px solid var(--border);
+  margin: 2px 0 2px 10px;
+}
+
+/* ——— Éditeur ——— */
+.lp-editor {
+  display: flex;
+  flex-direction: column;
+}
+.lp-editor__first {
+  margin-top: 0;
+}
+/* Aperçu en direct collé en haut de la zone qui défile (fenêtre ou Paramètres) :
+   on voit l'effet de chaque réglage, même tout en bas de la liste. */
+/* Décalages négatifs = marge intérieure de .cm-modal__body (haut --sp-2, bas --sp-4) :
+   le bloc collé touche le bord VISIBLE de la zone qui défile, sans laisser les lignes
+   défiler dans la bande de marge au-dessus (resp. au-dessous) de lui. */
+.lp-editor__preview {
+  position: sticky;
+  top: calc(-1 * var(--sp-2));
+  z-index: 2;
+  margin-top: var(--sp-1);
+  padding: var(--sp-2) 0;
+  background: var(--panel);
+}
+.lp-editor__preview > .cm-label {
+  margin-top: 0;
+}
+.lp-editor__bar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.lp-editor__hint {
+  flex: 1;
+  margin: 0;
+}
+.lp-editor__bulk {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.lp-rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.lp-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  transition: opacity var(--t-fast);
+}
+.lp-row:last-child {
+  border-bottom: none;
+}
+.lp-row--off .lp-row__ctl {
+  opacity: 0.5;
+}
+.lp-row__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  min-width: 0;
+}
+.lp-row__head input {
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+.lp-row__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.lp-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-row__unchanged {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-style: italic;
+  white-space: nowrap;
+}
+.lp-row__ctl {
+  min-width: 0;
+}
+.lp-inline {
+  display: flex;
+  gap: var(--sp-2);
+}
+.lp-inline > * {
+  flex: 1;
+  min-width: 0;
+}
+.lp-select {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.lp-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.lp-seg__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.lp-seg__btn:last-child {
+  border-right: none;
+}
+.lp-seg__btn:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.lp-seg__btn--on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.lp-seg__btn:focus-visible,
+.lp-swatch:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
+}
+
+.lp-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.lp-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.lp-swatch--on {
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 3px var(--text);
+}
+.lp-color-input {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  cursor: pointer;
+}
+.lp-hex {
+  width: 84px;
+  padding: 3px 6px;
+}
+
+.lp-editor__errors {
+  margin: var(--sp-2) 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--danger);
+}
+p.lp-editor__errors {
+  padding-left: 0;
+}
+.lp-editor__actions {
+  /* Toujours visibles en bas de la zone qui défile (ex. dans les Paramètres, où le
+     pied de la fenêtre a ses propres boutons Annuler / Enregistrer). */
+  position: sticky;
+  bottom: calc(-1 * var(--sp-4));
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) 0;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+
+/* ——— Gestionnaire ——— */
+.lp-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.lp-manager__title {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+.lp-manager__hint {
+  margin: 0;
+}
+.lp-manager__empty {
+  margin: 0;
+  padding: var(--sp-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  font-size: 12px;
+  color: var(--text-mute);
+  text-align: center;
+}
+.lp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.lp-list__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.lp-list__item:last-child {
+  border-bottom: none;
+}
+.lp-list__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lp-list__name {
+  font-size: 12.5px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+.lp-list__summary {
+  font-size: 11px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-list__rename {
+  padding: 3px 6px;
+}
+.lp-list__actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 0 0 auto;
+}
+.lp-list__actions .cm-btn--icon {
+  padding: 4px;
+}
+.lp-list__del:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.lp-manager__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+@media (max-width: 640px) {
+  .lp-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bouton « Préréglage ▾ » de la barre du lien (plus large que les icônes seules). */
+.lp-anchor {
+  position: relative;
+}
+/* §7 v1.9 : sélecteur à deux classes — `.et-btn { width: 26px }` (edgeToolbar.css)
+   a la même spécificité que `.lp-et-btn` et, selon l'ordre de chargement des
+   feuilles, gagnait : le libellé débordait alors du bouton carré. */
+.et-btn.lp-et-btn {
+  width: auto;
+  min-width: 26px;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 0 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+.et-btn.lp-et-btn > svg {
+  flex-shrink: 0;
+}
+.et-btn.lp-et-btn > span {
+  display: block;
+  line-height: 1;
+}

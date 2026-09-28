@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Pencil, PenLine, Repeat, Route, Trash2 } from 'lucide-react'
 import type { ElementStatus } from '@/types'
 import { StatusPicker } from '@/components/board/StatusBadge'
+import { LinkPresetMenuSection } from '@/components/board/LinkPresetMenuSection'
 import { t } from '@/i18n'
 
 interface EdgeContextMenuProps {
@@ -21,6 +22,9 @@ interface EdgeContextMenuProps {
   onResetRouting: () => void
   onDelete: () => void
   onClose: () => void
+  /** §7 v1.9 : liens visés par « Appliquer un préréglage » (ce lien, ou toute la
+   *  sélection de liens s'il en fait partie). */
+  presetEdgeIds?: string[]
 }
 
 export function EdgeContextMenu({
@@ -34,7 +38,8 @@ export function EdgeContextMenu({
   onReverse,
   onResetRouting,
   onDelete,
-  onClose
+  onClose,
+  presetEdgeIds
 }: EdgeContextMenuProps): JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ left: screenX, top: screenY })
@@ -44,10 +49,17 @@ export function EdgeContextMenu({
     const parent = menu?.offsetParent as HTMLElement | null
     if (!menu || !parent) return
     const margin = 8
-    setPos({
-      left: Math.max(margin, Math.min(screenX, parent.clientWidth - menu.offsetWidth - margin)),
-      top: Math.max(margin, Math.min(screenY, parent.clientHeight - menu.offsetHeight - margin))
-    })
+    const clamp = (): void =>
+      setPos({
+        left: Math.max(margin, Math.min(screenX, parent.clientWidth - menu.offsetWidth - margin)),
+        top: Math.max(margin, Math.min(screenY, parent.clientHeight - menu.offsetHeight - margin))
+      })
+    clamp()
+    // §7 v1.9 — re-borne quand le menu grandit (sous-menu « Appliquer un préréglage » déplié).
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(clamp)
+    observer.observe(menu)
+    return () => observer.disconnect()
   }, [screenX, screenY])
 
   useEffect(() => {
@@ -76,6 +88,8 @@ export function EdgeContextMenu({
         <Pencil size={15} />
         {t('edge.edit')}
       </button>
+      {/* §7 v1.9 : appliquer un préréglage (à ce lien ou à tous les liens sélectionnés). */}
+      {presetEdgeIds && <LinkPresetMenuSection edgeIds={presetEdgeIds} onDone={onClose} />}
       {/* §1 v1.7.1 : dessiner soi-même le tracé (côté de départ, trajet, côté
           d'arrivée) — remplace le routage manuel existant du lien. */}
       <button className="fl-add-menu__item" onClick={onDrawRoute}>

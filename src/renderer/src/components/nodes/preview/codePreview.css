@@ -1,0 +1,253 @@
+/*
+ * §R2 v1.9 (aperçu du code) — extrait coloré dans le nœud fichier et visionneuse
+ * (numéros de ligne, retour à la ligne). Couleurs des jetons : variables --code-*
+ * de code.css (thèmes sombre et clair), comme les blocs de code.
+ */
+:root,
+:root[data-theme='dark'] {
+  --cp-badge-bg: rgba(245, 179, 1, 0.14);
+  --cp-badge-text: #f5c542;
+  --cp-badge-border: rgba(245, 179, 1, 0.4);
+}
+:root[data-theme='light'] {
+  --cp-badge-bg: rgba(184, 134, 11, 0.1);
+  --cp-badge-text: #8a6100;
+  --cp-badge-border: rgba(184, 134, 11, 0.45);
+}
+
+.cp-lang {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.cp-script-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-badge-border);
+  background: var(--cp-badge-bg);
+  color: var(--cp-badge-text);
+  font-size: 10px;
+  font-weight: 600;
+}
+.cp-script-badge > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ——— Nœud ——— */
+.cp-node {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--code-bg);
+}
+.cp-node-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  min-width: 0;
+}
+.cp-node-code {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 5px 8px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  tab-size: 4;
+  user-select: none;
+}
+.cp-node-line {
+  display: block;
+  white-space: pre;
+  font: inherit;
+}
+.cp-node::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
+  background: linear-gradient(to bottom, transparent, var(--code-bg));
+  pointer-events: none;
+}
+
+/* ——— Visionneuse ——— */
+.cp-viewer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cp-viewer-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.cp-viewer-bar .cp-lang,
+.cp-viewer-bar .cp-script-badge {
+  font-size: 11.5px;
+  padding: 2px 8px;
+}
+.cp-viewer-spacer {
+  flex: 1;
+}
+.cp-viewer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.cp-viewer-btn:hover {
+  border-color: var(--accent);
+}
+.cp-viewer-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.cp-viewer-btn--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.cp-viewer-note {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.cp-viewer-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--code-bg);
+}
+.cp-viewer-code {
+  display: table;
+  min-width: 100%;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  tab-size: 4;
+  color: var(--code-text);
+}
+.cp-viewer-code--wrap {
+  display: block;
+}
+.cp-row {
+  display: flex;
+}
+.cp-ln {
+  flex: none;
+  position: sticky;
+  left: 0;
+  width: calc(var(--cp-digits, 3ch) + 22px);
+  padding: 0 10px 0 8px;
+  text-align: right;
+  color: var(--code-gutter);
+  background: var(--code-bg);
+  border-right: 1px solid var(--border);
+  user-select: none;
+}
+.cp-src {
+  flex: 1;
+  padding: 0 14px 0 10px;
+  white-space: pre;
+  font: inherit;
+  user-select: text;
+}
+.cp-viewer-code--wrap .cp-src {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ——— Jetons Prism (mêmes variables que code.css) ——— */
+.cp-code {
+  color: var(--code-text);
+}
+.cp-code .token.comment,
+.cp-code .token.prolog,
+.cp-code .token.doctype,
+.cp-code .token.cdata {
+  color: var(--code-comment);
+  font-style: italic;
+}
+.cp-code .token.punctuation {
+  color: var(--code-punct);
+}
+.cp-code .token.keyword,
+.cp-code .token.rule,
+.cp-code .token.important,
+.cp-code .token.atrule,
+.cp-code .token.directive {
+  color: var(--code-keyword);
+}
+.cp-code .token.string,
+.cp-code .token.char,
+.cp-code .token.attr-value,
+.cp-code .token.regex {
+  color: var(--code-string);
+}
+.cp-code .token.number,
+.cp-code .token.boolean,
+.cp-code .token.constant,
+.cp-code .token.symbol {
+  color: var(--code-number);
+}
+.cp-code .token.function,
+.cp-code .token.method,
+.cp-code .token.command {
+  color: var(--code-function);
+}
+.cp-code .token.class-name,
+.cp-code .token.builtin,
+.cp-code .token.namespace,
+.cp-code .token.section {
+  color: var(--code-class);
+}
+.cp-code .token.operator,
+.cp-code .token.entity,
+.cp-code .token.url {
+  color: var(--code-operator);
+}
+.cp-code .token.tag,
+.cp-code .token.selector,
+.cp-code .token.label {
+  color: var(--code-tag);
+}
+.cp-code .token.attr-name,
+.cp-code .token.property,
+.cp-code .token.variable,
+.cp-code .token.key {
+  color: var(--code-attr);
+}

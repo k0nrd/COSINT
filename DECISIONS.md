@@ -1673,3 +1673,209 @@ de datation).
 11. **Tests & build.** Nouveaux tests de datation (`eventTimingOf` : instant vs fenêtre vs
     durée) et de la frise Ajouts (tri par date d'ajout). Format `.trace` en **v7**. Suite
     complète au vert (typecheck node + web, **244 tests**), build de production OK.
+
+---
+
+## v1.9.0 — Copie d'image, entités enrichies, barre repositionnable, fichiers, liens nommés
+
+> Note : les entrées 1.8.3 → 1.8.9 n'ont pas été consignées ici (le journal avait été
+> interrompu après la v1.8.2) ; on reprend directement à la v1.9.0. Les détails 1.8.x
+> vivent dans `docs/RELEASE_NOTES_v1.8.*.md`.
+
+### §1 — Copie d'image (Ctrl+C)
+
+1. **Image seule → bitmap uniquement.** Le `§2 v1.8.1` posait DÉJÀ le bitmap sur le
+   presse-papiers système, mais **accompagné** du JSON `cosint-clip` en `text/plain` — les
+   logiciels qui préfèrent le texte collaient donc le JSON. Correctif : pour une **image
+   unique sélectionnée**, on pose **seulement** le bitmap (`copyImage(dataUrl)` sans texte) ;
+   toute autre sélection garde le fragment texte pour le collage interne pleine fidélité. La
+   copie interne (`internalClip`) reste en mémoire ; le collage d'une image seule recrée un
+   nœud image via le chemin « image du presse-papiers ». Helper pur `singleImageDataUrl`
+   (testable, sans DOM/ClipboardItem — le renderer est sandboxé, tout passe par l'IPC).
+   Cela ne suffisait pas sous Windows : voir §8 (écriture vérifiée, conversion PNG).
+
+### §2 — Images attachées aux entités (galerie)
+
+2. **Galerie ordonnée `images` (≤ 12) au lieu d'une image unique.** Le premier build de
+   travail ne portait qu'un `imageHash` peu visible ; la 1.9.0 livre une vraie GALERIE :
+   `images: {hash, width?, height?}[]` sur la Y.Map du nœud entité, tableau JSON réécrit en
+   entier comme `fields`/`tags`/`eventMarks` (dernier-écrivain-gagne à l'échelle de la
+   liste — deux ajouts simultanés par deux pairs : l'un peut l'emporter, choix assumé pour
+   rester cohérent avec les autres listes du nœud). La **1re image est la couverture**
+   affichée sur le nœud, avec un badge « +N ». Logique PURE dans `lib/entityImages.ts`
+   (assainissement, ajout borné/dédupliqué, retirer/déplacer/couverture, inline `.trace`).
+   - **Octets vs référence.** Octets compressés (`processImage`, profil dédié 1600 px /
+     700 Ko — une galerie complète reste transférable et tient le plus souvent dans le
+     budget de copie) puis découpés par `registerFile` (origine FILE) ; seule la LISTE est
+     écrite par `addEntityImages`/`editEntityImages` (origine locale → **un pas
+     d'annulation**, filtrée par rôle à la réception). Jamais de data-URL dans le nœud, sauf
+     transitoirement après import d'un `.trace` (re-découpé par `migrateInlineImages`).
+   - **Données non fiables.** Toute valeur distante passe par `readEntityImages` : hash
+     base64url ou data-URL `image/*` bornée (8 Mo), dimensions bornées, doublons retirés,
+     12 entrées max. Un pair 1.8.9 ignore la clé `images` inconnue sans erreur.
+   - **Héritage.** L'`imageHash` (+ dimensions) du build de travail est relu comme 1re image
+     (Y.Map, `.trace`, fragment collé) ; la 1re écriture de galerie purge ces clés.
+   - **Ajout découvrable.** Panneau Détails (bouton multi-sélection, dépôt, Ctrl+V zone
+     focalisée), clic droit sur l'entité, bouton de la barre contextuelle, et **dépôt de
+     fichiers image SUR le nœud** (BoardView repère l'entité sous le point de dépôt ; sur
+     le fond, on crée toujours des nœuds image). Visionneuse (précédent/suivant, Échap,
+     Ctrl+C) partagée par le nœud et le panneau.
+   - **Portabilité.** Export `.trace` : chaque hash → data-URL (image incomplète RETIRÉE,
+     jamais de référence pendante) ; copie : toutes les images embarquées sous le budget ;
+     collage dans un autre tableau : les images sans octets disponibles sont retirées
+     (`pruneUnavailableImages`) plutôt qu'une vignette « réception… » éternelle.
+
+### §3 — Barre d'outils repositionnable
+
+3. **Préférence LOCALE.** `toolbarPosition` ('left'|'right'|'top'|'bottom', défaut 'left')
+   vit dans `useSettings` (localStorage, `version` 8→9) — jamais dans le doc Yjs. La barre
+   émet un `data-position` ; le CSS bascule ancrage + orientation (séparateurs retournés en
+   mode horizontal). Aucun impact sur la frise.
+
+### §4 — Formatage du texte des champs
+
+4. **Retours à la ligne préservés.** `.nd-entity-field-value` passe en `white-space:
+   pre-wrap` (au lieu de `-webkit-line-clamp: 2`) : plusieurs valeurs sur des lignes
+   distinctes s'affichent bien ; le nœud entité étant à hauteur automatique, il grandit.
+
+### §5 — Import de fichiers quelconques
+
+5. **Nouveau type de nœud `file`.** `readFileMeta` accepte désormais tout type MIME (plus
+   seulement `image/`) : le stockage en chunks est identique. Le nom du fichier vit dans
+   `title`, le type/la taille dans `FileMeta` → **aucun nouveau champ** sur `BoardNodeData`.
+   Import par glisser-déposer, trombone de la barre, ou menu d'ajout (dialogue de fichier).
+   Bouton **Enregistrer** via une nouvelle IPC `file:save-attachment` (nom assaini par
+   `safeDefaultPath`, taille bornée). Limite de 25 Mo par fichier. `migrateInlineImages`
+   étendu (image/fichier inline + image d'entité) pour le round-trip `.trace`.
+   **Limite de compatibilité 1.8.9 (assumée).** `NODE_KINDS` 1.8.9 ne connaît pas `file` :
+   `yMapToNode` y retombe sur `text`, et le `TextNode` 1.8.9 n'affiche que `content`, soit
+   le HASH de 64 caractères hexadécimaux (le nom est bien dans `title`, mais 1.8.9 ne le montre
+   pas pour une note). Si un utilisateur 1.8.9 ÉDITE ce texte, la référence au fichier est
+   perdue pour tous les pairs, et un `.trace` exporté depuis 1.8.9 ne garde que le hash (pas
+   les octets). Aucune parade côté 1.9 sans changer le modèle (le hash dans `content` est le
+   même contrat que les images) : **un pair 1.9 est nécessaire pour voir, enregistrer ou
+   exporter les fichiers** — c'est écrit dans les notes de version.
+
+### §6 — Icône d'entité personnalisable
+
+6. **Override par nœud.** `icon?` sur `BoardNodeData` (entités), prime sur l'icône du type
+   (`resolveNodeIcon`, pur). Sélecteur d'icônes extrait de `CustomTypeDialog` vers un
+   `IconPicker` partagé (search + grille lucide) réutilisé par les deux. Op dédié
+   `setNodeIcon` (car `updateNode` ne sait pas SUPPRIMER une clé → « rétablir l'icône du
+   type »).
+
+### §7 — Préréglages de lien COMPLETS (`lib/linkPresets.ts`, `LinkPreset*.tsx`)
+
+7. **Local, réglages optionnels, style résolu répliqué.** `LinkPresetDef` {id, name,
+   props} vit dans `useSettings` (localStorage, comme les plateformes personnalisées) :
+   ce sont des raccourcis PERSONNELS, jamais dans le doc Yjs. `props` peut capturer
+   **chaque** réglage réutilisable d'un lien — type de relation (prédéfini OU texte libre
+   « Autre »), libellé, couleur, épaisseur, style de trait, flèches, tracé, statut, côtés
+   d'ancrage — et **chaque réglage est optionnel** : absent = « inchangé ». Appliquer un
+   préréglage n'écrit QUE ses réglages définis (`resolvePresetPatch` → `applyPatchToEdge`),
+   sur les clés Yjs EXISTANTES de l'arête : un pair 1.8.9 voit donc le résultat sans connaître
+   le préréglage, et aucune modification du modèle d'arête n'est nécessaire. Les points de
+   passage restent de la géométrie propre au lien : jamais dans un préréglage.
+   - **Pourquoi pas dans le tableau ?** Un préréglage traduit une habitude de l'analyste,
+     pas un fait de l'enquête ; le partager imposerait des conflits de nommage entre pairs.
+   - **Données locales non fiables.** `sanitizeLinkPresets` migre le format du premier
+     build (label/couleur/épaisseur/style à plat, reconnu à l'absence de `props`), ignore
+     les valeurs hors énumération, borne les textes (nom 60, texte 120) et le nombre (50).
+   - **Points d'entrée.** Gestionnaire dans les Paramètres avec **aperçu en direct** ;
+     barre d'outils du lien (appliquer / « Enregistrer comme préréglage… » depuis le lien
+     courant) ; menu contextuel d'une sélection de liens (application à N liens en UNE op
+     annulable) ; sélecteur clavier juste après la connexion de deux entités
+     (« Automatique » + préréglages, Échap = automatique).
+
+### §8 — Copie d'image fiable sous Windows (`lib/imageClipboard.ts`, `main/imageExport.ts`)
+
+8. **Écriture côté main, déclenchée au `keydown`, vérifiée par relecture.** Retour terrain :
+   sous Windows, Ctrl+C sur une image annonçait « copié » mais rien ne se collait ailleurs.
+   Deux causes cumulées : (a) voir point 9 ; (b) l'évènement `copy` du DOM écrivait son
+   propre contenu pendant que l'IPC écrivait le bitmap — le presse-papiers était **vidé
+   puis réécrit**, et entre-temps les programmes qui l'écoutent (historique Win+V,
+   synchronisation, bureau à distance) l'ouvraient et le **verrouillaient** un instant :
+   la seconde écriture se perdait sans erreur. Décision : Ctrl+C sur une image est
+   intercepté au **`keydown`** (phase de capture, `preventDefault`) — aucun évènement
+   `copy` n'écrit en parallèle ; le processus principal fait **UNE** écriture puis **relit**
+   le presse-papiers (`writeVerified` : empreinte 16×16 comparée avec tolérance) et ne
+   réécrit que si le contenu est étranger, avec un nombre de tentatives borné. Le toast
+   reflète le résultat RÉEL. Logique pure et testée (`shared/imageData.ts`), effets injectés.
+9. **Conversion PNG systématique.** `nativeImage.createFromDataURL` **ne décode pas le WebP**
+   (vérifié : image vide, sans erreur) — or le WebP est le format de STOCKAGE de COSINT.
+   Toute sortie (copie, « Enregistrer l'image sous… », glisser vers l'extérieur) passe donc
+   par une conversion PNG côté renderer (canvas : Chromium décode le WebP), mise en cache
+   (3 dernières) pour que le glisser démarre sans attendre. Le main n'accepte que PNG/JPEG
+   (type vérifié par signature, dimensions bornées).
+10. **Glisser hors du tableau + recollage fidèle.** Le glisser natif (`startDrag`) exige un
+    fichier : PNG temporaire au nom assaini (noms réservés Windows refusés), dossier propre
+    au processus, nettoyé à la fermeture, dossiers orphelins de plus de 24 h purgés. Au
+    recollage dans COSINT, l'empreinte de la dernière image copiée est reconnue : on recrée
+    le nœud d'origine (titre, étiquettes, taille) au lieu d'un nœud image nu. Copier
+    plusieurs nœuds garde le fragment `cosint-clip` complet (point 1 inchangé).
+
+### §9 — Aperçu des documents (`lib/pdfPreview.ts`, `lib/filePreview.ts`, `FileViewer.tsx`)
+
+11. **pdf.js chargé à la demande, worker sous CSP stricte, aucun cache Yjs.** `pdfjs-dist`
+    est importé dynamiquement : le démarrage du tableau n'en paie pas le coût tant
+    qu'aucun PDF n'est affiché. Le worker (`pdf.worker.min.mjs`, émis tel quel par Vite)
+    est instancié par NOUS en worker de module `'self'` et confié à pdf.js par un port
+    explicite — sinon, depuis `file://` (origine opaque), pdf.js le jugerait
+    « cross-origin » et l'envelopperait dans un blob : la CSP de production n'a **pas** été
+    assouplie. PDF de pairs = données NON FIABLES : `isEvalSupported: false`, pas de XFA,
+    ni scripts ni calque d'annotations, aucune ressource externe (cMap, polices), images et
+    canvas bornés, délais avec worker tué s'il ne répond plus, une miniature à la fois.
+    - **Rien dans le document partagé.** Miniature de 1re page + nombre de pages calculés
+      par CHAQUE pair, cache mémoire LRU par hash de contenu. Les ajouter au doc Yjs aurait
+      alourdi la synchro pour une donnée entièrement dérivée des octets déjà partagés.
+    - **Texte.** Détection par type MIME/extension, décodage UTF-8/UTF-16/Windows-1252,
+      contenu binaire refusé, extrait borné sur le nœud (16 Ko, 40 lignes) et plafond de
+      1 Mo dans la visionneuse. Autres fichiers : carte type + taille + Enregistrer.
+    - **Node ≥ 20 pour construire** (exigence de `pdfjs-dist`) ; le serveur de
+      signalisation, lui, reste en Node 18+.
+
+### §9b — Aperçus étendus : bureautique, audio/vidéo, code (`lib/zipReader.ts`, `lib/officeXml.ts`, `lib/officePreview.ts`, `lib/legacyOffice.ts`, `lib/mediaPreview.ts`, `lib/codePreview.ts`, `board/viewer/`, `nodes/preview/`)
+
+12. **Lecteurs ZIP / OOXML / ODF / CFB maison, sans dépendance, à plafonds durs.** Word,
+    Excel, PowerPoint (docx/xlsx/pptx), OpenDocument (odt/ods/odp/odg), RTF et anciens
+    binaires (doc/xls/ppt, conteneur CFB) sont lus par nos propres parseurs plutôt que par
+    une bibliothèque tierce : surface d'attaque réduite, rien qui interprète macros, HTML
+    ou scripts, et des bornes que l'on maîtrise. Fichiers de pairs = NON FIABLES :
+    - **ZIP** : 2 000 entrées max, 8 Mo par entrée, **20 Mo décompressés au total**
+      (anti-bombe de décompression, flux `DecompressionStream('deflate-raw')` arrêté dès
+      que le budget est dépassé), méthodes autres que stockée/deflate et entrées
+      chiffrées refusées ;
+    - **XML** : tokeniseur minimal (400 000 nœuds, 256 attributs, pas de DTD ni d'entités
+      externes) ; **bureautique** : 64 Mo lus, 3 000 blocs, 400 000 caractères, 12
+      feuilles × 200 lignes × 30 colonnes, 300 diapositives, profondeur 24, **20 s** ;
+    - **anciens formats / RTF** : 48 Mo lus, flux CFB ≤ 32 Mo, 4 096 entrées de
+      répertoire, chaînes de secteurs contrôlées (boucles détectées), profondeur RTF 256 ;
+      rendu **au mieux**, signalé « approximatif » ; au-delà des plafonds : « tronqué ».
+    - **Rendu** : éléments React construits à partir du TEXTE extrait uniquement, jamais
+      de HTML du document. Miniatures intégrées (OOXML, iWork) ≤ 2 Mo, affichées en
+      `blob:` image. `.key` n'est traité comme Keynote que si le contenu est un ZIP : c'est
+      aussi l'extension des clés privées PEM, affichées alors comme texte.
+13. **CSP : `media-src 'self' blob:` pour l'audio et la vidéo.** Les sons/vidéos importés
+    sont lus depuis des URL `blob:` créées localement à partir des octets du magasin de
+    fichiers — aucune source réseau n'est autorisée, le reste de la CSP est inchangé.
+    Métadonnées (durée, titre, artiste, album, pochette — ID3, Vorbis/FLAC, MP4) lues par
+    un analyseur borné (512 trames, pochette ≤ 2 Mo, tags ≤ 300 caractères).
+14. **Scripts affichés colorés, JAMAIS exécutés.** `.bat`, `.ps1`, `.sh`, `.py`, `.js`…
+    passent par Prism (grammaires importées statiquement, aucun autoloader réseau) qui
+    n'entoure que du texte ÉCHAPPÉ ; au-delà de 200 000 caractères, texte seulement
+    échappé. Aucun bouton « exécuter » ni ouverture par le système. `.bat`/`.cmd` non
+    UTF-8 décodés en page de code console (850) pour garder les accents lisibles.
+15. **Correctif CSS : bouton de préréglage dans la barre du lien.** `.lp-et-btn` avait la
+    même spécificité que `.et-btn { width: 26px }` et, selon l'ordre de chargement des
+    feuilles, perdait : le libellé débordait du bouton carré. Sélecteur passé à
+    `.et-btn.lp-et-btn` (largeur automatique, pas de retour à la ligne).
+
+### §10 — Finalisation
+
+16. **Tests & build.** Nouveaux tests : `singleImageDataUrl`, écriture vérifiée
+    (`writeVerified`, `classifyReadback`), noms de fichiers sûrs, galerie d'entité
+    (`entityImages`), préréglages complets (assainissement, migration, application
+    partielle), aperçus (détection, décodage texte, bornes), round-trip icône/image
+    d'entité, nœud `file`, stockage de fichiers non-image + migration inline. Format
+    `.trace` inchangé (**v7**). Suite complète au vert (typecheck node + web,
+    **578 tests**), build de production OK.

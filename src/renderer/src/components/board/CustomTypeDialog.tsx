@@ -4,12 +4,12 @@
  * par défaut (pré-créés sur chaque nouvelle entité de ce type). Enregistré dans le
  * document Yjs (synchronisé, exporté dans le .trace) via `upsertCustomType`.
  */
-import { useMemo, useState } from 'react'
-import { Check, Plus, Search, Trash2 } from 'lucide-react'
-import * as Lucide from 'lucide-react'
+import { useState } from 'react'
+import { Check, Plus, Trash2 } from 'lucide-react'
 import type { CustomEntityType, CustomTypeField, FieldKind } from '@/types'
 import { Modal } from '@/components/common/Modal'
 import { EntityIcon } from '@/components/nodes/entityIcons'
+import { IconPicker } from '@/components/board/IconPicker'
 import { ColorField } from '@/components/common/ColorPicker'
 import { useBoardContext } from '@/flow/BoardContext'
 import { newCustomTypeId, upsertCustomType } from '@/sync/boardOps'
@@ -18,26 +18,6 @@ import { withAlpha } from '@/lib/colors'
 import { t } from '@/i18n'
 import './customType.css'
 
-/** Banque d'icônes suggérées (noms lucide PascalCase) — couvre les usages OSINT
- *  courants. On peut aussi saisir n'importe quel autre nom lucide valide. */
-const ICON_SUGGESTIONS = [
-  'User', 'Users', 'UserSearch', 'UserX', 'UserCheck', 'Contact', 'Fingerprint', 'Eye',
-  'Building2', 'Landmark', 'Factory', 'Store', 'Home', 'MapPin', 'MapPinned', 'Globe',
-  'Car', 'Truck', 'Plane', 'Ship', 'Bike', 'Train', 'Package', 'Box',
-  'Phone', 'Smartphone', 'Mail', 'MessageSquare', 'AtSign', 'Wifi', 'Radio', 'RadioTower',
-  'CreditCard', 'Banknote', 'Coins', 'Wallet', 'TrendingUp', 'ShoppingCart', 'Receipt', 'Scale',
-  'FileText', 'File', 'Folder', 'Book', 'Newspaper', 'ScrollText', 'Clipboard', 'Stamp',
-  'Camera', 'Image', 'Video', 'Mic', 'Music', 'Film', 'Aperture', 'ScanLine',
-  'Shield', 'ShieldAlert', 'Lock', 'Key', 'KeyRound', 'Flag', 'Target', 'Crosshair',
-  'Calendar', 'Clock', 'AlarmClock', 'Timer', 'History', 'CalendarClock', 'Hourglass', 'Bell',
-  'Briefcase', 'Gavel', 'Handshake', 'Network', 'Share2', 'GitBranch', 'Boxes', 'Layers',
-  'Cpu', 'Server', 'Database', 'HardDrive', 'Terminal', 'Bug', 'Wrench', 'Cog',
-  'Heart', 'Star', 'Zap', 'Flame', 'Droplet', 'Leaf', 'Skull', 'Bomb',
-  'Pill', 'Syringe', 'Cross', 'Stethoscope', 'Dna', 'FlaskConical', 'Microscope', 'Atom',
-  'Music2', 'Church', 'Vote', 'Swords', 'Anchor', 'Compass', 'Tag', 'Circle'
-]
-
-const REGISTRY = Lucide as unknown as Record<string, unknown>
 const FIELD_KINDS: FieldKind[] = ['text', 'longtext', 'url', 'email', 'phone', 'date', 'social']
 
 interface CustomTypeDialogProps {
@@ -54,22 +34,7 @@ export function CustomTypeDialog({ editing, onSaved, onClose }: CustomTypeDialog
   const [icon, setIcon] = useState(editing?.icon ?? 'Circle')
   const [color, setColor] = useState(editing?.color ?? CUSTOM_CATEGORY_COLOR)
   const [fields, setFields] = useState<CustomTypeField[]>(editing?.fields ?? [])
-  const [iconQuery, setIconQuery] = useState('')
   const [nameError, setNameError] = useState(false)
-
-  // Icônes affichées : suggestions filtrées par la recherche ; si la recherche
-  // désigne une icône lucide valide hors liste, on la propose aussi.
-  const icons = useMemo(() => {
-    const needle = iconQuery.trim().toLowerCase()
-    if (needle === '') return ICON_SUGGESTIONS
-    const matches = ICON_SUGGESTIONS.filter((n) => n.toLowerCase().includes(needle))
-    // Saisie directe d'un nom exact hors suggestions (ex. « Rocket »).
-    const exact = iconQuery.trim()
-    if (/^[A-Za-z0-9]+$/.test(exact) && REGISTRY[exact] && !matches.includes(exact)) {
-      matches.unshift(exact)
-    }
-    return matches
-  }, [iconQuery])
 
   const addField = (): void => setFields((prev) => [...prev, { label: '', kind: 'text' }])
   const updateField = (index: number, patch: Partial<CustomTypeField>): void =>
@@ -146,28 +111,7 @@ export function CustomTypeDialog({ editing, onSaved, onClose }: CustomTypeDialog
       <ColorField value={color} onChange={setColor} />
 
       <label className="cm-label">{t('customType.icon')}</label>
-      <div className="ct-iconsearch">
-        <Search size={14} />
-        <input
-          className="ct-iconsearch__input"
-          value={iconQuery}
-          placeholder={t('customType.iconSearch')}
-          onChange={(e) => setIconQuery(e.target.value)}
-        />
-      </div>
-      <div className="ct-icons">
-        {icons.map((name) => (
-          <button
-            key={name}
-            className={`ct-icon${icon === name ? ' ct-icon--on' : ''}`}
-            onClick={() => setIcon(name)}
-            title={name}
-            aria-pressed={icon === name}
-          >
-            <EntityIcon icon={name} size={16} />
-          </button>
-        ))}
-      </div>
+      <IconPicker value={icon} onChange={setIcon} />
 
       <label className="cm-label">{t('customType.fields')}</label>
       <p className="cm-hint">{t('customType.fieldsHint')}</p>

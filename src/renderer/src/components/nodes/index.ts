@@ -12,6 +12,7 @@ import { GroupNode } from './GroupNode'
 import { EntityNode } from './EntityNode'
 import { SourceNode } from './SourceNode'
 import { CodeNode } from './CodeNode'
+import { FileNode } from './FileNode'
 
 export const nodeTypes: Record<NodeKind, NodeTypes[string]> = {
   text: TextNode,
@@ -21,5 +22,6 @@ export const nodeTypes: Record<NodeKind, NodeTypes[string]> = {
   group: GroupNode,
   entity: EntityNode,
   source: SourceNode,
-  code: CodeNode
+  code: CodeNode,
+  file: FileNode
 }

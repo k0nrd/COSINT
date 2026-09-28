@@ -9,6 +9,7 @@ import type { BoardHandle } from '@/sync/BoardDoc'
 import type { EdgePatch, NodePatch } from '@/sync/boardOps'
 import type { CustomTypeMap } from '@/lib/entityTypes'
 import type { ValueMatch } from '@/lib/matching'
+import type { EntityImageAction } from '@/lib/entityImages'
 
 export interface BoardContextValue {
   handle: BoardHandle
@@ -25,6 +26,15 @@ export interface BoardContextValue {
   customTypes: CustomEntityType[]
   customTypeMap: CustomTypeMap
   updateNodeData: (id: string, patch: NodePatch) => void
+  /** §6 v1.9 : fixe (ou libère avec `null`) l'icône propre d'un nœud entité. */
+  setNodeIcon: (id: string, icon: string | null) => void
+  // ——— §2 v1.9 (galerie) : images attachées à une entité (neutralisées pour un visiteur) ———
+  /** Compresse, enregistre (chunks) puis ajoute des images à la galerie d'une entité. */
+  attachEntityImages: (id: string, files: Blob[]) => void
+  /** Ouvre le sélecteur de fichiers (plusieurs images) puis les attache à l'entité. */
+  pickEntityImages: (id: string) => void
+  /** Retire / déplace / passe en couverture une image de la galerie (un pas d'annulation). */
+  editEntityImages: (id: string, action: EntityImageAction) => void
   deleteNodes: (ids: string[]) => void
   duplicateNodes: (ids: string[]) => void
   updateEdgeData: (id: string, patch: EdgePatch) => void
@@ -41,6 +51,9 @@ export interface BoardContextValue {
   deleteComment: (commentId: string) => void
   /** Ouvre une URL dans le navigateur externe (jamais dans l'app, §8). */
   openExternal: (url: string) => void
+  /** §1 v1.9 (copie d'image) : pose l'image d'un nœud image sur le presse-papiers
+   *  système (bitmap vérifié + toast), recollable en pleine fidélité dans COSINT. */
+  copyImageNode?: (id: string) => void
   /**
    * §3 v1.8.1 : cherche les autres éléments du tableau portant déjà l'information
    * `value` (hors `excludeNodeId`), pour proposer discrètement une liaison.

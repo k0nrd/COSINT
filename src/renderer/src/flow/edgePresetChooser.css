@@ -1,0 +1,34 @@
+/* §7 v1.9 : sélecteur de préréglage de lien (après liaison). Réutilise le cadre
+   `.fl-add-menu` (défini dans canvas.css) ; les lignes de préréglage (aperçu + nom +
+   résumé) viennent de `linkPresets.css` (.lp-pick). */
+.fl-preset-menu {
+  min-width: 240px;
+  max-width: 320px;
+  max-height: min(460px, calc(100% - 16px));
+  overflow-y: auto;
+}
+
+.fl-preset-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+
+.fl-preset-add {
+  color: var(--accent);
+}
+.fl-preset-menu .fl-add-menu__item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.fl-preset-menu .fl-add-menu__item:focus-visible {
+  outline: none;
+  background: var(--panel-3);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+
+.fl-preset-hint {
+  padding: 4px 9px 3px;
+  font-size: 10.5px;
+  color: var(--text-mute);
+}

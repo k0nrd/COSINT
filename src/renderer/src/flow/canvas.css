@@ -81,6 +81,9 @@
   border-radius: var(--r-md);
   box-shadow: var(--shadow-md);
   padding: var(--sp-1);
+  /* §7 v1.9 — un menu déplié (préréglages) ne dépasse jamais la fenêtre : il défile. */
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
 }
 .fl-add-menu__title {
   font-size: 10.5px;
@@ -160,6 +163,12 @@
 }
 .fl-add-menu__item--danger:hover {
   background: var(--danger-soft);
+}
+/* §1 v1.9 (copie d'image) : séparateur entre les actions image et le reste du menu. */
+.fl-add-menu__sep {
+  height: 1px;
+  margin: var(--sp-1) 2px;
+  background: var(--border);
 }
 
 /* ——— Mode « Dessiner le tracé » d'un lien (§1 v1.7.1) ——— */

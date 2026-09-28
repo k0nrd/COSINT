@@ -1,0 +1,219 @@
+/* §R2 v1.9 (aperçu audio/vidéo) — nœud + visionneuse. Couleurs : variables du thème
+   (clair ET sombre via tokens.css) ; seules les zones vidéo restent sur fond noir. */
+
+.nd-media {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  color: var(--text);
+}
+
+.nd-media--message {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.nd-media-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.nd-media--video {
+  background: #000;
+}
+
+.nd-media-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.nd-media--audio {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 6px 10px;
+  padding: 10px;
+  align-items: center;
+}
+
+.nd-media-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-sm);
+  background: var(--panel-3);
+  color: var(--text-mute);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nd-media-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nd-media-text {
+  min-width: 0;
+}
+
+.nd-media-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nd-media-artist {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nd-media-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nd-media-play {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.nd-media-play:hover {
+  background: var(--accent-hover);
+}
+
+.nd-media-play:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.nd-media-seek {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.nd-media-time {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* — Visionneuse — */
+
+.fv-media {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.fv-media--video {
+  background: #000;
+}
+
+.fv-media-video {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.fv-media--audio {
+  gap: 16px;
+  padding: 24px;
+  color: var(--text);
+  text-align: center;
+}
+
+.fv-media-cover {
+  width: min(280px, 40vh);
+  aspect-ratio: 1;
+  border-radius: var(--r-md, 10px);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-mute);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fv-media-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.fv-media-tags {
+  max-width: min(560px, 90%);
+}
+
+.fv-media-title {
+  font-size: 17px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fv-media-artist {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.fv-media-album {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-mute);
+  overflow-wrap: anywhere;
+}
+
+.fv-media-audio {
+  width: min(520px, 90%);
+}
+
+.fv-media-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}

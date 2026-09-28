@@ -6,7 +6,8 @@ import {
   detectPastedText,
   parseClip,
   remapClip,
-  serializeClip
+  serializeClip,
+  singleImageDataUrl
 } from '@/lib/clipboard'
 
 function makeNode(overrides: Partial<BoardNodeData> = {}): BoardNodeData {
@@ -129,5 +130,37 @@ describe('lib/clipboard — détection du texte collé (§2)', () => {
     expect(detectPastedText('2024-01-15').kind).toBe('text')
     // Un vrai numéro reste détecté.
     expect(detectPastedText('01 23 45 67 89').kind).toBe('phone')
+  })
+})
+
+describe('lib/clipboard — image seule copiée en bitmap (§2 v1.9)', () => {
+  const resolve = (hash: string): string | null =>
+    hash === 'HASH1' ? 'data:image/webp;base64,AAAA' : null
+
+  it('un unique nœud image (hash résolu) → sa data-URL', () => {
+    const nodes = [makeNode({ id: 'i', kind: 'image', content: 'HASH1' })]
+    expect(singleImageDataUrl(nodes, resolve)).toBe('data:image/webp;base64,AAAA')
+  })
+
+  it('un unique nœud image inline (data-URL héritée) → tel quel', () => {
+    const nodes = [makeNode({ id: 'i', kind: 'image', content: 'data:image/png;base64,ZZZ' })]
+    expect(singleImageDataUrl(nodes, resolve)).toBe('data:image/png;base64,ZZZ')
+  })
+
+  it('null si les chunks ne sont pas encore résolus', () => {
+    const nodes = [makeNode({ id: 'i', kind: 'image', content: 'HASH_ABSENT' })]
+    expect(singleImageDataUrl(nodes, resolve)).toBeNull()
+  })
+
+  it('null pour un nœud non-image, un contenu vide, zéro ou plusieurs nœuds', () => {
+    expect(singleImageDataUrl([makeNode({ kind: 'entity' })], resolve)).toBeNull()
+    expect(singleImageDataUrl([makeNode({ kind: 'image', content: '' })], resolve)).toBeNull()
+    expect(singleImageDataUrl([], resolve)).toBeNull()
+    expect(
+      singleImageDataUrl(
+        [makeNode({ id: 'a', kind: 'image', content: 'HASH1' }), makeNode({ id: 'b', kind: 'image', content: 'HASH1' })],
+        resolve
+      )
+    ).toBeNull()
   })
 })

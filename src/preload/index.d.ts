@@ -36,6 +36,8 @@ export interface CosintApi {
   copyText: (text: string) => Promise<boolean>
   /** Copie une image (data-URL) dans le presse-papiers système (§2 v1.8.1). */
   copyImage: (dataUrl: string, text?: string) => Promise<boolean>
+  /** §1 v1.9 : glisse une image (data-URL PNG) hors de l'application (fichier temporaire). */
+  startImageDrag: (dataUrl: string, name: string) => Promise<boolean>
   getVersion: () => Promise<string>
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void
   installUpdate: () => Promise<void>
@@ -46,6 +48,8 @@ export interface CosintApi {
   savePng: (defaultName: string, dataUrl: string) => Promise<SaveResult>
   saveReport: (defaultName: string, markdown: string) => Promise<SaveResult>
   saveCsv: (defaultName: string, csv: string) => Promise<SaveResult>
+  /** §5 v1.9 : enregistre une pièce jointe importée (fichier de tout type). */
+  saveAttachment: (defaultName: string, dataUrl: string) => Promise<SaveResult>
   openCsv: () => Promise<OpenTextResult>
   /** §1 v1.8.7 : profil d'organisation (.cosint-org) — export/import. */
   saveOrgProfile: (defaultName: string, json: string) => Promise<SaveResult>

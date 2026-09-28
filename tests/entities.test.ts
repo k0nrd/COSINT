@@ -15,6 +15,7 @@ import {
   yMapToEdge,
   yMapToNode
 } from '@/sync/model'
+import { resolveNodeIcon } from '@/lib/entities'
 
 /** Écrit un nœud dans un Y.Doc neuf puis le relit (aller-retour CRDT). */
 function nodeRoundTrip(node: BoardNodeData): BoardNodeData {
@@ -199,5 +200,75 @@ describe('sanitizeField', () => {
   it('retombe sur le kind « text » pour un kind inconnu', () => {
     const field = sanitizeField({ id: 'f1', label: 'Alias', kind: 'video', value: 'JD' })
     expect(field?.kind).toBe('text')
+  })
+})
+
+describe('§6/§2 v1.9 — icône propre + image d’entité (aller-retour Y.Doc)', () => {
+  it('préserve l’icône propre et la galerie d’images d’une entité (§2 v1.9)', () => {
+    const node: BoardNodeData = {
+      ...ENTITY,
+      icon: 'Rocket',
+      images: [
+        { hash: 'PoRza6Rsulj7TTCtxfKK1a', width: 408, height: 232 },
+        { hash: 'QqRza6Rsulj7TTCtxfKK1b' }
+      ]
+    }
+    const round = nodeRoundTrip(node)
+    expect(round.icon).toBe('Rocket')
+    expect(round.images).toEqual([
+      { hash: 'PoRza6Rsulj7TTCtxfKK1a', width: 408, height: 232 },
+      { hash: 'QqRza6Rsulj7TTCtxfKK1b' }
+    ])
+    expect(round).toEqual(node)
+  })
+
+  it('rejette un nom d’icône invalide à la relecture', () => {
+    expect(nodeRoundTrip({ ...ENTITY, icon: 'has space' }).icon).toBeUndefined()
+    expect(nodeRoundTrip({ ...ENTITY, icon: '../x' }).icon).toBeUndefined()
+  })
+
+  it('resolveNodeIcon — l’override valide prime, sinon l’icône du type', () => {
+    expect(resolveNodeIcon('Rocket', 'User')).toBe('Rocket')
+    expect(resolveNodeIcon(undefined, 'User')).toBe('User')
+    expect(resolveNodeIcon('', 'User')).toBe('User')
+    expect(resolveNodeIcon('has space', 'User')).toBe('User')
+    expect(resolveNodeIcon('x'.repeat(41), 'User')).toBe('User')
+  })
+
+  it('préserve un retour à la ligne dans une valeur de champ (§7 — pas de perte au round-trip)', () => {
+    const multi: BoardNodeData = {
+      ...ENTITY,
+      fields: [
+        { id: 'p', label: 'Téléphones', kind: 'phone', value: '0102030405\n0607080910', updatedBy: 'a', updatedAt: 1 }
+      ]
+    }
+    expect(nodeRoundTrip(multi).fields[0].value).toBe('0102030405\n0607080910')
+  })
+})
+
+describe('§5 v1.9 — nœud fichier (aller-retour Y.Doc)', () => {
+  it('préserve kind « file », le hash (content) et le nom (title)', () => {
+    const file: BoardNodeData = {
+      id: 'file1',
+      kind: 'file',
+      x: 5,
+      y: 5,
+      width: 260,
+      height: 96,
+      content: 'AbCdEf0123456789xyz012',
+      title: 'rapport.pdf',
+      color: '#3b82f6',
+      tags: [],
+      fields: [],
+      createdBy: 'alice',
+      createdAt: 100,
+      updatedBy: 'alice',
+      updatedAt: 100
+    }
+    const round = nodeRoundTrip(file)
+    expect(round.kind).toBe('file')
+    expect(round.content).toBe('AbCdEf0123456789xyz012')
+    expect(round.title).toBe('rapport.pdf')
+    expect(round).toEqual(file)
   })
 })

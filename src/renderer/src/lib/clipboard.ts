@@ -57,7 +57,8 @@ function sanitizeFiles(raw: unknown): ClipFile[] {
       typeof record.hash === 'string' &&
       record.hash !== '' &&
       typeof record.dataUrl === 'string' &&
-      record.dataUrl.startsWith('data:image/')
+      // §5 v1.9 : tout fichier (images ET .pdf/.txt…), pas seulement les images.
+      record.dataUrl.startsWith('data:')
     ) {
       files.push({ hash: record.hash, dataUrl: record.dataUrl })
     }
@@ -140,6 +141,8 @@ export function remapClip(
       tags: [...node.tags],
       fields: node.fields.map((field) => ({ ...field, id: newId() })),
       style: node.style ? { ...node.style } : undefined,
+      // §2 v1.9 (galerie) : copie profonde de la liste d'images (mêmes hashes).
+      images: node.images ? node.images.map((image) => ({ ...image })) : undefined,
       createdBy: author,
       createdAt: now,
       updatedBy: author,
@@ -164,6 +167,24 @@ export function remapClip(
     })
   }
   return { nodes, edges }
+}
+
+/**
+ * §2 v1.9 : data-URL à poser comme BITMAP sur le presse-papiers système lors d'un
+ * Ctrl+C — UNIQUEMENT pour un seul nœud image dont l'image est résolue ; sinon `null`
+ * (une sélection multiple / non-image garde le fragment texte pour le collage interne).
+ * `resolveHash` fournit la data-URL complète à partir d'un hash de fichier (ou `null`
+ * si les chunks ne sont pas encore tous là). Pur → testable sans Yjs ni DOM.
+ */
+export function singleImageDataUrl(
+  nodes: BoardNodeData[],
+  resolveHash: (hash: string) => string | null
+): string | null {
+  if (nodes.length !== 1) return null
+  const node = nodes[0]
+  if (node.kind !== 'image' || node.content === '') return null
+  if (node.content.startsWith('data:image/')) return node.content
+  return resolveHash(node.content)
 }
 
 /** Nature détectée d'un texte collé depuis l'extérieur (§2). */

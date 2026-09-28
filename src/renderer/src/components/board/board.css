@@ -136,7 +136,7 @@
   text-shadow: none;
 }
 
-/* ——— Barre d'outils verticale flottante ——— */
+/* ——— Barre d'outils flottante (position réglable, §3 v1.9 ; défaut = gauche) ——— */
 .bd-toolbar {
   position: absolute;
   left: var(--sp-3);
@@ -151,6 +151,37 @@
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
   z-index: 20;
+}
+
+/* §3 v1.9 : bord droit — vertical comme à gauche, ancré à droite. */
+.bd-toolbar[data-position='right'] {
+  left: auto;
+  right: var(--sp-3);
+}
+/* §3 v1.9 : haut / bas — horizontal, centré sur l'axe X (peut passer sur 2 lignes
+   sur une fenêtre étroite plutôt que de déborder du canvas). */
+.bd-toolbar[data-position='top'],
+.bd-toolbar[data-position='bottom'] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100% - 2 * var(--sp-3));
+  left: 50%;
+  right: auto;
+  top: var(--sp-3);
+  transform: translateX(-50%);
+}
+.bd-toolbar[data-position='bottom'] {
+  top: auto;
+  bottom: var(--sp-3);
+}
+/* Séparateur vertical quand la barre est horizontale. */
+.bd-toolbar[data-position='top'] .bd-toolbar__sep,
+.bd-toolbar[data-position='bottom'] .bd-toolbar__sep {
+  width: 1px;
+  height: auto;
+  align-self: stretch;
+  margin: 3px 2px;
 }
 .bd-toolbar__btn {
   width: 30px;

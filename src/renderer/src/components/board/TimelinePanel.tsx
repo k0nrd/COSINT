@@ -113,7 +113,8 @@ const KIND_ICONS: Record<Exclude<NodeKind, 'entity'>, LucideIcon> = {
   timestamped: Clock,
   group: Square,
   source: FileText,
-  code: Code2
+  code: Code2,
+  file: FileText
 }
 
 const dayFmt = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit' })

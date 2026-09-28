@@ -11,6 +11,7 @@ import {
   Image,
   Link,
   Maximize,
+  Paperclip,
   Redo2,
   Search,
   Square,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react'
 import type { NodeKind } from '@/types'
 import { t, type MessageKey } from '@/i18n'
+import { useSettings } from '@/store/settings'
 
 interface ToolbarProps {
   onAddNode: (kind: NodeKind) => void
@@ -53,6 +55,7 @@ const ADD_BUTTONS: Array<{ kind: NodeKind; icon: LucideIcon; titleKey: MessageKe
   { kind: 'text', icon: StickyNote, titleKey: 'toolbar.addText' },
   { kind: 'link', icon: Link, titleKey: 'toolbar.addLink' },
   { kind: 'image', icon: Image, titleKey: 'toolbar.addImage' },
+  { kind: 'file', icon: Paperclip, titleKey: 'toolbar.addFile' },
   { kind: 'timestamped', icon: Clock, titleKey: 'toolbar.addTimestamped' },
   { kind: 'group', icon: Square, titleKey: 'toolbar.addGroup' },
   { kind: 'code', icon: Code2, titleKey: 'toolbar.addCode' }
@@ -80,8 +83,10 @@ export function Toolbar({
   legendActive,
   timelineActive
 }: ToolbarProps): JSX.Element {
+  // §3 v1.9 : position choisie par l'utilisateur (préférence locale).
+  const toolbarPosition = useSettings((state) => state.toolbarPosition)
   return (
-    <div className="bd-toolbar" role="toolbar">
+    <div className="bd-toolbar" data-position={toolbarPosition} role="toolbar">
       {/* Outils d'édition — masqués proprement pour un visiteur (§6). */}
       {canEdit && (
         <>

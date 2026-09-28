@@ -11,12 +11,12 @@
  * est affiché directement.
  */
 import { memo, useEffect, useState } from 'react'
-import { AlertTriangle, Copy, Image as ImageIcon, RotateCw } from 'lucide-react'
+import { AlertTriangle, Copy, GripVertical, Image as ImageIcon, RotateCw } from 'lucide-react'
 import { t } from '@/i18n'
 import type { CosintNodeProps } from '@/flow/flowTypes'
 import { useBoardContext } from '@/flow/BoardContext'
 import { useFile } from '@/sync/hooks'
-import { useToasts } from '@/store/toasts'
+import { copyImageWithToast, startImageDrag, warmImagePng } from '@/lib/imageClipboard'
 import { NodeShell } from './NodeShell'
 
 /** Au-delà de ce délai SANS progression, un transfert en cours est déclaré
@@ -25,8 +25,7 @@ const STALL_MS = 20_000
 
 export const ImageNode = memo(function ImageNode({ id, data, selected }: CosintNodeProps): JSX.Element {
   const board = data.board
-  const { handle } = useBoardContext()
-  const pushToast = useToasts((state) => state.push)
+  const { handle, copyImageNode } = useBoardContext()
   const content = board.content
 
   // Sécurité (§8) : une data-URL héritée n'est affichée que si c'est bien une
@@ -60,14 +59,11 @@ export const ImageNode = memo(function ImageNode({ id, data, selected }: CosintN
   // §2 v1.8.1 : copie du BITMAP dans le presse-papiers système, pour le coller dans
   // un autre document (traitement de texte, messagerie…). Distinct du Ctrl+C interne
   // (fragment de graphe) : ici on écrit l'image elle-même.
+  // §1 v1.9 : MÊME chemin que Ctrl+C (conversion PNG, écriture vérifiée par le main,
+  // toast du vrai résultat, recollage du nœud entier dans COSINT).
   const copyImage = (): void => {
-    if (!src) {
-      pushToast(t('image.copyEmpty'), 'info')
-      return
-    }
-    void window.cosint.copyImage(src).then((ok) => {
-      pushToast(ok ? t('image.copied') : t('image.copyError'), ok ? 'success' : 'error')
-    })
+    if (copyImageNode) copyImageNode(id)
+    else void copyImageWithToast(src)
   }
 
   let body: JSX.Element
@@ -102,6 +98,31 @@ export const ImageNode = memo(function ImageNode({ id, data, selected }: CosintN
           >
             <Copy size={13} />
           </button>
+        )}
+        {/* §1 v1.9 : poignée DÉDIÉE pour glisser l'image hors de COSINT (bureau,
+            explorateur, messagerie, traitement de texte…). Le glisser HTML est annulé et
+            remplacé par le glisser NATIF du système (fichier PNG écrit par le main) ; le
+            déplacement normal du nœud (glisser son corps) reste inchangé (`nodrag`). */}
+        {selected && (
+          <div
+            className="nd-image-drag nodrag nopan"
+            role="button"
+            draggable
+            title={t('image.dragOut')}
+            aria-label={t('image.dragOut')}
+            onPointerEnter={() => warmImagePng(src)}
+            onPointerDown={(event) => {
+              event.stopPropagation()
+              warmImagePng(src)
+            }}
+            onDragStart={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              void startImageDrag(src, board.title)
+            }}
+          >
+            <GripVertical size={14} />
+          </div>
         )}
       </div>
     )

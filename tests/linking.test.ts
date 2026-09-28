@@ -12,10 +12,12 @@ import {
   deleteEdges,
   reverseEdge,
   setEdgeRouting,
-  updateEdge
+  updateEdge,
+  applyEdgePreset
 } from '@/sync/boardOps'
 import { readAllEdges } from '@/sync/model'
 import { exportBoardData, importTraceIntoDoc, parseTrace, serializeTrace } from '@/lib/serialization'
+import { sanitizeLinkPresets, type LinkPresetDef } from '@/lib/linkPresets'
 
 /** Handle minimal suffisant pour les opérations (pas de réseau, pas d'undo réel). */
 function makeHandle(): BoardHandle {
@@ -55,6 +57,93 @@ describe('§1 — liaison des nœuds (données + persistance)', () => {
     expect(edge2.label).toBe('communique avec')
     expect(edge2.width).toBe('thick')
     expect(edge2.pathType).toBe('step')
+  })
+
+  it('§7 v1.9 — applique un préréglage de lien au style résolu d’un lien', () => {
+    const handle = makeHandle()
+    const n1 = textNode(handle, 0)
+    const n2 = textNode(handle, 200)
+    const e = createEdge(handle, { source: n1, target: n2 }, 'alice')!
+    // Préréglage enregistré par la PREMIÈRE 1.9.0 (format hérité, migré au chargement).
+    const [preset] = sanitizeLinkPresets([
+      { id: 'p2', label: 'Source secondaire', color: '#ef4444', width: 'thin', style: 'dashed' }
+    ])
+    expect(applyEdgePreset(handle, [e], preset, 'alice')).toBe(1)
+    const edge = readAllEdges(handle.doc).find((candidate) => candidate.id === e)!
+    expect(edge.color).toBe('#ef4444')
+    expect(edge.width).toBe('thin')
+    expect(edge.style).toBe('dashed')
+    // Le reste est inchangé (le nom du préréglage n'est PAS devenu le libellé du lien).
+    expect(edge.label).toBe('')
+    expect(edge.direction).toBe('single')
+  })
+
+  it('§7 v1.9 — préréglage complet sur plusieurs liens : seuls les réglages définis sont écrits, et tout survit à l’export .trace', () => {
+    const handle = makeHandle()
+    const n1 = textNode(handle, 0)
+    const n2 = textNode(handle, 200)
+    const n3 = textNode(handle, 400)
+    const e1 = createEdge(handle, { source: n1, target: n2 }, 'alice')!
+    const e2 = createEdge(handle, { source: n2, target: n3 }, 'alice')!
+    // Routage manuel + statut préexistants sur e2 : les points de passage (géométrie)
+    // ne font jamais partie d'un préréglage et doivent survivre.
+    setEdgeRouting(handle, e2, { waypoints: [{ x: 300, y: 80 }], sourceAnchor: 'b', targetAnchor: 't' }, 'alice')
+    updateEdge(handle, e2, { label: 'garder', width: 'thick' }, 'alice')
+    const preset: LinkPresetDef = {
+      id: 'full',
+      name: 'Source principale',
+      props: {
+        relationType: 'Hébergé par', // « Autre » : texte libre
+        color: '#22c55e',
+        style: 'dotted',
+        direction: 'double',
+        pathType: 'step',
+        status: 'confirmed',
+        sourceAnchor: 'r',
+        targetAnchor: 'auto'
+      }
+    }
+    expect(applyEdgePreset(handle, [e1, e2, 'absent'], preset, 'bob')).toBe(2)
+    for (const edge of readAllEdges(handle.doc)) {
+      expect(edge.relationType).toBe('Hébergé par')
+      expect(edge.color).toBe('#22c55e')
+      expect(edge.style).toBe('dotted')
+      expect(edge.direction).toBe('double')
+      expect(edge.pathType).toBe('step')
+      expect(edge.status).toBe('confirmed')
+      expect(edge.sourceAnchor).toBe('r')
+      expect(edge.targetAnchor).toBeUndefined()
+      expect(edge.updatedBy).toBe('bob')
+    }
+    const after2 = readAllEdges(handle.doc).find((edge) => edge.id === e2)!
+    expect(after2.label).toBe('garder') // libellé non défini → inchangé
+    expect(after2.width).toBe('thick') // épaisseur non définie → inchangée
+    expect(after2.waypoints).toEqual([{ x: 300, y: 80 }])
+
+    // Statut « aucun » : retire le badge.
+    applyEdgePreset(handle, [e1], { status: 'none' }, 'bob')
+    expect(readAllEdges(handle.doc).find((edge) => edge.id === e1)!.status).toBeUndefined()
+
+    // Export → import .trace : les valeurs appliquées sont de simples champs de lien.
+    const trace = parseTrace(serializeTrace(exportBoardData(handle.doc)))
+    const copy = makeHandle()
+    importTraceIntoDoc(trace, copy.doc)
+    const imported = readAllEdges(copy.doc).find((edge) => edge.id === e2)!
+    expect(imported.relationType).toBe('Hébergé par')
+    expect(imported.status).toBe('confirmed')
+    expect(imported.sourceAnchor).toBe('r')
+    expect(imported.targetAnchor).toBeUndefined()
+    expect(imported.pathType).toBe('step')
+  })
+
+  it('§7 v1.9 — un préréglage vide n’écrit rien', () => {
+    const handle = makeHandle()
+    const n1 = textNode(handle, 0)
+    const n2 = textNode(handle, 200)
+    const e = createEdge(handle, { source: n1, target: n2 }, 'alice')!
+    const before = readAllEdges(handle.doc)[0]
+    expect(applyEdgePreset(handle, [e], { id: 'x', name: 'Vide', props: {} }, 'bob')).toBe(0)
+    expect(readAllEdges(handle.doc)[0]).toEqual(before)
   })
 
   it('inverse le sens d’un lien', () => {

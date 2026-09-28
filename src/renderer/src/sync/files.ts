@@ -25,6 +25,7 @@ import * as Y from 'yjs'
 import type { PresenceAvatar } from '@/types'
 import type { BoardHandle } from './BoardDoc'
 import { getFilesMap, getNodesMap } from './model'
+import { isInlineImageRef, replaceEntityImageRef, sanitizeEntityImages } from '@/lib/entityImages'
 
 /**
  * Taille maximale d'un chunk, en CARACTÈRES de base64 (≈ octets du message).
@@ -125,7 +126,10 @@ export function readFileMeta(doc: Y.Doc, hash: string): FileMeta | null {
   const raw = getFilesMap(doc).get(metaKey(hash))
   if (typeof raw !== 'object' || raw === null) return null
   const record = raw as Record<string, unknown>
-  if (typeof record.mime !== 'string' || !record.mime.startsWith('image/')) return null
+  // §5 v1.9 : tout type MIME non vide est accepté (images ET fichiers importés —
+  // .pdf, .txt…). Avant v1.9 seules les images étaient stockées ; le stockage en
+  // chunks est identique quel que soit le type (adressage par contenu).
+  if (typeof record.mime !== 'string' || record.mime === '') return null
   if (typeof record.chunkCount !== 'number' || !Number.isInteger(record.chunkCount)) return null
   if (record.chunkCount < 1 || record.chunkCount > 4096) return null
   const meta: FileMeta = {
@@ -252,6 +256,12 @@ export function isFileHash(value: string): boolean {
   return /^[A-Za-z0-9_-]{16,64}$/.test(value) && !value.startsWith('data:')
 }
 
+/** §5 v1.9 : estime la taille binaire (octets) d'une charge base64 de `len`
+ * caractères (≈ 3/4 des caractères). Pure, pour l'affichage de la taille d'un fichier. */
+export function base64ByteLength(len: number): number {
+  return Math.max(0, Math.floor((len * 3) / 4))
+}
+
 /**
  * Résout un avatar diffusé par un pair : une référence par hash devient la
  * data-URL réassemblée si le fichier est complet ; sinon on retombe sur les
@@ -279,21 +289,61 @@ export function resolveAvatar(doc: Y.Doc, avatar: PresenceAvatar): PresenceAvata
  */
 export async function migrateInlineImages(handle: BoardHandle): Promise<void> {
   const nodes = getNodesMap(handle.doc)
-  const pending: Array<{ id: string; dataUrl: string }> = []
+  // (a) contenu inline des nœuds image/fichier (§1 v1.4, §5 v1.9) ;
+  // (b) image ATTACHÉE à une entité stockée inline (§2 v1.9).
+  const pendingContent: Array<{ id: string; dataUrl: string }> = []
+  const pendingImage: Array<{ id: string; dataUrl: string }> = []
+  // (c) §2 v1.9 : images inline de la GALERIE d'une entité (liste `images`).
+  const pendingGallery: Array<{ id: string; dataUrl: string }> = []
   nodes.forEach((map, id) => {
     if (!(map instanceof Y.Map)) return
-    if (map.get('kind') !== 'image') return
+    const kind = map.get('kind')
     const content = map.get('content')
-    if (typeof content === 'string' && content.startsWith('data:image/')) {
-      pending.push({ id, dataUrl: content })
+    if (
+      (kind === 'image' || kind === 'file') &&
+      typeof content === 'string' &&
+      content.startsWith('data:')
+    ) {
+      pendingContent.push({ id, dataUrl: content })
+    }
+    if (kind === 'entity') {
+      const imageHash = map.get('imageHash')
+      if (typeof imageHash === 'string' && imageHash.startsWith('data:')) {
+        pendingImage.push({ id, dataUrl: imageHash })
+      }
+      // §2 v1.9 (galerie) : entrées inline de la liste `images` (.trace importé).
+      for (const image of sanitizeEntityImages(map.get('images'))) {
+        if (isInlineImageRef(image.hash)) pendingGallery.push({ id, dataUrl: image.hash })
+      }
     }
   })
-  for (const { id, dataUrl } of pending) {
+  for (const { id, dataUrl } of pendingContent) {
     const hash = await registerFile(handle, dataUrl)
     if (!hash) continue
     handle.doc.transact(() => {
       const map = nodes.get(id)
       if (map instanceof Y.Map && map.get('content') === dataUrl) map.set('content', hash)
+    }, FILE_ORIGIN)
+  }
+  for (const { id, dataUrl } of pendingImage) {
+    const hash = await registerFile(handle, dataUrl)
+    if (!hash) continue
+    handle.doc.transact(() => {
+      const map = nodes.get(id)
+      if (map instanceof Y.Map && map.get('imageHash') === dataUrl) map.set('imageHash', hash)
+    }, FILE_ORIGIN)
+  }
+  // §2 v1.9 (galerie) : chaque entrée inline → hash, en place (ordre conservé ; la
+  // liste est relue dans la transaction pour ne pas écraser une édition intercalée).
+  for (const { id, dataUrl } of pendingGallery) {
+    const hash = await registerFile(handle, dataUrl)
+    if (!hash) continue
+    handle.doc.transact(() => {
+      const map = nodes.get(id)
+      if (!(map instanceof Y.Map)) return
+      const images = sanitizeEntityImages(map.get('images'))
+      if (!images.some((image) => image.hash === dataUrl)) return
+      map.set('images', replaceEntityImageRef(images, dataUrl, hash))
     }, FILE_ORIGIN)
   }
 }

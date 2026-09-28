@@ -138,6 +138,33 @@ export async function processImage(
   return { ok: false, reason: 'incompressible', sizeBytes: best?.length }
 }
 
+/**
+ * §2 v1.9 : convertit une data-URL image (WebP — format de STOCKAGE de COSINT — ou
+ * JPEG/PNG) en **PNG**, pour le presse-papiers système. Indispensable car
+ * `nativeImage.createFromDataURL` d'Electron NE DÉCODE PAS le WebP (image vide → la
+ * copie échouait silencieusement). Le rendu passe par un <canvas> : Chromium décode
+ * le WebP côté renderer. Retourne `null` si le décodage échoue.
+ */
+export async function toPngDataUrl(dataUrl: string): Promise<string | null> {
+  // Déjà en PNG : rien à convertir.
+  if (dataUrl.startsWith('data:image/png')) return dataUrl
+  try {
+    const img = await loadImage(dataUrl)
+    const width = Math.max(1, img.naturalWidth)
+    const height = Math.max(1, img.naturalHeight)
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(img, 0, 0)
+    const png = canvas.toDataURL('image/png')
+    return png.startsWith('data:image/png') ? png : null
+  } catch {
+    return null
+  }
+}
+
 /** Taille d'affichage initiale d'un nœud image (bornée), à partir des pixels réels. */
 export function initialImageNodeSize(width: number, height: number): { width: number; height: number } {
   const MAX = 420

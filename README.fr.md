@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.9-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.0-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
-  <img src="https://img.shields.io/badge/tests-306%20au%20vert-3fbf6a" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-578%20au%20vert-3fbf6a" alt="Tests">
   <img src="https://img.shields.io/badge/télémétrie-aucune-ef4444" alt="Aucune télémétrie">
   <img src="https://img.shields.io/badge/Electron%20·%20React%20·%20Yjs-1f2937" alt="Construit avec">
 </p>
@@ -74,7 +74,41 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.8.9
+## 🚀 Nouveautés de la 1.9.0
+
+- **🖼️ Une copie d'image qui marche vraiment sous Windows** — Ctrl+C sur une image pose
+  **l'image elle-même** dans le presse-papiers, pour n'importe quelle autre application.
+  Avant, le WebP stocké n'était pas lisible par le système et le presse-papiers était vidé
+  puis verrouillé par les programmes qui le surveillent (historique du presse-papiers de
+  Windows) : COSINT l'écrit maintenant une seule fois et vérifie. En plus : **clic droit ›
+  Copier l'image / Enregistrer l'image sous**, **glisser une image hors du tableau** vers le
+  bureau ou une autre application, et un recollage dans COSINT qui garde titre, étiquettes
+  et taille.
+- **🧷 Des images dans les entités** — une **galerie de 12 images au plus** par entité, la
+  première servant de **couverture** sur le nœud (badge **+N**). Ajout depuis le panneau
+  Détails, le clic droit, la barre d'outils du nœud ou en **déposant des images sur
+  l'entité** ; visionneuse, choix de la couverture, réordonnancement, copie, enregistrement.
+- **📄 Aperçu des documents** — un PDF montre sa **première page et son nombre de pages** et
+  s'ouvre dans une **visionneuse** (pages, zoom) ; **Word / Excel / PowerPoint** (docx, xlsx,
+  pptx — anciens doc, xls, ppt au mieux), **LibreOffice / OpenOffice** (odt, ods, odp, odg)
+  et **RTF** montrent leur contenu, les fichiers **Apple iWork** leur miniature ; l'**audio**
+  (mp3, wav, ogg, flac, m4a…) a un lecteur avec ses tags, la **vidéo** (mp4, webm…) se lit
+  dans la visionneuse ; le **code et les scripts** (.bat, .ps1, .sh, .py…) sont colorés et
+  **jamais exécutés** ; un fichier texte affiche un extrait ; les autres fichiers une carte
+  propre. Calculé localement, rien de plus n'est synchronisé.
+- **🔗 Préréglages de lien complets** — un préréglage reprend **chaque réglage d'un lien**
+  (relation, y compris le texte libre *« Autre »*, libellé, couleur, épaisseur, tirets,
+  flèches, tracé, statut, côtés d'ancrage). Gestion dans les Paramètres avec aperçu en
+  direct, application ou enregistrement depuis la barre d'outils du lien, application à
+  plusieurs liens d'un coup, et choix juste après avoir relié deux entités.
+- **📎 Et aussi** — import de **n'importe quel fichier** (bouton Enregistrer, 25 Mo par
+  fichier), une **barre d'outils que l'on place soi-même** (gauche/droite/haut/bas), une
+  **icône par entité**, des **champs d'entité multi-lignes**.
+
+Notes complètes : [`docs/RELEASE_NOTES_v1.9.0.md`](docs/RELEASE_NOTES_v1.9.0.md).
+
+<details>
+<summary>1.8.9 — découverte automatique du serveur en DHCP, tutoriel qui explique le modèle</summary>
 
 - **📡 Votre serveur en DHCP, retrouvé tout seul** — un serveur auto-hébergé dont l'adresse
   changeait dans la nuit, c'était refaire un profil et le réimporter sur chaque poste, tous
@@ -91,6 +125,8 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
   avec le `.trace` comme sauvegarde.
 
 Notes complètes : [`docs/RELEASE_NOTES_v1.8.9.md`](docs/RELEASE_NOTES_v1.8.9.md).
+
+</details>
 
 <details>
 <summary>1.8.8 — tutoriel guidé, paramètres en onglets, nouvelle icône</summary>
@@ -124,6 +160,12 @@ Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
   ou une durée précise *de → à*.
 - Notes (markdown), notes horodatées, images, blocs de code colorés, cartes de lien,
   zones de regroupement.
+- **Images dans les entités (1.9)** — une galerie par entité avec couverture sur le nœud,
+  une visionneuse, copier / enregistrer / glisser l'image vers toute autre application.
+- **Fichiers avec aperçu (1.9)** — import de n'importe quel fichier ; un PDF montre sa
+  première page et s'ouvre dans une visionneuse paginée avec zoom ; documents bureautiques
+  (Word, Excel, PowerPoint, LibreOffice, RTF), audio avec lecteur, vidéo, code coloré (jamais
+  exécuté) et extraits de texte — calculé localement, lecteurs bornés.
 - Sources graduées sur l'**échelle de l'Amirauté** (fiabilité A–F / crédibilité 1–6),
   rattachables à tout élément, avec un rapport de sources en Markdown.
 - Badges de statut, tags, couleurs libres, recherche plein texte insensible aux accents,
@@ -137,6 +179,9 @@ Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 - Mode **« Dessiner le tracé »** : choisissez le côté de sortie sur A, cliquez les points,
   choisissez le côté d'entrée sur B — aperçu en direct, une seule annulation, tracé
   automatique par défaut.
+- **Préréglages de lien (1.9)** — enregistrez n'importe quelle combinaison de réglages sous
+  un nom, appliquez-la à un ou plusieurs liens, ou choisissez-la juste après avoir relié
+  deux entités.
 
 **Collaboration temps réel (P2P)**
 - Partage par **code de 12 caractères** (60 bits d'entropie). Les arrivants passent par un
@@ -150,7 +195,7 @@ Notes complètes : [`docs/RELEASE_NOTES_v1.8.8.md`](docs/RELEASE_NOTES_v1.8.8.md
 
 | Quoi | Par où | Un tiers voit le contenu ? |
 |---|---|---|
-| Contenu du tableau (entités, liens, images…) | **Direct pair ↔ pair** (WebRTC, AES-GCM E2E) | Jamais — ne touche aucun serveur |
+| Contenu du tableau (entités, liens, images, fichiers…) | **Direct pair ↔ pair** (WebRTC, AES-GCM E2E) | Jamais — ne touche aucun serveur |
 | Mise en relation (handshake chiffré) | Serveur de signalisation (public par défaut, auto-hébergeable) | Non — salon opaque + blobs chiffrés |
 | Découverte de l'IP publique | STUN (Google/Cloudflare/Twilio par défaut, remplaçables) | Aucune donnée |
 | Relais des données (TURN) | **N'existe pas** par conception | — |
@@ -238,7 +283,7 @@ courante. Testé sur Ubuntu 24.04. Également en
 
 ## 🛠️ Compiler depuis les sources
 
-Prérequis : Node.js ≥ 18, npm.
+Prérequis : Node.js ≥ 20, npm.
 
 ```bash
 npm install

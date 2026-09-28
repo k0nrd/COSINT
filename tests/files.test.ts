@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import * as Y from 'yjs'
 import type { BoardHandle } from '@/sync/BoardDoc'
 import {
+  base64ByteLength,
   CHUNK_SIZE,
   hashPayload,
   joinChunks,
@@ -146,3 +147,49 @@ describe('migration des images base64 inline (§1.5)', () => {
 function readFileStatus_(handle: BoardHandle, hash: string): string {
   return readFileStatus(handle.doc, hash).status
 }
+
+describe('§5 v1.9 — stockage de fichiers non-image', () => {
+  it('enregistre et relit un fichier .pdf (type MIME non-image)', async () => {
+    const handle = makeHandle()
+    const dataUrl = fakeImage(CHUNK_SIZE + 20, 'application/pdf')
+    const hash = await registerFile(handle, dataUrl)
+    expect(hash).not.toBeNull()
+    const status = readFileStatus(handle.doc, hash!)
+    expect(status.status).toBe('complete')
+    if (status.status === 'complete') {
+      expect(status.meta.mime).toBe('application/pdf')
+      expect(status.dataUrl).toBe(dataUrl)
+    }
+  })
+
+  it('base64ByteLength ≈ 3/4 de la longueur base64', () => {
+    expect(base64ByteLength(0)).toBe(0)
+    expect(base64ByteLength(4)).toBe(3)
+    expect(base64ByteLength(100)).toBe(75)
+  })
+})
+
+describe('§2/§5 v1.9 — migration inline (nœud fichier + image d’entité)', () => {
+  it('migre le contenu inline d’un nœud fichier vers une référence par hash', async () => {
+    const handle = makeHandle()
+    const dataUrl = fakeImage(CHUNK_SIZE + 10, 'application/pdf')
+    const id = createNode(handle, { kind: 'file', x: 0, y: 0, content: dataUrl, title: 'a.pdf' }, 'testeur')
+    await migrateInlineImages(handle)
+    const content = getNodesMap(handle.doc).get(id)!.get('content') as string
+    expect(content.startsWith('data:')).toBe(false)
+    expect(readFileStatus(handle.doc, content).status).toBe('complete')
+  })
+
+  it("migre l'image inline attachée à une entité vers une référence par hash", async () => {
+    const handle = makeHandle()
+    const dataUrl = fakeImage(CHUNK_SIZE + 5)
+    const id = createNode(handle, { kind: 'entity', x: 0, y: 0, entityType: 'person' }, 'testeur')
+    handle.doc.transact(() => {
+      getNodesMap(handle.doc).get(id)!.set('imageHash', dataUrl)
+    })
+    await migrateInlineImages(handle)
+    const imageHash = getNodesMap(handle.doc).get(id)!.get('imageHash') as string
+    expect(imageHash.startsWith('data:')).toBe(false)
+    expect(readFileStatus(handle.doc, imageHash).status).toBe('complete')
+  })
+})

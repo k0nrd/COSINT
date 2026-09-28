@@ -11,7 +11,7 @@
  *  - profils enrichis (avatar, rôle, statut).
  */
 
-/** Types de nœuds (v1 + entités/sources en v1.1 + bloc de code en v1.6). */
+/** Types de nœuds (v1 + entités/sources en v1.1 + bloc de code en v1.6 + fichier en v1.9). */
 export type NodeKind =
   | 'text'
   | 'link'
@@ -21,6 +21,7 @@ export type NodeKind =
   | 'entity'
   | 'source'
   | 'code'
+  | 'file'
 
 /**
  * Badge de statut d'un élément (§3 v1.5), posable sur les entités, nœuds libres
@@ -139,6 +140,17 @@ export interface EventMark {
   tags?: string[]
 }
 
+/**
+ * §2 v1.9 (galerie) : une image attachée à une entité. `hash` = hash de fichier (chunks
+ * dans `files`) — OU, transitoirement, une data-URL image inline dans un `.trace`
+ * portable / avant migration. Dimensions en px (aperçu, ratio), optionnelles.
+ */
+export interface EntityImage {
+  hash: string
+  width?: number
+  height?: number
+}
+
 /** Taille de texte d'un nœud entité/source (§4 v1.4). */
 export type NodeTextSize = 'small' | 'normal' | 'large'
 
@@ -185,6 +197,8 @@ export interface BoardNodeData {
    * - entity : inutilisé (les données sont dans `fields`)
    * - source : l'URL de la source
    * - code : le code source brut (indentation préservée) — §5 v1.6
+   * - file : le HASH du fichier importé (§5 v1.9), ou une data-URL héritée avant
+   *   migration ; le nom du fichier est dans `title`, le type MIME/la taille dans FileMeta
    */
   content: string
   /** Titre éditable (liens, entités, sources) ou libellé (groupes). */
@@ -206,6 +220,20 @@ export interface BoardNodeData {
   fields: EntityField[]
   /** Personnalisation visuelle (§4 v1.4) — entités/sources uniquement. */
   style?: EntityStyle
+  /**
+   * §6 v1.9 : icône choisie POUR CE nœud (nom lucide PascalCase), qui prime sur
+   * l'icône par défaut du type. Absente = icône du type (taxonomie ou type
+   * personnalisé). Entités uniquement.
+   */
+  icon?: string
+  /**
+   * §2 v1.9 (galerie) : images attachées à une entité, ORDONNÉES (la première est la
+   * couverture affichée sur le nœud), au plus 12 (lib/entityImages.ts). Chaque entrée
+   * référence un fichier par HASH (octets en chunks P2P dans `files`). Entités
+   * uniquement ; absente/vide = aucune image. L'image unique héritée du build de
+   * travail (`imageHash`) est relue comme première image (sync/model.ts).
+   */
+  images?: EntityImage[]
   /** Badge de statut (§3 v1.5). Absent/`none` = aucun badge. */
   status?: ElementStatus
   /**

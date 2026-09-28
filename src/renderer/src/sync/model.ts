@@ -37,6 +37,7 @@ import { colorHex, DEFAULT_EDGE_COLOR, DEFAULT_NODE_COLOR } from '@/lib/colors'
 import { normalizeEntityType } from '@/lib/taxonomy'
 import { sanitizeEventMarks } from '@/lib/timeline'
 import { asStatus, hasStatusBadge } from '@/lib/status'
+import { cloneEntityImages, readEntityImages } from '@/lib/entityImages'
 
 export type YNodeMap = Y.Map<unknown>
 export type YEdgeMap = Y.Map<unknown>
@@ -135,8 +136,13 @@ const NODE_KINDS: NodeKind[] = [
   'group',
   'entity',
   'source',
-  'code'
+  'code',
+  'file'
 ]
+
+/** §6 v1.9 : nom d'icône lucide valide — même contrainte que `sanitizeCustomType`.
+ *  (§2 v1.9 : les références d'images d'entité sont validées par lib/entityImages.) */
+const ICON_NAME_RE = /^[A-Za-z0-9]{1,40}$/
 const FIELD_KINDS: FieldKind[] = [
   'text',
   'longtext',
@@ -377,6 +383,21 @@ export function yMapToNode(id: string, map: YNodeMap): BoardNodeData {
     const style = sanitizeEntityStyle(map.get('style'))
     if (style) node.style = style
   }
+  // §6/§2 v1.9 — icône propre au nœud + image attachée (entités uniquement).
+  if (kind === 'entity') {
+    const icon = str(map, 'icon')
+    if (ICON_NAME_RE.test(icon)) node.icon = icon
+    // §2 v1.9 (galerie) : liste `images` validée (hash de fichier ou data-URL image
+    // transitoire, doublons retirés, bornée) ; à défaut, l'image UNIQUE héritée du
+    // build de travail (`imageHash`) devient la première image — rien n'est perdu.
+    const images = readEntityImages({
+      images: map.get('images'),
+      imageHash: map.get('imageHash'),
+      imageWidth: map.get('imageWidth'),
+      imageHeight: map.get('imageHeight')
+    })
+    if (images.length > 0) node.images = images
+  }
   // Badge de statut (§3 v1.5) — tous types de nœuds.
   const status = asStatus(map.get('status'))
   if (hasStatusBadge(status)) node.status = status
@@ -412,6 +433,12 @@ export function nodeToYMap(node: BoardNodeData): YNodeMap {
   map.set('tags', [...node.tags])
   map.set('fields', node.fields.map((field) => ({ ...field })))
   if (node.style) map.set('style', { ...node.style })
+  // §6/§2 v1.9 — icône propre + image attachée (écrites seulement si présentes).
+  if (node.icon) map.set('icon', node.icon)
+  // §2 v1.9 (galerie) : copie profonde, clé écrite seulement si non vide.
+  if (node.kind === 'entity' && node.images && node.images.length > 0) {
+    map.set('images', cloneEntityImages(node.images))
+  }
   if (hasStatusBadge(node.status)) map.set('status', node.status)
   // Datation d'événement — écrite seulement si présente (§4 v1.7 + §1 v1.8).
   if (node.eventDate !== undefined) map.set('eventDate', node.eventDate)

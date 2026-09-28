@@ -5,17 +5,23 @@
  * §1 v1.7.1 : routage manuel au premier plan — côté de départ/arrivée sur les
  * nœuds (Auto/Haut/Bas/Gauche/Droite), mode « Dessiner le tracé » et retour au
  * tracé automatique.
+ * §7 v1.9 : préréglages de lien — appliquer un préréglage (liste avec aperçu),
+ * enregistrer ce lien comme préréglage (réglages à inclure au choix), gérer.
  */
 import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   ArrowLeftRight,
+  BookmarkPlus,
+  ChevronDown,
   Minus,
   MoveHorizontal,
   PenLine,
   Repeat,
   Route,
+  Settings2,
   Spline,
+  SwatchBook,
   Trash2,
   Waypoints,
   X
@@ -34,6 +40,13 @@ import { RELATION_TYPES } from '@/lib/relations'
 import { colorHex } from '@/lib/colors'
 import { ColorField } from '@/components/common/ColorPicker'
 import { StatusPicker } from '@/components/board/StatusBadge'
+// §7 v1.9 : préréglages de lien.
+import { DEFAULT_CAPTURED_PROPS, edgePresetValues } from '@/lib/linkPresets'
+import { useSettings } from '@/store/settings'
+import { useLinkPresetDialog } from '@/store/linkPresetDialog'
+import { LinkPresetPickList, onPickListKeyDown } from '@/components/board/LinkPresetPickList'
+import { useApplyLinkPreset } from '@/components/board/LinkPresetDialog'
+import { relationText } from '@/components/board/linkPresetLabels'
 import { t } from '@/i18n'
 import './edgeToolbar.css'
 
@@ -96,6 +109,34 @@ export function EdgeToolbar({ edge, onDrawRoute, onClose }: EdgeToolbarProps): J
   const [relDraft, setRelDraft] = useState('')
   const colorRef = useRef<HTMLDivElement>(null)
 
+  // ——— §7 v1.9 : préréglages de lien ———
+  const linkPresets = useSettings((state) => state.linkPresets)
+  const openPresetDialog = useLinkPresetDialog((state) => state.open)
+  const applyPreset = useApplyLinkPreset()
+  const [presetOpen, setPresetOpen] = useState(false)
+  const presetRef = useRef<HTMLDivElement>(null)
+  useEffect(() => setPresetOpen(false), [edge.id])
+  useEffect(() => {
+    if (!presetOpen) return
+    const onDown = (event: MouseEvent): void => {
+      if (presetRef.current && !presetRef.current.contains(event.target as Node)) setPresetOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [presetOpen])
+  /** Enregistre CE lien comme préréglage : ses réglages actuels pré-remplissent
+   *  l'éditeur, l'utilisateur nomme et choisit ce qu'il inclut. */
+  const saveAsPreset = (): void => {
+    setPresetOpen(false)
+    openPresetDialog({
+      mode: 'create',
+      values: edgePresetValues(edge),
+      include: DEFAULT_CAPTURED_PROPS,
+      name: edge.relationType.trim() !== '' ? relationText(edge.relationType) : '',
+      fromEdge: true
+    })
+  }
+
   useEffect(() => setLabel(edge.label), [edge.id, edge.label])
   // Réinitialise le mode custom au changement de lien (le composant n'est pas
   // remonté entre deux liens sélectionnés).
@@ -151,6 +192,76 @@ export function EdgeToolbar({ edge, onDrawRoute, onClose }: EdgeToolbarProps): J
 
   return (
     <div className="et-bar" role="toolbar" aria-label={t('edge.title')}>
+      {/* §7 v1.9 : préréglages — appliquer (liste avec aperçu), enregistrer, gérer. */}
+      <div className="lp-anchor" ref={presetRef}>
+        <button
+          className="et-btn lp-et-btn"
+          onClick={() => setPresetOpen((open) => !open)}
+          title={t('linkPreset.applyTitle')}
+          aria-label={t('linkPreset.applyTitle')}
+          aria-haspopup="menu"
+          aria-expanded={presetOpen}
+        >
+          <SwatchBook size={15} />
+          <span>{t('linkPreset.menuShort')}</span>
+          <ChevronDown size={12} />
+        </button>
+        {presetOpen && (
+          <div
+            className="lp-pop"
+            role="menu"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation()
+                setPresetOpen(false)
+                return
+              }
+              // ↑/↓ parcourent préréglages ET actions « Enregistrer » / « Gérer ».
+              onPickListKeyDown(event)
+            }}
+          >
+            <div className="fl-add-menu__title">{t('linkPreset.applyTitle')}</div>
+            <LinkPresetPickList
+              presets={linkPresets}
+              autoFocus
+              showEmpty
+              keyboardNav={false}
+              onPick={(preset) => {
+                applyPreset([edge.id], preset)
+                setPresetOpen(false)
+              }}
+            />
+            <div className="lp-sep" role="separator" />
+            <button className="fl-add-menu__item" role="menuitem" data-lp-item onClick={saveAsPreset}>
+              <BookmarkPlus size={15} />
+              {t('linkPreset.saveFromEdge')}
+            </button>
+            <button
+              className="fl-add-menu__item"
+              role="menuitem"
+              data-lp-item
+              onClick={() => {
+                setPresetOpen(false)
+                openPresetDialog({ mode: 'manage', edgeIds: [edge.id] })
+              }}
+            >
+              <Settings2 size={15} />
+              {t('linkPreset.manage')}
+            </button>
+          </div>
+        )}
+      </div>
+      <button
+        className="et-btn"
+        onClick={saveAsPreset}
+        title={t('linkPreset.saveFromEdge')}
+        aria-label={t('linkPreset.saveFromEdge')}
+      >
+        <BookmarkPlus size={15} />
+      </button>
+
+      <span className="et-sep" />
+
       {/* Type de relation */}
       <select
         className="et-select"

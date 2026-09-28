@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { UserProfile } from '@/types'
 import type { CustomPlatformDef } from '@/lib/links'
+import { sanitizeLinkPresets, upsertLinkPreset, type LinkPresetDef } from '@/lib/linkPresets'
 import type { OrgBranding } from '@/lib/orgProfile'
 import { LOCALES, type Locale } from '@/i18n'
 import { ICE_SERVERS } from '@/sync/network'
@@ -32,6 +33,9 @@ export const DEFAULT_SIGNALING_URLS = ['wss://y-webrtc.fly.dev', 'wss://y-webrtc
 const COLOR_HISTORY_MAX = 10
 
 export type Theme = 'dark' | 'light'
+
+/** §3 v1.9 : position de la barre d'outils du tableau (préférence LOCALE, par poste). */
+export type ToolbarPosition = 'left' | 'right' | 'top' | 'bottom'
 
 /**
  * Mode réseau (§réseau v1.7.1) :
@@ -62,6 +66,8 @@ export type CustomPlatform = CustomPlatformDef
 interface SettingsState {
   profile: UserProfile | null
   theme: Theme
+  /** §3 v1.9 : position de la barre d'outils du tableau (par poste, non partagée). */
+  toolbarPosition: ToolbarPosition
   /** Langue de l'interface (§4 v1.8.6) : français, anglais ou polonais. */
   language: Locale
   /** Mode réseau (§réseau v1.7.1) : standard (serveurs publics) ou 100 % local. */
@@ -99,8 +105,12 @@ interface SettingsState {
   entitySort: EntitySort
   /** §2 v1.5 : plateformes personnalisées mémorisées pour réutilisation. */
   customPlatforms: CustomPlatform[]
+  /** §7 v1.9 : préréglages de lien nommés (relation, libellé, couleur, épaisseur, style,
+   * extrémités, tracé, statut, côtés), mémorisés localement, dans l'ordre choisi. */
+  linkPresets: LinkPresetDef[]
   setProfile: (profile: UserProfile) => void
   setTheme: (theme: Theme) => void
+  setToolbarPosition: (position: ToolbarPosition) => void
   setLanguage: (language: Locale) => void
   setNetworkMode: (mode: NetworkMode) => void
   setCustomSignalingUrl: (url: string) => void
@@ -116,6 +126,10 @@ interface SettingsState {
   setEntitySort: (sort: EntitySort) => void
   addCustomPlatform: (platform: CustomPlatform) => void
   removeCustomPlatform: (id: string) => void
+  addLinkPreset: (preset: LinkPresetDef) => void
+  removeLinkPreset: (id: string) => void
+  /** §7 v1.9 : remplace toute la liste (réordonner, dupliquer…) — re-nettoyée. */
+  setLinkPresets: (presets: LinkPresetDef[]) => void
 }
 
 /**
@@ -150,6 +164,7 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       profile: null,
       theme: 'dark',
+      toolbarPosition: 'left',
       language: detectLocale(),
       networkMode: 'standard',
       customSignalingUrl: '',
@@ -164,8 +179,10 @@ export const useSettings = create<SettingsState>()(
       favoriteEntityTypes: [],
       entitySort: 'category',
       customPlatforms: [],
+      linkPresets: [],
       setProfile: (profile) => set({ profile: normalizeProfile(profile) }),
       setTheme: (theme) => set({ theme }),
+      setToolbarPosition: (toolbarPosition) => set({ toolbarPosition }),
       setLanguage: (language) => set({ language }),
       setNetworkMode: (networkMode) => set({ networkMode }),
       setCustomSignalingUrl: (customSignalingUrl) => set({ customSignalingUrl }),
@@ -207,11 +224,22 @@ export const useSettings = create<SettingsState>()(
       removeCustomPlatform: (id) =>
         set((state) => ({
           customPlatforms: state.customPlatforms.filter((p) => p.id !== id)
-        }))
+        })),
+      addLinkPreset: (preset) =>
+        set((state) => ({
+          // §7 v1.9 : remplace EN PLACE un préréglage de même id (édition — l'ordre
+          // choisi par l'utilisateur est conservé), sinon ajoute en fin de liste.
+          linkPresets: sanitizeLinkPresets(upsertLinkPreset(state.linkPresets, preset))
+        })),
+      removeLinkPreset: (id) =>
+        set((state) => ({
+          linkPresets: state.linkPresets.filter((p) => p.id !== id)
+        })),
+      setLinkPresets: (presets) => set({ linkPresets: sanitizeLinkPresets(presets) })
     }),
     {
       name: 'cosint:settings',
-      version: 8,
+      version: 9,
       // Migration des profils v1 (sans avatar/rôle/statut) + prefs §6bis + §2 v1.5
       // + réglages réseau v1.7.1 (mode, ICE, mise à jour) + langue & mise à jour locale v1.8.6
       // + jeton d'accès & marque d'organisation v1.8.7 + découverte du serveur v1.8.9.
@@ -241,8 +269,28 @@ export const useSettings = create<SettingsState>()(
             ? state.favoriteEntityTypes
             : [],
           entitySort: state.entitySort === 'alpha' ? 'alpha' : 'category',
-          customPlatforms: Array.isArray(state.customPlatforms) ? state.customPlatforms : []
+          customPlatforms: Array.isArray(state.customPlatforms) ? state.customPlatforms : [],
+          // §3 v1.9 : position de la barre d'outils (défaut « left » ; valeur héritée
+          // absente/invalide → gauche). §7 v1.9 : préréglages de lien.
+          toolbarPosition:
+            state.toolbarPosition === 'right' ||
+            state.toolbarPosition === 'top' ||
+            state.toolbarPosition === 'bottom'
+              ? state.toolbarPosition
+              : 'left',
+          linkPresets: sanitizeLinkPresets(state.linkPresets)
         } as SettingsState
+      },
+      // §7 v1.9 : les préréglages de lien sont RE-NETTOYÉS à CHAQUE chargement, pas
+      // seulement lors d'une migration : la première 1.9.0 les stockait sous le MÊME
+      // numéro de version (format couleur/épaisseur/style à migrer), et un réglage local
+      // malformé ne doit jamais atteindre l'interface. Le reste = fusion par défaut.
+      merge: (persisted, current) => {
+        const state =
+          typeof persisted === 'object' && persisted !== null
+            ? (persisted as Partial<SettingsState>)
+            : {}
+        return { ...current, ...state, linkPresets: sanitizeLinkPresets(state.linkPresets) }
       }
     }
   )

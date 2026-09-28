@@ -3,12 +3,14 @@
  * Règle : jamais de throw non géré ; toute erreur ou entrée invalide
  * se traduit par un retour neutre ({ saved: false }, null ou false).
  */
-import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
 import type { IpcMainInvokeEvent } from 'electron'
 import { readFile, stat, writeFile } from 'node:fs/promises'
 import { win32, join } from 'node:path'
 import { normalizeExternalUrl } from '../shared/url'
 import { checkServer, discoverServer, type DiscoveredServer } from './discovery'
+// §1 v1.9 : sortie d'image (presse-papiers vérifié, glisser vers l'extérieur).
+import { copyImagePayload } from './imageExport'
 
 /** Taille maximale acceptée pour un fichier .trace importé (256 Mo). */
 const MAX_TRACE_BYTES = 256 * 1024 * 1024
@@ -156,29 +158,12 @@ export function setupIpc(): void {
   // optionnel = fragment COSINT posé EN PLUS de l'image (write multi-format) : le
   // collage DANS l'appli garde alors la pleine fidélité (nœud), tandis qu'un logiciel
   // externe reçoit le bitmap. Retour neutre (false) sur toute donnée invalide.
-  ipcMain.handle('app:copy-image', (_event, payload: unknown): boolean => {
-    if (typeof payload !== 'object' || payload === null) return false
-    const { dataUrl, text } = payload as { dataUrl?: unknown; text?: unknown }
-    if (
-      typeof dataUrl !== 'string' ||
-      !dataUrl.startsWith('data:image/') ||
-      dataUrl.length > MAX_WRITE_BYTES
-    ) {
-      return false
-    }
-    try {
-      const image = nativeImage.createFromDataURL(dataUrl)
-      if (image.isEmpty()) return false
-      if (typeof text === 'string' && text.length > 0 && text.length <= MAX_CLIPBOARD_LENGTH) {
-        clipboard.write({ text, image })
-      } else {
-        clipboard.writeImage(image)
-      }
-      return true
-    } catch {
-      return false
-    }
-  })
+  // §1 v1.9 : validation stricte (type, base64, signature binaire, dimensions) et
+  // écriture VÉRIFIÉE avec nouvelles tentatives (presse-papiers Windows verrouillé par
+  // un autre programme) — voir imageExport.ts.
+  ipcMain.handle('app:copy-image', (_event, payload: unknown): Promise<boolean> =>
+    copyImagePayload(payload)
+  )
 
   ipcMain.handle('app:version', (): string => app.getVersion())
 
@@ -388,6 +373,55 @@ export function setupIpc(): void {
           : await dialog.showSaveDialog(options)
         if (result.canceled || !result.filePath) return { saved: false }
         await writeFile(result.filePath, markdown, 'utf8')
+        return { saved: true, path: result.filePath }
+      } catch {
+        return { saved: false, error: 'write' }
+      }
+    }
+  )
+
+  // §5 v1.9 : enregistre une pièce jointe (fichier importé, tout type MIME) sur le
+  // disque via un dialogue « Enregistrer sous ». La data-URL vient du renderer (zone
+  // NON fiable) : nom assaini par `safeDefaultPath`, taille bornée, décodage base64.
+  ipcMain.handle(
+    'file:save-attachment',
+    async (event, payload: unknown): Promise<SaveResult> => {
+      if (typeof payload !== 'object' || payload === null) return { saved: false, error: 'invalid' }
+      const { defaultName, dataUrl } = payload as { defaultName?: unknown; dataUrl?: unknown }
+      if (typeof defaultName !== 'string' || typeof dataUrl !== 'string') {
+        return { saved: false, error: 'invalid' }
+      }
+      const match = /^data:[^;,]*;base64,(.*)$/s.exec(dataUrl)
+      if (!match) return { saved: false, error: 'invalid' }
+      if (dataUrl.length > MAX_WRITE_BYTES) return { saved: false, error: 'write' }
+      let bytes: Buffer
+      try {
+        bytes = Buffer.from(match[1], 'base64')
+      } catch {
+        return { saved: false, error: 'invalid' }
+      }
+      if (bytes.length === 0) return { saved: false, error: 'invalid' }
+      // Extension déduite du nom proposé (sinon « bin »).
+      const dot = defaultName.lastIndexOf('.')
+      const ext =
+        dot > 0 && dot < defaultName.length - 1
+          ? defaultName.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || 'bin'
+          : 'bin'
+      try {
+        const win = windowOf(event)
+        const options = {
+          defaultPath: safeDefaultPath(defaultName, [ext]),
+          filters: [
+            // §5 v1.9 : libellés neutres (pas de français imposé en EN/PL)
+            { name: ext.toUpperCase(), extensions: [ext] },
+            { name: '*.*', extensions: ['*'] }
+          ]
+        }
+        const result = win
+          ? await dialog.showSaveDialog(win, options)
+          : await dialog.showSaveDialog(options)
+        if (result.canceled || !result.filePath) return { saved: false }
+        await writeFile(result.filePath, bytes)
         return { saved: true, path: result.filePath }
       } catch {
         return { saved: false, error: 'write' }
