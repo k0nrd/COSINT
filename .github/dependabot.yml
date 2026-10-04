@@ -16,6 +16,17 @@ updates:
       # vérifiée (src/main/imageExport.ts) doit être migrée À LA MAIN avant de monter.
       - dependency-name: electron
         update-types: ['version-update:semver-major']
+      # React 19 impose une migration de typage JSX (React.JSX) dans de nombreux
+      # composants TypeScript ; on garde la pile React 18 tant que cette migration
+      # n'est pas faite manuellement.
+      - dependency-name: react
+        update-types: ['version-update:semver-major']
+      - dependency-name: react-dom
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
       # Version épinglée volontairement (aperçu PDF).
       - dependency-name: pdfjs-dist
 
