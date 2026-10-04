@@ -155,38 +155,16 @@ export function ShareDialog(props: ShareDialogProps): JSX.Element {
         // ——— Tableau PARTAGÉ ———
         <>
           <p className="cm-hint">{t('share.hint')}</p>
-          <div className="bd-share-code" aria-label={t('share.code')}>
-            {props.code}
-          </div>
-          <div className="bd-share-actions">
-            <button className="cm-btn cm-btn--primary" onClick={() => void copyCode()}>
-              <Copy size={15} />
+          {/* Refonte UI : le code et son bouton « Copier » sur une même ligne. */}
+          <div className="bd-share-coderow">
+            <div className="bd-share-code" aria-label={t('share.code')}>
+              {props.code}
+            </div>
+            <button className="cm-btn" onClick={() => void copyCode()}>
+              <Copy size={14} />
               {t('share.copy')}
             </button>
           </div>
-          {props.canManage && (
-            <>
-              {/* §1b : deux actions clairement distinctes. */}
-              <div className="bd-share-lifecycle">
-                <button
-                  className="cm-btn bd-share-lifecycle__btn"
-                  onClick={() => props.onRegenerate(props.accessMode)}
-                >
-                  <RefreshCw size={15} />
-                  {t('share.regenerate')}
-                </button>
-                <p className="cm-hint">{t('share.regenerateHint')}</p>
-                <button
-                  className="cm-btn cm-btn--danger bd-share-lifecycle__btn"
-                  onClick={props.onRevoke}
-                >
-                  <ShieldOff size={15} />
-                  {t('share.revoke')}
-                </button>
-                <p className="cm-hint">{t('share.revokeHint')}</p>
-              </div>
-            </>
-          )}
           <p className="bd-share-participants">
             {t('share.participants', {
               count: props.participantCount,
@@ -239,6 +217,30 @@ export function ShareDialog(props: ShareDialogProps): JSX.Element {
               ))}
             </ul>
           </div>
+
+          {props.canManage && (
+            <>
+              {/* §1b : deux actions clairement distinctes. */}
+              <div className="bd-share-lifecycle">
+                <button
+                  className="cm-btn bd-share-lifecycle__btn"
+                  onClick={() => props.onRegenerate(props.accessMode)}
+                >
+                  <RefreshCw size={15} />
+                  {t('share.regenerate')}
+                </button>
+                <p className="cm-hint">{t('share.regenerateHint')}</p>
+                <button
+                  className="cm-btn cm-btn--danger bd-share-lifecycle__btn"
+                  onClick={props.onRevoke}
+                >
+                  <ShieldOff size={15} />
+                  {t('share.revoke')}
+                </button>
+                <p className="cm-hint">{t('share.revokeHint')}</p>
+              </div>
+            </>
+          )}
 
           {/* Journal des changements de mode */}
           {props.accessLog.length > 0 && (

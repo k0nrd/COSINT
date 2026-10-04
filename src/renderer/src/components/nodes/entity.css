@@ -195,25 +195,6 @@
   font-size: 11px;
 }
 
-/* ——— Badge du type d'entité ——— */
-.nd-entity-foot {
-  margin-top: auto;
-  display: flex;
-  min-width: 0;
-}
-.nd-entity-badge {
-  padding: 1px 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--panel-2);
-  font-size: 10px;
-  color: var(--text-mute);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ——— Source : badge de notation (fiabilité + crédibilité) ——— */
 .nd-source-badge {
   flex: 0 0 auto;
@@ -284,4 +265,13 @@
 .nd-entity-image__ph--failed {
   color: var(--danger);
   text-align: center;
+}
+
+/* Refonte UI : sur une fiche entité / source, la couleur est portée par la pastille
+   d'icône — la barre d'accent du haut ferait doublon. Elle est rendue invisible mais
+   GARDE sa hauteur : la taille du nœud (et l'ancrage des liens) reste identique à
+   celle vue par un pair sur une version antérieure. */
+.nd-clip:has(> .nd-entity) > .nd-accent,
+.nd-clip:has(> .nd-source) > .nd-accent {
+  visibility: hidden;
 }

@@ -5,6 +5,7 @@
  * Préfixes de classes : cm- (commun), hm- (accueil), bd- (tableau), nd- (nœuds).
  */
 @import './tokens.css';
+@import './fonts.css';
 
 * {
   box-sizing: border-box;
@@ -70,14 +71,16 @@ body {
   opacity: 0.4;
   cursor: default;
 }
+/* Action principale : bouton clair (--primary), l'accent reste réservé à la sélection. */
 .cm-btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+  font-weight: 500;
 }
 .cm-btn--primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 .cm-btn--danger {
   color: var(--danger);
@@ -338,7 +341,8 @@ body {
 /* ——— Toasts ——— */
 .cm-toasts {
   position: fixed;
-  bottom: var(--sp-4);
+  /* Au-dessus de la barre d'état du tableau (24 px). */
+  bottom: 36px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;

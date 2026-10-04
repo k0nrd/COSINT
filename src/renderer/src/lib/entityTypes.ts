@@ -15,7 +15,7 @@ import { entityTypeLabelKey } from '@/components/nodes/EntityNode'
 import { t } from '@/i18n'
 
 /** Couleur d'accent par défaut de la catégorie « Personnalisés » (§2 v1.8). */
-export const CUSTOM_CATEGORY_COLOR = '#8b5cf6'
+export const CUSTOM_CATEGORY_COLOR = '#c2a27a'
 
 /** true si l'id désigne un type personnalisé (préfixe réservé). */
 export function isCustomTypeId(id: string): boolean {

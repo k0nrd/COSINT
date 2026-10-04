@@ -1,0 +1,40 @@
+/* Barre d'état du tableau (refonte UI) : bandeau fin, discret, sous le canvas. */
+.bd-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: 24px;
+  padding: 0 var(--sp-3);
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  color: var(--text-mute);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+  position: relative;
+  z-index: 30;
+}
+.bd-footer__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bd-footer__item--lead {
+  color: var(--text-dim);
+}
+.bd-footer__item--lead svg {
+  flex: none;
+  color: var(--success);
+}
+/* Compteurs = données : monospace à chasse fixe (ne « danse » pas au zoom). */
+.bd-footer__item--num {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-variant-numeric: tabular-nums;
+}
+.bd-footer__spacer {
+  flex: 1;
+}

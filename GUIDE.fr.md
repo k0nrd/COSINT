@@ -357,7 +357,7 @@ nom ou type d'événement, en vue **Frise** (barres/points) ou **Liste** (tablea
 
 ## Installation (développement)
 
-Prérequis : **Node.js ≥ 20** et npm.
+Prérequis : **Node.js ≥ 22.12** et npm.
 
 ```bash
 npm install
@@ -416,7 +416,7 @@ par **variables d'environnement**, aucun secret n'est stocké dans le dépôt :
 
   ```powershell
   npm run build:icon; npm run build
-  npx electron-builder --win --x64 --config.win.certificateSubjectName="Nom Légal Exact"
+  npx electron-builder --win --x64 --config.win.signtoolOptions.certificateSubjectName="Nom Légal Exact"
   ```
 
 L'algorithme de hachage (`sha256`) et l'**horodatage RFC-3161**
@@ -470,7 +470,31 @@ COSINT vérifie silencieusement les mises à jour au démarrage via **GitHub Rel
 notification « Mise à jour disponible » → téléchargement en arrière-plan → bannière
 « Redémarrer pour installer ». Rien à héberger.
 
-Pour publier une version :
+**Publication automatisée (recommandée).** Le dépôt contient une chaîne GitHub Actions
+(`.github/workflows/`) :
+
+- `ci.yml` — à chaque push sur `main` et à chaque pull request : typecheck, tests, build et
+  empaquetage sous Windows **et** Linux. Les installeurs produits se téléchargent pendant
+  7 jours depuis l'onglet *Actions* (pour essayer une PR sans rien construire chez soi).
+- `release.yml` — à chaque tag `vX.Y.Z` : construit les deux plates-formes et crée la
+  *release* GitHub **en brouillon** avec les 7 fichiers ci-dessous.
+- `codeql.yml` et `dependabot.yml` — analyse de sécurité du code et PR hebdomadaires de
+  mise à jour des dépendances (à préférer à `npm audit fix --force`, qui saute des versions
+  majeures sans rien vérifier).
+
+Pour publier ainsi : incrémentez `version` dans `package.json`, ajoutez
+`docs/RELEASE_NOTES_vX.Y.Z.md` (facultatif : il sert de texte à la release), poussez sur
+`main`, puis :
+
+```bash
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+Quand le workflow est vert, relisez le brouillon dans *Releases* et publiez-le. Pour signer
+les exécutables Windows, ajoutez les secrets `CSC_LINK` (base64 du `.pfx`) et
+`CSC_KEY_PASSWORD` au dépôt ; sans eux, le build reste non signé.
+
+Pour publier une version à la main (sans GitHub Actions) :
 
 1. Dans `electron-builder.yml`, renseignez `publish.owner` (votre compte GitHub) et
    `publish.repo` (le dépôt).

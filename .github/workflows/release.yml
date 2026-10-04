@@ -1,0 +1,101 @@
+# Publication : pousser un tag `vX.Y.Z` (identique à la version de package.json)
+# construit Windows + Linux et crée une release GitHub EN BROUILLON avec les 7 fichiers
+# attendus par la mise à jour automatique (voir GUIDE.fr.md). Rien n'est visible des
+# utilisateurs tant que le brouillon n'est pas publié à la main.
+#
+# Signature Windows (optionnelle) : définir les secrets CSC_LINK (base64 du .pfx) et
+# CSC_KEY_PASSWORD dans le dépôt. Sans eux, les exécutables sont produits non signés.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Construire (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: linux, script: 'build:linux' }
+          - { os: windows-latest, name: windows, script: 'build:win' }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Le tag doit correspondre à la version de package.json
+        shell: bash
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME ≠ version de package.json ($version)"
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build + empaquetage
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          # Secrets absents → variables vides : les retirer pour un build non signé.
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          npm run ${{ matrix.script }} -- --publish never
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.name }}
+          path: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/*.AppImage
+            release/*.deb
+            release/latest*.yml
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    name: Créer la release (brouillon)
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Vérifier les 7 fichiers attendus
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          for f in "COSINT-Setup-$v.exe" "COSINT-Setup-$v.exe.blockmap" "COSINT-Portable-$v.exe" \
+                   "COSINT-$v-x86_64.AppImage" "COSINT-$v-amd64.deb" latest.yml latest-linux.yml; do
+            [ -f "dist/$f" ] || { echo "::error::Fichier manquant : $f"; exit 1; }
+          done
+          ls -la dist
+      - name: Créer le brouillon de release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="docs/RELEASE_NOTES_${GITHUB_REF_NAME}.md"
+          if [ -f "$notes" ]; then
+            gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
+              --title "COSINT $GITHUB_REF_NAME" --notes-file "$notes"
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
+              --title "COSINT $GITHUB_REF_NAME" --generate-notes
+          fi

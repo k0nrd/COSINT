@@ -1,0 +1,30 @@
+# Mises à jour automatiques des dépendances (une PR groupée par semaine et par
+# écosystème ; la CI dit si elle casse quelque chose). À utiliser À LA PLACE de
+# `npm audit fix --force`, qui saute des versions majeures sans rien vérifier.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      mineures-et-correctifs:
+        update-types: [minor, patch]
+    ignore:
+      # Electron 44 remplace l'API `clipboard` (asynchrone) : la copie d'image
+      # vérifiée (src/main/imageExport.ts) doit être migrée À LA MAIN avant de monter.
+      - dependency-name: electron
+        update-types: ['version-update:semver-major']
+      # Version épinglée volontairement (aperçu PDF).
+      - dependency-name: pdfjs-dist
+
+  - package-ecosystem: npm
+    directory: /server
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

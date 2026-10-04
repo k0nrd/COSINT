@@ -270,7 +270,7 @@ on Ubuntu 24.04. Also available in
 
 ## 🛠️ Build from source
 
-Requirements: Node.js ≥ 20, npm.
+Requirements: Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

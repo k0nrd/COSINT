@@ -280,32 +280,43 @@ function CommitTextarea({
 
 export function NodeDetails({ node }: { node: BoardNodeData }): JSX.Element {
   const { updateNodeData, deleteNodes, customTypeMap } = useBoardContext()
+  const [iconOpen, setIconOpen] = useState(false)
   const entityTypeId = node.kind === 'entity' ? (node.entityType ?? 'generic_other') : null
   const resolvedType = entityTypeId ? resolveType(entityTypeId, customTypeMap) : null
 
+  // Refonte UI : en-tête d'identité (icône, « Catégorie · Type », titre). Pour une entité,
+  // la pastille d'icône ouvre le sélecteur d'icône (replié par défaut).
+  const kicker = resolvedType
+    ? resolvedType.categoryLabel
+      ? `${resolvedType.categoryLabel} · ${resolvedType.label}`
+      : resolvedType.label
+    : t(KIND_LABEL[node.kind])
+  const heroTint = { background: `color-mix(in srgb, ${node.color} 16%, transparent)`, color: node.color }
+
   return (
     <div className="bd-side__body">
-      <div className="bd-details-head">
-        <div className="bd-detail-row">
-          <span className="bd-detail-key">{t('details.type')}</span>
-          <span className="bd-detail-val">{t(KIND_LABEL[node.kind])}</span>
-        </div>
+      <div className="bd-details-head bd-details-hero">
         {resolvedType && (
-          <div className="bd-detail-row">
-            <span className="bd-detail-key">{t('entity.type')}</span>
-            <span className="bd-detail-val bd-details-entitytype">
-              <EntityIcon icon={resolveNodeIcon(node.icon, resolvedType.icon)} size={13} />
-              {/* §6 : « Catégorie · Type » avec un séparateur propre (types personnalisés inclus §2 v1.8). */}
-              {resolvedType.categoryLabel
-                ? `${resolvedType.categoryLabel} · ${resolvedType.label}`
-                : resolvedType.label}
-            </span>
-          </div>
+          <button
+            type="button"
+            className="bd-details-hero__ico"
+            style={heroTint}
+            onClick={() => setIconOpen((open) => !open)}
+            title={t('entity.iconChange')}
+            aria-label={t('entity.iconChange')}
+            aria-expanded={iconOpen}
+          >
+            <EntityIcon icon={resolveNodeIcon(node.icon, resolvedType.icon)} size={16} />
+          </button>
         )}
+        <div className="bd-details-hero__text">
+          <span className="bd-details-hero__kicker">{kicker}</span>
+          <span className="bd-details-hero__title">{node.title || t(KIND_LABEL[node.kind])}</span>
+        </div>
       </div>
 
       {node.kind === 'link' && <LinkSection node={node} />}
-      {node.kind === 'entity' && <EntitySection node={node} />}
+      {node.kind === 'entity' && <EntitySection node={node} iconOpen={iconOpen} />}
       {node.kind === 'source' && <SourceSection node={node} />}
       {node.kind === 'file' && <FileSection node={node} />}
       {node.kind === 'text' && <ConvertSection node={node} />}
@@ -590,7 +601,7 @@ function LinkSection({ node }: { node: BoardNodeData }): JSX.Element {
   )
 }
 
-function EntitySection({ node }: { node: BoardNodeData }): JSX.Element {
+function EntitySection({ node, iconOpen }: { node: BoardNodeData; iconOpen: boolean }): JSX.Element {
   const { updateNodeData, setNodeIcon, customTypeMap } = useBoardContext()
   // §6 v1.9 : icône par défaut du type (pour la précédence override → type).
   const resolved = resolveType(node.entityType ?? 'generic_other', customTypeMap)
@@ -604,12 +615,16 @@ function EntitySection({ node }: { node: BoardNodeData }): JSX.Element {
       />
 
       {/* §6 v1.9 : icône propre au nœud (choisir l'icône du type = pas d'override). */}
-      <label className="cm-label">{t('customType.icon')}</label>
-      <IconPicker
-        value={node.icon ?? resolved.icon}
-        onChange={(name) => setNodeIcon(node.id, name === resolved.icon ? null : name)}
-        onReset={node.icon ? () => setNodeIcon(node.id, null) : undefined}
-      />
+      {iconOpen && (
+        <>
+          <label className="cm-label">{t('customType.icon')}</label>
+          <IconPicker
+            value={node.icon ?? resolved.icon}
+            onChange={(name) => setNodeIcon(node.id, name === resolved.icon ? null : name)}
+            onReset={node.icon ? () => setNodeIcon(node.id, null) : undefined}
+          />
+        </>
+      )}
 
       {/* §2 v1.9 (galerie) : images attachées à l'entité (la 1re = couverture du nœud). */}
       <EntityGallery node={node} />

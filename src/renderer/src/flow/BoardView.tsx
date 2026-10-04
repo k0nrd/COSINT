@@ -29,7 +29,7 @@ import {
   type EdgeChange,
   type NodeChange
 } from '@xyflow/react'
-import { PenLine } from 'lucide-react'
+import { ClipboardPaste, Contact, FileUp, Paperclip, PenLine } from 'lucide-react'
 import type {
   AccessMode,
   BoardEdgeData,
@@ -165,6 +165,7 @@ import { nodeTypes } from '@/components/nodes'
 import { edgeTypes } from '@/components/edges'
 import { TopBar } from '@/components/board/TopBar'
 import { Toolbar } from '@/components/board/Toolbar'
+import { BoardFooter } from '@/components/board/BoardFooter'
 import { DiagnosticsPanel } from '@/components/board/DiagnosticsPanel'
 import { ShareDialog } from '@/components/board/ShareDialog'
 import { SearchBar } from '@/components/board/SearchBar'
@@ -2306,7 +2307,7 @@ function BoardCanvas({
       )
       const background =
         getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim() ||
-        '#0b0d11'
+        '#0b0c0e'
       const dataUrl = await renderBoardToPng(wrapperRef.current!, visibleNodes, background)
       if (dataUrl) {
         const result = await window.cosint.savePng(toFileName(meta.title, 'png'), dataUrl)
@@ -2579,6 +2580,13 @@ function BoardCanvas({
             role: profile.role,
             status: profile.status
           }}
+          onToggleSearch={() => setSearchOpen((open) => !open)}
+          searchActive={searchOpen}
+          searchAvailable={view === 'canvas'}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
         />
         <div
           className={`fl-canvas-wrap${routeDraw ? ' fl-route-drawing' : ''}`}
@@ -2753,7 +2761,40 @@ function BoardCanvas({
           )}
 
           {boardNodes.length === 0 && initialSync.ready && (
-            <div className="fl-empty-hint">{t('board.empty')}</div>
+            // Refonte UI : état vide = courte liste d'amorces (non interactive : laisse
+            // passer double-clic et glisser-déposer). Le visiteur garde le message simple.
+            <div className="fl-empty-hint">
+              <p className="fl-empty-hint__title">{t('board.emptyTitle')}</p>
+              {canEdit ? (
+                <>
+                  <p className="fl-empty-hint__lead">{t('board.emptyLead')}</p>
+                  <ul className="fl-empty-hint__list">
+                    <li>
+                      <Contact size={15} aria-hidden="true" />
+                      <span>{t('board.emptyAdd')}</span>
+                      <em>{t('board.emptyAddHint')}</em>
+                    </li>
+                    <li>
+                      <ClipboardPaste size={15} aria-hidden="true" />
+                      <span>{t('board.emptyPaste')}</span>
+                      <kbd>{t('board.emptyPasteHint')}</kbd>
+                    </li>
+                    <li>
+                      <Paperclip size={15} aria-hidden="true" />
+                      <span>{t('board.emptyDrop')}</span>
+                      <em>{t('board.emptyDropHint')}</em>
+                    </li>
+                    <li>
+                      <FileUp size={15} aria-hidden="true" />
+                      <span>{t('board.emptyCsv')}</span>
+                      <em>{t('board.emptyCsvHint')}</em>
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                <p className="fl-empty-hint__lead">{t('board.empty')}</p>
+              )}
+            </div>
           )}
 
           {/* §1a : synchronisation initiale d'un nouvel arrivant — le tableau ne
@@ -2773,20 +2814,14 @@ function BoardCanvas({
             onAddNode={addFromToolbar}
             onOpenEntityPicker={() => openEntityPicker()}
             canEdit={canEdit}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
             onZoomIn={() => void reactFlow.zoomIn({ duration: 150 })}
             onZoomOut={() => void reactFlow.zoomOut({ duration: 150 })}
             onFitView={() => void reactFlow.fitView({ padding: 0.2, duration: 300 })}
-            onToggleSearch={() => setSearchOpen((open) => !open)}
             onToggleFilter={() => setFilterOpen((open) => !open)}
             onToggleSources={() => setSourcesOpen((open) => !open)}
             onToggleLegend={() => setLegendOpen((open) => !open)}
             onToggleTimeline={() => setView((v) => (v === 'timeline' ? 'canvas' : 'timeline'))}
             filterActive={filterActive}
-            searchActive={searchOpen}
             sourcesActive={sourcesOpen}
             legendActive={legendOpen}
             timelineActive={false}
@@ -3068,6 +3103,14 @@ function BoardCanvas({
             />
           )}
         </div>
+
+        {/* Refonte UI : barre d'état (décomptes, sélection, zoom) sous le canvas. */}
+        <BoardFooter
+          nodeCount={boardNodes.length}
+          edgeCount={boardEdges.length}
+          selectedCount={selectedNodeIds.size + selectedEdgeIds.size}
+          showZoom={view === 'canvas'}
+        />
 
         {shareOpen && (
           <ShareDialog

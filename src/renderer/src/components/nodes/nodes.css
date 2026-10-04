@@ -155,6 +155,9 @@
        contenu, donc restent toujours visibles et cliquables (correctif du conflit
        badge/poignée haut-droit). ——— */
 .react-flow__resize-control.handle {
+  /* Refonte UI : couleur d'accent du thème (le bleu par défaut de React Flow jurait). */
+  background: var(--accent);
+  border-color: var(--node-bg);
   width: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
   height: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
   border-radius: 2px;
@@ -163,6 +166,7 @@
 }
 /* Les bords (lignes) de redimensionnement : zone de saisie plus épaisse au dézoom. */
 .react-flow__resize-control.line {
+  border-color: var(--accent);
   border-width: calc(1px * clamp(1, var(--fl-inv-zoom, 1), 3));
   z-index: 5;
 }
@@ -355,7 +359,7 @@
 .nd-image-copy:hover {
   opacity: 1;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 /* §1 v1.9 (copie d'image) : poignée « glisser l'image hors de COSINT », à gauche du
@@ -381,7 +385,7 @@
 .nd-image-drag:hover {
   opacity: 1;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 .nd-image-drag:active {
@@ -589,7 +593,7 @@
 }
 .nd-file-open:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 .nd-file-empty,

@@ -283,7 +283,7 @@ courante. Testé sur Ubuntu 24.04. Également en
 
 ## 🛠️ Compiler depuis les sources
 
-Prérequis : Node.js ≥ 20, npm.
+Prérequis : Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

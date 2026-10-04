@@ -4,6 +4,7 @@
  * confidentialité) et choix de la langue dès l'accueil.
  */
 import { useState, type FormEvent } from 'react'
+import { KeyRound, RadioTower, ServerOff } from 'lucide-react'
 import { LOCALES, LOCALE_LABELS, setLocale, t, type Locale } from '@/i18n'
 import { useSettings } from '@/store/settings'
 import { USER_COLORS } from '@/lib/colors'
@@ -98,6 +99,35 @@ export function ProfileSetup(): JSX.Element {
           <AuthorTag className="hm-setup-author" />
         </p>
       </div>
+
+      {/* Refonte UI : colonne de droite — ce que fait (et ne fait pas) l'application.
+          Purement informative ; masquée sur les fenêtres étroites. */}
+      <aside className="hm-setup-aside" aria-label={t('setup.factsTitle')}>
+        <div className="hm-setup-facts">
+          <h2 className="hm-setup-facts__title">{t('setup.factsTitle')}</h2>
+          <div className="hm-setup-fact">
+            <ServerOff size={15} aria-hidden="true" />
+            <div>
+              <strong>{t('setup.fact1Title')}</strong>
+              <p>{t('setup.fact1Text')}</p>
+            </div>
+          </div>
+          <div className="hm-setup-fact">
+            <RadioTower size={15} aria-hidden="true" />
+            <div>
+              <strong>{t('setup.fact2Title')}</strong>
+              <p>{t('setup.fact2Text')}</p>
+            </div>
+          </div>
+          <div className="hm-setup-fact">
+            <KeyRound size={15} aria-hidden="true" />
+            <div>
+              <strong>{t('setup.fact3Title')}</strong>
+              <p>{t('setup.fact3Text')}</p>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }

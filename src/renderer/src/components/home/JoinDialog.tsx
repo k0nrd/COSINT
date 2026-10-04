@@ -18,7 +18,7 @@ interface JoinDialogProps {
  * On conserve les caractères hors alphabet (O, 0, I, 1…) : c'est la
  * validation à la soumission qui signale l'erreur, sans saisie « fantôme ».
  */
-function formatDraft(value: string): string {
+export function formatShareCodeDraft(value: string): string {
   const raw = value
     .toUpperCase()
     .replace(/[^0-9A-Z]/g, '')
@@ -70,7 +70,7 @@ export function JoinDialog({ onSubmit, onClose }: JoinDialogProps): JSX.Element 
           value={code}
           placeholder={t('join.placeholder')}
           onChange={(event) => {
-            setCode(formatDraft(event.target.value))
+            setCode(formatShareCodeDraft(event.target.value))
             setInvalid(false)
           }}
           autoFocus

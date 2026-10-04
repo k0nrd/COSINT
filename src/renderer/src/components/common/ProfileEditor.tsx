@@ -87,35 +87,71 @@ export function ProfileEditor({ value, onChange }: ProfileEditorProps): JSX.Elem
 
   return (
     <div className="pe-root">
-      <label className="cm-label" htmlFor="pe-pseudo">
-        {t('profile.pseudoLabel')}
-      </label>
-      <input
-        id="pe-pseudo"
-        className="cm-input"
-        value={value.pseudo}
-        maxLength={24}
-        placeholder={t('profile.pseudoPlaceholder')}
-        onChange={(event) => patch({ pseudo: event.target.value })}
-      />
+      <div className="pe-row">
+        <div className="pe-col">
+          <label className="cm-label" htmlFor="pe-pseudo">
+            {t('profile.pseudoLabel')}
+          </label>
+          <input
+            id="pe-pseudo"
+            className="cm-input"
+            value={value.pseudo}
+            maxLength={24}
+            placeholder={t('profile.pseudoPlaceholder')}
+            onChange={(event) => patch({ pseudo: event.target.value })}
+          />
+        </div>
+        <div className="pe-col">
+          <label className="cm-label" htmlFor="pe-role">
+            {t('profile.role')}
+          </label>
+          <input
+            id="pe-role"
+            className="cm-input"
+            value={value.role}
+            maxLength={40}
+            placeholder={t('profile.rolePlaceholder')}
+            onChange={(event) => patch({ role: event.target.value })}
+          />
+        </div>
+      </div>
 
-      <span className="cm-label">{t('profile.colorLabel')}</span>
-      <ColorField value={value.colorHex} onChange={(hex) => patch({ colorHex: hex })} />
-
-      <span className="cm-label">{t('profile.avatar')}</span>
-      <div className="pe-tabs" role="tablist" aria-label={t('profile.avatar')}>
-        {AVATAR_TABS.map((tab) => (
-          <button
-            key={tab.type}
-            type="button"
-            role="tab"
-            aria-selected={value.avatarType === tab.type}
-            className={`pe-tab${value.avatarType === tab.type ? ' pe-tab--active' : ''}`}
-            onClick={() => selectAvatarType(tab.type)}
-          >
-            {t(tab.labelKey)}
-          </button>
-        ))}
+      <div className="pe-row pe-row--wrap">
+        <div className="pe-col">
+          <span className="cm-label">{t('profile.avatar')}</span>
+          <div className="pe-tabs" role="tablist" aria-label={t('profile.avatar')}>
+            {AVATAR_TABS.map((tab) => (
+              <button
+                key={tab.type}
+                type="button"
+                role="tab"
+                aria-selected={value.avatarType === tab.type}
+                className={`pe-tab${value.avatarType === tab.type ? ' pe-tab--active' : ''}`}
+                onClick={() => selectAvatarType(tab.type)}
+              >
+                {t(tab.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="pe-col">
+          <span className="cm-label">{t('profile.status')}</span>
+          <div className="pe-tabs" role="radiogroup" aria-label={t('profile.status')}>
+            {STATUS_OPTIONS.map((option) => (
+              <button
+                key={option.status}
+                type="button"
+                role="radio"
+                aria-checked={value.status === option.status}
+                className={`pe-tab${value.status === option.status ? ' pe-tab--active' : ''}`}
+                onClick={() => patch({ status: option.status })}
+              >
+                <span className="pe-status-dot" data-status={option.status} aria-hidden="true" />
+                {t(option.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       {value.avatarType === 'emoji' && (
         <input
@@ -142,32 +178,8 @@ export function ProfileEditor({ value, onChange }: ProfileEditorProps): JSX.Elem
         </div>
       )}
 
-      <label className="cm-label" htmlFor="pe-role">
-        {t('profile.role')}
-      </label>
-      <input
-        id="pe-role"
-        className="cm-input"
-        value={value.role}
-        maxLength={40}
-        placeholder={t('profile.rolePlaceholder')}
-        onChange={(event) => patch({ role: event.target.value })}
-      />
-
-      <span className="cm-label">{t('profile.status')}</span>
-      <div className="pe-radios">
-        {STATUS_OPTIONS.map((option) => (
-          <label key={option.status} className="pe-radio">
-            <input
-              type="radio"
-              name="pe-status"
-              checked={value.status === option.status}
-              onChange={() => patch({ status: option.status })}
-            />
-            {t(option.labelKey)}
-          </label>
-        ))}
-      </div>
+      <span className="cm-label">{t('profile.colorLabel')}</span>
+      <ColorField value={value.colorHex} onChange={(hex) => patch({ colorHex: hex })} />
 
       <span className="cm-label">{t('profile.preview')}</span>
       <div className="pe-preview">

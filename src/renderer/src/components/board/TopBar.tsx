@@ -1,7 +1,7 @@
-/** Barre supérieure du tableau : retour, titre éditable, état de connexion,
- * présence, partage, export, paramètres. */
+/** Barre supérieure du tableau : retour, titre éditable, recherche, annuler/rétablir,
+ * état de connexion, présence, partage, export, paramètres. */
 import { useEffect, useRef, useState } from 'react'
-import { Download, Home, Settings, Share2 } from 'lucide-react'
+import { ChevronRight, Download, Home, Redo2, Search, Settings, Share2, Undo2 } from 'lucide-react'
 import type { AccessMode, PresenceAvatar, PresenceState, UserStatus } from '@/types'
 import type { ConnectionDiagnostics } from '@/sync/network'
 import { t } from '@/i18n'
@@ -33,6 +33,15 @@ interface TopBarProps {
   onOpenDiagnostics: () => void
   others: Array<PresenceState & { clientId: number }>
   self: { name: string; color: string; avatar: PresenceAvatar; role: string; status: UserStatus }
+  /** Refonte UI : la recherche s'ouvre depuis la barre supérieure (vue canvas seulement). */
+  onToggleSearch: () => void
+  searchActive: boolean
+  searchAvailable: boolean
+  /** Refonte UI : annuler / rétablir (masqués pour un visiteur, §6). */
+  onUndo: () => void
+  onRedo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }
 
 export function TopBar({
@@ -53,7 +62,14 @@ export function TopBar({
   connection,
   onOpenDiagnostics,
   others,
-  self
+  self,
+  onToggleSearch,
+  searchActive,
+  searchAvailable,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }: TopBarProps): JSX.Element {
   // Brouillon local du titre : le CRDT n'est écrit qu'au blur/Entrée.
   const [draft, setDraft] = useState(title)
@@ -107,6 +123,7 @@ export function TopBar({
         >
           <Home size={17} />
         </button>
+        <ChevronRight size={13} className="bd-topbar__crumb" aria-hidden="true" />
         <input
           className="bd-topbar__title"
           value={draft}
@@ -121,7 +138,46 @@ export function TopBar({
         />
       </div>
 
+      {/* Refonte UI : champ de recherche au centre — ouvre la barre de recherche du
+          tableau (Ctrl+F), qui porte la saisie, les options et la navigation. */}
+      {searchAvailable && (
+        <button
+          type="button"
+          className={`bd-topbar__search${searchActive ? ' bd-topbar__search--active' : ''}`}
+          onClick={onToggleSearch}
+          title={t('toolbar.search')}
+          aria-label={t('toolbar.search')}
+          aria-pressed={searchActive}
+          data-tut="search"
+        >
+          <Search size={14} />
+          <span className="bd-topbar__search-label">{t('search.placeholder')}</span>
+        </button>
+      )}
+
       <div className="bd-topbar__right">
+        {canRename && searchAvailable && (
+          <div className="bd-topbar__history">
+            <button
+              className="cm-btn cm-btn--ghost cm-btn--icon"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title={t('toolbar.undo')}
+              aria-label={t('toolbar.undo')}
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              className="cm-btn cm-btn--ghost cm-btn--icon"
+              onClick={onRedo}
+              disabled={!canRedo}
+              title={t('toolbar.redo')}
+              aria-label={t('toolbar.redo')}
+            >
+              <Redo2 size={16} />
+            </button>
+          </div>
+        )}
         <StatusBar
           connection={connection}
           onOpenDiagnostics={onOpenDiagnostics}
@@ -130,7 +186,12 @@ export function TopBar({
         />
         <PresenceList others={others} self={self} />
         {!solo && <AccessIndicator mode={accessMode} onClick={onShare} />}
-        <button className="cm-btn" onClick={onShare} title={t('share.title')} data-tut="share">
+        <button
+          className="cm-btn cm-btn--primary"
+          onClick={onShare}
+          title={t('share.title')}
+          data-tut="share"
+        >
           <Share2 size={15} />
           {t('toolbar.share')}
         </button>

@@ -281,7 +281,7 @@ Sprawdzone na Ubuntu 24.04. Dostępne także po
 
 ## 🛠️ Kompilacja ze źródeł
 
-Wymagania: Node.js ≥ 20, npm.
+Wymagania: Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

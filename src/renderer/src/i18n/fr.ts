@@ -14,6 +14,9 @@ export const fr = {
   'home.recent': 'Tableaux récents',
   'home.noRecent': 'Aucun tableau pour le moment. Créez-en un ou rejoignez un collègue avec un code.',
   'home.lastOpened': 'Dernière ouverture : {date}',
+  'home.colName': 'Nom',
+  'home.colShare': 'Partage',
+  'home.colOpened': 'Dernière ouverture',
   'home.open': 'Ouvrir',
   'home.delete': 'Supprimer de ce poste',
   'home.deleteConfirm': 'Supprimer « {title} » de ce poste ? Les copies détenues par vos collègues ne sont pas affectées.',
@@ -143,6 +146,22 @@ export const fr = {
   'board.untitled': 'Tableau sans titre',
   'board.empty':
     'Tableau vide — double-cliquez sur le fond ou utilisez la barre d’outils pour ajouter un premier élément.',
+  // Refonte UI : état vide du tableau (liste d’amorces) et barre d’état.
+  'board.emptyTitle': 'Tableau vide',
+  'board.emptyLead': 'Posez un premier élément. Tout reste sur ce poste tant que vous ne partagez pas le tableau.',
+  'board.emptyAdd': 'Ajouter un élément',
+  'board.emptyAddHint': 'double-clic sur le fond',
+  'board.emptyPaste': 'Coller une image, un texte ou une URL',
+  'board.emptyPasteHint': 'Ctrl+V',
+  'board.emptyDrop': 'Déposer des fichiers',
+  'board.emptyDropHint': 'glisser sur le tableau',
+  'board.emptyCsv': 'Importer un CSV',
+  'board.emptyCsvHint': 'menu Exporter',
+  'footer.local': 'Pair-à-pair · aucune donnée sur serveur',
+  'footer.elements': '{count} élément(s)',
+  'footer.links': '{count} lien(s)',
+  'footer.selected': '{count} sélectionné(s)',
+  'footer.zoom': 'Niveau de zoom',
   'board.full': 'Tableau complet ({count}/{max}). Réessayez quand une place se libère.',
   'board.fullHard':
     'Tableau complet ({count}/{max}) — impossible de rejoindre pour le moment.',
@@ -1174,7 +1193,9 @@ export const fr = {
   // ——— v1.8.8 : signature de l'auteur (§2) ———
   'app.madeBy': 'fait par',
   'app.author': 'k0nrd',
+  'app.authorAnd': 'et',
   'app.authorLink': 'Ouvrir le GitHub de k0nrd',
+  'app.coAuthorLink': 'Ouvrir le GitHub de w4ll-i',
 
   // ——— v1.8.8 : paramètres en onglets (§4) ———
   'settings.tabProfile': 'Profil',
@@ -1484,5 +1505,21 @@ export const fr = {
   'edge.presetAutomatique': 'Automatique',
   'edge.presetAdd': 'Nouveau préréglage…',
   'edge.presetName': 'Nom du préréglage',
-  'edge.presetDelete': 'Supprimer le préréglage'
+  'edge.presetDelete': 'Supprimer le préréglage',
+  'setup.factsTitle': 'Ce que fait l’application',
+  'setup.fact1Title': 'Aucun serveur central',
+  'setup.fact1Text': 'Les tableaux sont enregistrés sur ce poste et échangés directement entre postes, chiffrés de bout en bout.',
+  'setup.fact2Title': 'Aucune télémétrie',
+  'setup.fact2Text': 'L’application n’envoie aucune statistique d’usage.',
+  'setup.fact3Title': 'Partage par code',
+  'setup.fact3Text': 'Un collègue rejoint un tableau avec un code de 12 caractères que vous lui transmettez.',
+  'home.joinInline': 'Code de partage',
+  'home.deleteNote': 'Supprimer un tableau ne le retire que de ce poste. Les copies de vos collègues ne sont pas affectées.',
+  'entityPicker.all': 'Tous les types',
+  'entityPicker.categories': 'Catégories',
+  'entityPicker.hintEnter': 'premier résultat',
+  'entityPicker.hintEsc': 'fermer',
+  'entityPicker.keyEnter': 'Entrée',
+  'entityPicker.keyEsc': 'Échap',
+  'entity.iconChange': 'Changer l’icône'
 } as const
