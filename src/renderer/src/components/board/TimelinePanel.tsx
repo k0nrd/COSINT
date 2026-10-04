@@ -29,6 +29,7 @@ import {
   Crosshair,
   Diamond,
   FileText,
+  Download,
   Image as ImageIcon,
   LayoutGrid,
   Link as LinkIcon,
@@ -592,9 +593,12 @@ export function TimelinePanel({
     }
     try {
       const bg =
-        getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim() || '#0b0d11'
+        getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim() || '#0b0c0e'
+      // Polices embarquées en data: URI (même typographie que l'écran, cf. lib/fontEmbed).
+      const { FONT_EMBED_CSS } = await import('@/lib/fontEmbed')
       const dataUrl = await toPng(contentRef.current, {
         backgroundColor: bg,
+        fontEmbedCSS: FONT_EMBED_CSS,
         pixelRatio: 2,
         width: contentWidth,
         height: contentHeight
@@ -668,6 +672,7 @@ export function TimelinePanel({
   return (
     <div className="tl-panel">
       <div className="tl-header">
+        <span className="tl-title">{t('timeline.title')}</span>
         {/* Onglets Événements / Ajouts (§3 v1.8 ; ordre §3 v1.8.1 : Événements d'abord). */}
         <div className="tl-tabs" role="tablist">
           <button
@@ -691,8 +696,14 @@ export function TimelinePanel({
         </div>
         <span className="tl-count">{t('timeline.count', { count: hasContent ? (tab === 'added' ? items.length : eventItems.length) : 0 })}</span>
         <div className="tl-header__spacer" />
-        <button className="cm-btn cm-btn--ghost" onClick={() => void exportPng()}>{t('timeline.exportPng')}</button>
-        <button className="cm-btn cm-btn--ghost" onClick={() => void exportCsv()}>{t('timeline.exportCsv')}</button>
+        <button className="cm-btn" onClick={() => void exportPng()}>
+          <ImageIcon size={13} />
+          {t('timeline.exportPng')}
+        </button>
+        <button className="cm-btn" onClick={() => void exportCsv()}>
+          <Download size={13} />
+          {t('timeline.exportCsv')}
+        </button>
         <button className="cm-btn cm-btn--ghost cm-btn--icon" onClick={onClose} title={t('timeline.backCanvas')} aria-label={t('timeline.backCanvas')}>
           <X size={16} />
         </button>

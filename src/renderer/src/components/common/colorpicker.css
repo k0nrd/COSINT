@@ -12,13 +12,14 @@
   margin: var(--sp-2) 0 5px;
 }
 .cp-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .cp-swatch {
-  aspect-ratio: 1;
-  min-width: 0;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
   border-radius: var(--r-sm);
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
@@ -29,7 +30,7 @@
   transition: transform var(--t-fast);
 }
 .cp-swatch:hover {
-  transform: scale(1.14);
+  transform: scale(1.1);
 }
 .cp-swatch--active {
   outline: 2px solid var(--text);
@@ -41,8 +42,8 @@
   align-items: center;
 }
 .cp-wheel {
-  width: 34px;
-  height: 30px;
+  width: 30px;
+  height: 28px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -51,7 +52,7 @@
   flex: 0 0 auto;
 }
 .cp-hex {
-  flex: 1;
+  flex: 0 1 130px;
 }
 .cp-hex--error {
   border-color: var(--danger);
@@ -62,9 +63,3 @@
   margin-top: 4px;
 }
 
-/* Recadrage des grilles denses sur les petits panneaux */
-@media (max-width: 360px) {
-  .cp-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}

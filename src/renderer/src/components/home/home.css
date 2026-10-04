@@ -2,45 +2,37 @@
  * Écrans hors tableau (préfixe hm-) : accueil, première ouverture, rejoindre,
  * paramètres. Esthétique « outil d'analyste » (§1) : cartes fines bordées,
  * pas de dégradés ni de grosses ombres, hover discrets, tokens uniquement.
+ * Refonte UI : l'accueil est une barre latérale (actions) + une liste (tableaux).
  */
 
 .hm-screen {
   height: 100%;
-  overflow-y: auto;
+  display: flex;
   background: var(--bg);
 }
 
-.hm-container {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 48px 32px 64px;
-}
-
-/* ——— En-tête ——— */
-.hm-header {
+/* ——— Barre latérale : marque, action principale, actions secondaires ——— */
+.hm-side {
+  flex: 0 0 264px;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  margin-bottom: 36px;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: 20px var(--sp-4) var(--sp-4);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
 }
 .hm-brand-title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
 }
 .hm-brand-tagline {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--text-dim);
-}
-
-.hm-header__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  flex: 0 0 auto;
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-mute);
 }
 
 /* §1 v1.8.7 : co-marquage « COSINT · Organisation » (marque servie par le serveur local).
@@ -49,13 +41,13 @@
 .hm-brand--cosint {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 11px;
   min-width: 0;
 }
 .hm-brand__logo {
   flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   border-radius: var(--r-md);
   background: var(--bg-elev);
@@ -64,121 +56,262 @@
   min-width: 0;
 }
 .hm-brand--org .hm-brand-title {
-  font-size: 22px;
   letter-spacing: 0.01em;
 }
 .hm-brand__cobrand {
-  margin-left: 7px;
-  font-size: 10px;
-  font-weight: 700;
+  margin-left: 6px;
+  font-size: 9.5px;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-mute);
   white-space: nowrap;
 }
-/* §2 v1.8.8 : signature de l'auteur sous l'accroche. */
+/* §2 v1.8.8 : signature de l'auteur, en pied de barre latérale. */
 .hm-brand__author {
-  display: inline-block;
-  margin-top: 4px;
+  display: block;
+  margin-top: var(--sp-2);
+  padding: 0 10px;
 }
-/* Le logo COSINT est un visuel plein (pas une icône plate) : léger contour et
-   coins arrondis pour qu'il se pose proprement sur le fond, comme le logo d'une
-   organisation servi par un serveur interne. */
 .hm-brand--cosint .hm-brand__logo {
-  width: 50px;
-  height: 50px;
   background: transparent;
 }
 
-/* ——— Cartes d'action ——— */
+/* ——— Actions : une action principale (bouton clair), le reste en lignes sobres ——— */
 .hm-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-3);
-  margin-bottom: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .hm-action {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-3);
-  padding: var(--sp-4);
-  border: 1px solid var(--border);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
   border-radius: var(--r-md);
-  background: var(--panel);
-  color: var(--text);
+  background: none;
+  color: var(--text-dim);
   font-family: inherit;
   font-size: 13px;
+  font-weight: 400;
   text-align: left;
   cursor: pointer;
   transition:
-    border-color var(--t-fast),
-    background var(--t-fast);
+    background var(--t-fast),
+    color var(--t-fast);
 }
 .hm-action:hover {
-  border-color: var(--border-strong);
   background: var(--panel-2);
+  color: var(--text);
 }
 .hm-action:active {
   background: var(--panel-3);
 }
-.hm-action__icon {
-  display: flex;
-  align-items: center;
+.hm-action--primary {
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--accent-soft);
-  color: var(--accent);
+  margin-bottom: var(--sp-3);
+  padding: 8px 10px;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 500;
+}
+.hm-action--primary:hover,
+.hm-action--primary:active {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+  color: var(--primary-text);
 }
 .hm-action__label {
-  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* §1 v1.8.7 : l'accent de l'organisation (co-marquage) teinte la barre latérale —
+   filet sous la marque et icônes des actions secondaires. */
+.hm-screen--branded .hm-brand {
+  padding-bottom: var(--sp-3);
+  border-bottom: 2px solid var(--accent);
+}
+.hm-screen--branded .hm-actions .hm-action:not(.hm-action--primary) svg {
+  color: var(--accent);
+}
+/* Focus clavier net sur les lignes d'action et les lignes de tableau. */
+.hm-action:focus-visible,
+.hm-board__main:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+.hm-side__foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Rappel de confidentialité, encadré en pied de barre latérale. */
+.hm-side__note {
+  display: flex;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+  padding: 10px var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-mute);
+}
+.hm-side__note svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--success);
+}
+/* Le bouton du parcours guidé reprend la forme d'une ligne d'action dans la barre. */
+.hm-side__foot .tu-launch {
+  display: flex;
+  gap: 10px;
+  padding: 7px 10px;
+  border-color: transparent;
+  border-radius: var(--r-md);
+  background: none;
+  font-size: 13px;
+  font-weight: 400;
+}
+.hm-side__foot .tu-launch:hover {
+  border-color: transparent;
+  background: var(--panel-2);
+  color: var(--text);
+}
+.hm-side__foot .tu-launch__new {
+  margin-left: auto;
 }
 
-/* ——— Tableaux récents ——— */
+/* ——— Zone principale : liste des tableaux ——— */
+.hm-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+.hm-container {
+  max-width: 1040px;
+  padding: 40px 56px 64px;
+}
+/* En-tête de la liste : titre à gauche, champ « rejoindre avec un code » à droite. */
+.hm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-4);
+  flex-wrap: wrap;
+  margin: 0 0 var(--sp-5);
+}
+.hm-joinbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.hm-joinbar__row {
+  display: flex;
+  gap: 6px;
+}
+.hm-joinbar__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.hm-joinbar__field svg {
+  position: absolute;
+  left: 9px;
+  color: var(--text-mute);
+  pointer-events: none;
+}
+.hm-joinbar__input {
+  width: 190px;
+  padding-left: 28px;
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+}
+.hm-joinbar__input::placeholder {
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+}
+.hm-list-note {
+  margin: var(--sp-3) 2px 0;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
 .hm-section-title {
-  margin: 0 0 var(--sp-3);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text);
+}
+.hm-section-count {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 400;
   color: var(--text-mute);
 }
 .hm-board-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  overflow: hidden;
 }
 .hm-board {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: 3px var(--sp-2) 3px 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--panel);
-  transition:
-    border-color var(--t-fast),
-    background var(--t-fast);
+  padding-right: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t-fast);
+}
+.hm-board:last-child {
+  border-bottom: none;
+}
+/* Ligne d'en-têtes de colonnes (non interactive). */
+.hm-board--head,
+.hm-board--head:hover {
+  background: var(--panel-2);
+}
+.hm-board--head .hm-board__main {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  cursor: default;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+/* Réserve la largeur du bouton corbeille des lignes, pour aligner les colonnes. */
+.hm-board__delete-slot {
+  flex: none;
+  width: 30px;
 }
 .hm-board:hover {
-  border-color: var(--border-strong);
   background: var(--panel-2);
 }
 .hm-board__main {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--sp-2) 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px 250px;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 12px var(--sp-4);
   border: none;
-  border-radius: var(--r-sm);
   background: transparent;
   color: var(--text);
   font-family: inherit;
@@ -187,23 +320,38 @@
 }
 .hm-board__title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.hm-board__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 11.5px;
+.hm-board__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
   color: var(--text-dim);
+  white-space: nowrap;
+}
+.hm-board__code svg {
+  flex: none;
+  color: var(--text-mute);
 }
 /* Code de partage = donnée technique : monospace (§1). */
-.hm-board__code {
+.hm-board__codeval {
   font-family: var(--font-mono);
   font-variant-ligatures: none;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+.hm-board__date {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Corbeille révélée au survol (et au clavier via focus-within) */
 .hm-board__delete {
@@ -220,13 +368,27 @@
 
 .hm-empty {
   margin: 0;
-  padding: var(--sp-5) var(--sp-4);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--r-md);
+  max-width: 520px;
   color: var(--text-dim);
-  font-size: 12.5px;
-  line-height: 1.5;
-  text-align: center;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Fenêtre étroite : la barre latérale se resserre, les colonnes secondaires s'effacent. */
+@media (max-width: 900px) {
+  .hm-side {
+    flex-basis: 220px;
+  }
+  .hm-container {
+    padding: 28px 24px 48px;
+  }
+  .hm-board__main {
+    grid-template-columns: minmax(0, 1fr) 150px;
+  }
+  .hm-board__date,
+  .hm-board--head .hm-board__main span:nth-child(3) {
+    display: none;
+  }
 }
 
 /* ——— Dialogue Rejoindre ——— */
@@ -260,17 +422,95 @@
 /* ——— Première ouverture (profil) — §7 v1.8.6 : mise en page éditoriale ——— */
 .hm-setup {
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--sp-5);
-  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(380px, 500px) minmax(0, 1fr);
   background: var(--bg);
 }
 /* Panneau SANS carte encadrée (moins « gabarit ») : une composition typographique posée
    sur le fond, structurée par la marque, l'accroche et une note de confidentialité. */
 .hm-setup-panel {
-  width: min(464px, 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 40px 48px;
+  overflow: hidden auto;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+/* Centrage vertical SANS rogner le haut quand le contenu dépasse (marges auto). */
+.hm-setup-panel > :first-child {
+  margin-top: auto;
+}
+.hm-setup-panel > :last-child {
+  margin-bottom: auto;
+}
+/* Colonne de droite : rappel de ce que fait l'application, sur fond pointillé. */
+.hm-setup-aside {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: var(--sp-5);
+  background-color: var(--canvas-bg);
+  background-image: radial-gradient(var(--canvas-dots) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.hm-setup-facts {
+  width: min(380px, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+.hm-setup-facts__title {
+  margin: 0;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.hm-setup-fact {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--text-dim);
+}
+.hm-setup-fact + .hm-setup-fact {
+  border-top: 1px solid var(--border);
+}
+.hm-setup-fact svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.hm-setup-fact strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.hm-setup-fact p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+@media (max-width: 900px) {
+  .hm-setup {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hm-setup-panel {
+    border-right: none;
+    align-items: center;
+  }
+  .hm-setup-panel > * {
+    width: min(464px, 100%);
+  }
+  .hm-setup-aside {
+    display: none;
+  }
 }
 .hm-setup-brand {
   display: flex;
@@ -307,14 +547,14 @@
 }
 .hm-setup-title {
   margin: 0;
-  font-size: 25px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.15;
 }
 .hm-setup-subtitle {
-  margin: 11px 0 24px;
-  max-width: 44ch;
+  margin: 9px 0 18px;
+  max-width: 46ch;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-dim);
@@ -373,9 +613,13 @@
 .hm-seg__btn:hover {
   color: var(--text);
 }
+/* Refonte UI : segment actif NEUTRE (surface relevée), l'accent reste réservé à la
+   sélection et au focus. */
 .hm-seg__btn--on {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--panel-3);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 .hm-setup-lang .hm-seg__btn {
   padding: 4px 10px;

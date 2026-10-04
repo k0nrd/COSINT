@@ -1,4 +1,9 @@
-/** Barre d'outils verticale flottante : ajout de nœuds, undo/redo, zoom, recherche, filtres, légende. */
+/**
+ * Barre d'outils : ajout de nœuds, zoom, filtres, sources, légende, chronologie
+ * (annuler/rétablir et la recherche sont dans la barre supérieure).
+ * À gauche / à droite c'est un rail ancré au bord du canvas ; en haut / en bas, une
+ * barre flottante centrée (voir board.css, `data-position`).
+ */
 import {
   BookOpen,
   CalendarClock,
@@ -12,11 +17,8 @@ import {
   Link,
   Maximize,
   Paperclip,
-  Redo2,
-  Search,
   Square,
   StickyNote,
-  Undo2,
   ZoomIn,
   ZoomOut,
   type LucideIcon
@@ -31,21 +33,15 @@ interface ToolbarProps {
   onOpenEntityPicker: () => void
   /** false = visiteur (lecture seule, §6) : les outils d'édition sont masqués. */
   canEdit: boolean
-  onUndo: () => void
-  onRedo: () => void
-  canUndo: boolean
-  canRedo: boolean
   onZoomIn: () => void
   onZoomOut: () => void
   onFitView: () => void
-  onToggleSearch: () => void
   onToggleFilter: () => void
   onToggleSources: () => void
   onToggleLegend: () => void
   /** §4 v1.7 : bascule Canvas ↔ Chronologie. */
   onToggleTimeline: () => void
   filterActive: boolean
-  searchActive: boolean
   sourcesActive: boolean
   legendActive: boolean
   timelineActive: boolean
@@ -65,20 +61,14 @@ export function Toolbar({
   onAddNode,
   onOpenEntityPicker,
   canEdit,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
   onZoomIn,
   onZoomOut,
   onFitView,
-  onToggleSearch,
   onToggleFilter,
   onToggleSources,
   onToggleLegend,
   onToggleTimeline,
   filterActive,
-  searchActive,
   sourcesActive,
   legendActive,
   timelineActive
@@ -90,18 +80,8 @@ export function Toolbar({
       {/* Outils d'édition — masqués proprement pour un visiteur (§6). */}
       {canEdit && (
         <>
-          {ADD_BUTTONS.map(({ kind, icon: Icon, titleKey }) => (
-            <button
-              key={kind}
-              className="bd-toolbar__btn"
-              onClick={() => onAddNode(kind)}
-              title={t(titleKey)}
-              aria-label={t(titleKey)}
-            >
-              <Icon size={17} />
-            </button>
-          ))}
-
+          {/* Refonte UI : la fiche entité et la source — objets centraux d'une enquête —
+              passent en tête ; les autres types de nœuds suivent. */}
           {/* Fiche entité : ouvre le sélecteur par catégories (§2). */}
           <button
             className="bd-toolbar__btn"
@@ -124,26 +104,17 @@ export function Toolbar({
             <FileText size={17} />
           </button>
 
-          <div className="bd-toolbar__sep" />
-
-          <button
-            className="bd-toolbar__btn"
-            onClick={onUndo}
-            disabled={!canUndo}
-            title={t('toolbar.undo')}
-            aria-label={t('toolbar.undo')}
-          >
-            <Undo2 size={17} />
-          </button>
-          <button
-            className="bd-toolbar__btn"
-            onClick={onRedo}
-            disabled={!canRedo}
-            title={t('toolbar.redo')}
-            aria-label={t('toolbar.redo')}
-          >
-            <Redo2 size={17} />
-          </button>
+          {ADD_BUTTONS.map(({ kind, icon: Icon, titleKey }) => (
+            <button
+              key={kind}
+              className="bd-toolbar__btn"
+              onClick={() => onAddNode(kind)}
+              title={t(titleKey)}
+              aria-label={t(titleKey)}
+            >
+              <Icon size={17} />
+            </button>
+          ))}
 
           <div className="bd-toolbar__sep" />
         </>
@@ -176,16 +147,6 @@ export function Toolbar({
 
       <div className="bd-toolbar__sep" />
 
-      <button
-        className={`bd-toolbar__btn${searchActive ? ' bd-toolbar__btn--active' : ''}`}
-        onClick={onToggleSearch}
-        title={t('toolbar.search')}
-        aria-label={t('toolbar.search')}
-        aria-pressed={searchActive}
-        data-tut="search"
-      >
-        <Search size={17} />
-      </button>
       <button
         className={`bd-toolbar__btn${filterActive ? ' bd-toolbar__btn--active' : ''}`}
         onClick={onToggleFilter}

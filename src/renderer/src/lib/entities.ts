@@ -205,7 +205,7 @@ export function entityFieldTemplate(typeId: string): FieldTemplate[] {
 
 // ——— Sources (§4) ———
 
-export const SOURCE_COLOR = '#10b981'
+export const SOURCE_COLOR = '#4cb782'
 
 /** Types de source proposés (clé i18n `sourceType.*`). */
 export const SOURCE_TYPES = [

@@ -3,6 +3,7 @@
 .pe-root {
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
 }
 
 /* Onglets du type d'avatar (initiales / emoji / image) */
@@ -15,8 +16,12 @@
   background: var(--panel-2);
 }
 .pe-tab {
-  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
   font-size: 12px;
+  white-space: nowrap;
   font-family: var(--font-ui);
   background: transparent;
   color: var(--text-dim);
@@ -34,8 +39,9 @@
   color: var(--text);
 }
 .pe-tab--active {
-  background: var(--accent-soft);
+  background: var(--panel-3);
   color: var(--text);
+  font-weight: 600;
 }
 
 /* Saisie de l'emoji : étroite et centrée */
@@ -57,22 +63,27 @@
   display: none;
 }
 
-/* Statut (radios) */
-.pe-radios {
+/* Champs côte à côte (pseudo | rôle, avatar | statut) ; empilés quand c'est étroit. */
+.pe-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--sp-3);
+}
+.pe-col {
   display: flex;
-  gap: var(--sp-4);
+  flex-direction: column;
+  min-width: 0;
 }
-.pe-radio {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--text);
-  cursor: pointer;
+/* Avatar | statut : deux groupes de boutons qui passent à la ligne si la place manque. */
+.pe-row--wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-5);
 }
-.pe-radio input {
-  accent-color: var(--accent);
-  cursor: pointer;
+@container (max-width: 380px) {
+  .pe-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Aperçu en direct du profil */

@@ -6,7 +6,9 @@
     "moduleResolution": "bundler",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    // "node" : les tests (tests/**) et les modules main qu'ils importent utilisent les API Node ;
+    // vitest ≥ 4 ne tire plus ces types implicitement.
+    "types": ["vite/client", "node"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

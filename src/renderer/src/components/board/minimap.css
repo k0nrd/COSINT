@@ -28,3 +28,8 @@
 .bd-minimap__edges line {
   vector-effect: non-scaling-stroke;
 }
+/* Refonte UI : le rail d'outils ancré à droite ne recouvre pas la mini-carte (la légende
+   et le panneau Sources sont gérés avec les panneaux ancrés, dans board.css). */
+.fl-canvas-wrap:has(.bd-toolbar[data-position='right']) .bd-minimap {
+  right: 56px;
+}
