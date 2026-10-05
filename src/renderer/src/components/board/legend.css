@@ -17,7 +17,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 6px 6px 10px;
+  flex: none;
+  min-height: 37px;
+  padding: 4px 8px 4px 14px;
   border-bottom: 1px solid var(--border);
 }
 .bd-legend__title {
@@ -25,22 +27,24 @@
   font-weight: 650;
 }
 .bd-legend__body {
-  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  padding: var(--sp-2) 14px var(--sp-3);
   overflow-y: auto;
 }
 .bd-legend__section {
-  margin: var(--sp-2) 0 5px;
+  margin: var(--sp-3) 0 6px;
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   color: var(--text-mute);
 }
 .bd-legend__row {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 2px 0;
+  gap: 9px;
+  padding: 4px 0;
+  font-size: 12.5px;
 }
 .bd-legend__dot,
 .bd-legend__swatch {

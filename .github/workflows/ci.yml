@@ -1,0 +1,80 @@
+# Intégration continue : à chaque push sur main et à chaque pull request.
+#  - verify  : typecheck + tests + build + empaquetage, sous Linux ET Windows.
+#              Les installeurs produits sont téléchargeables 7 jours depuis l'onglet
+#              « Actions » (pratique pour essayer une PR sans rien builder chez soi).
+#  - audit   : `npm audit` sur les dépendances embarquées dans l'application.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Vérifier (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: linux, script: 'build:linux' }
+          - { os: windows-latest, name: windows, script: 'build:win' }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Build + empaquetage. `--publish never` : la CI ne publie jamais rien.
+      - run: npm run ${{ matrix.script }} -- --publish never
+        shell: bash
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cosint-${{ matrix.name }}
+          path: |
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
+          retention-days: 7
+
+  server:
+    name: Serveur de signalisation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node --check signaling.js
+      - run: npm audit --audit-level=high
+
+  audit:
+    name: Audit des dépendances
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # Bloquant : ce qui est livré dans l'application (dépendances de production).
+      - run: npm audit --omit=dev --audit-level=high
+      # Informatif : l'outillage de build (ne casse pas la CI, mais reste visible).
+      - run: npm audit --audit-level=high
+        continue-on-error: true

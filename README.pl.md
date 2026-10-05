@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.9.0-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.9.1-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
   <img src="https://img.shields.io/badge/testy-578%20zielone-3fbf6a" alt="Testy">
@@ -74,7 +74,19 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.9.0
+## 🚀 Nowości w 1.9.1
+
+- **🎨 Przeprojektowany interfejs** — neutralny grafitowy motyw (ciemny i jasny), wbudowane
+  czcionki IBM Plex, ekran główny w formie listy z panelem bocznym, pasek narzędzi
+  zadokowany jako szyna, wyszukiwanie oraz cofnij/ponów w górnym pasku, pasek stanu,
+  dwupanelowy wybór encji, zadokowane Legenda i Źródła.
+- **🔧 Aktualna baza** — Electron 43, brak znanych podatności w `npm audit`, ciągła
+  integracja i automatyczne budowanie wydań (GitHub Actions).
+- Tablice, format `.trace` i protokół peer-to-peer pozostają bez zmian.
+
+Pełne informacje: [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+
+## Nowości w 1.9.0
 
 - **🖼️ Kopiowanie obrazu, które naprawdę działa w Windows** — Ctrl+C na obrazie umieszcza
   w schowku **sam obraz**, gotowy do wklejenia w dowolnej innej aplikacji. Wcześniej system
@@ -281,7 +293,7 @@ Sprawdzone na Ubuntu 24.04. Dostępne także po
 
 ## 🛠️ Kompilacja ze źródeł
 
-Wymagania: Node.js ≥ 20, npm.
+Wymagania: Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

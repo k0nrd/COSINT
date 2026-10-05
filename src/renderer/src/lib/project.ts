@@ -11,6 +11,12 @@ import { getLocale, type Locale } from '@/i18n'
 /** Compte GitHub de l'auteur. */
 export const AUTHOR_URL = 'https://github.com/k0nrd'
 
+/** Co-auteur crédité à côté de l'auteur (refonte de l'interface). */
+export const CO_AUTHOR_NAME = 'w4ll-i'
+
+/** Compte GitHub du co-auteur. */
+export const CO_AUTHOR_URL = 'https://github.com/w4ll-i'
+
 /** Dépôt public : code, notes de version, téléchargements. */
 export const REPO_URL = 'https://github.com/k0nrd/COSINT'
 

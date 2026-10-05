@@ -15,6 +15,9 @@ export const pl: Record<MessageKey, string> = {
   'home.recent': 'Ostatnie tablice',
   'home.noRecent': 'Brak tablic. Utwórz nową lub dołącz do współpracownika za pomocą kodu.',
   'home.lastOpened': 'Ostatnio otwarto: {date}',
+  'home.colName': 'Nazwa',
+  'home.colShare': 'Udostępnianie',
+  'home.colOpened': 'Ostatnie otwarcie',
   'home.open': 'Otwórz',
   'home.delete': 'Usuń z tego komputera',
   'home.deleteConfirm': 'Usunąć „{title}” z tego komputera? Kopie posiadane przez współpracowników nie zostaną naruszone.',
@@ -144,6 +147,22 @@ export const pl: Record<MessageKey, string> = {
   'board.untitled': 'Tablica bez tytułu',
   'board.empty':
     'Pusta tablica — kliknij dwukrotnie tło lub użyj paska narzędzi, aby dodać pierwszy element.',
+  // Refonte UI : état vide du tableau (liste d’amorces) et barre d’état.
+  'board.emptyTitle': 'Pusta tablica',
+  'board.emptyLead': 'Dodaj pierwszy element. Wszystko pozostaje na tym stanowisku, dopóki nie udostępnisz tablicy.',
+  'board.emptyAdd': 'Dodaj element',
+  'board.emptyAddHint': 'dwukrotne kliknięcie tła',
+  'board.emptyPaste': 'Wklej obraz, tekst lub adres URL',
+  'board.emptyPasteHint': 'Ctrl+V',
+  'board.emptyDrop': 'Upuść pliki',
+  'board.emptyDropHint': 'przeciągnij na tablicę',
+  'board.emptyCsv': 'Importuj CSV',
+  'board.emptyCsvHint': 'menu Eksportuj',
+  'footer.local': 'Peer-to-peer · żadnych danych na serwerze',
+  'footer.elements': 'Elementy: {count}',
+  'footer.links': 'Połączenia: {count}',
+  'footer.selected': 'Zaznaczone: {count}',
+  'footer.zoom': 'Poziom powiększenia',
   'board.full': 'Tablica pełna ({count}/{max}). Spróbuj ponownie, gdy zwolni się miejsce.',
   'board.fullHard':
     'Tablica pełna ({count}/{max}) — nie można teraz dołączyć.',
@@ -1169,7 +1188,9 @@ export const pl: Record<MessageKey, string> = {
   // ——— v1.8.8: podpis autora (§2) ———
   'app.madeBy': 'autor:',
   'app.author': 'k0nrd',
+  'app.authorAnd': 'i',
   'app.authorLink': 'Otwórz GitHub użytkownika k0nrd',
+  'app.coAuthorLink': 'Otwórz GitHub użytkownika w4ll-i',
 
   // ——— v1.8.8: ustawienia w zakładkach (§4) ———
   'settings.tabProfile': 'Profil',
@@ -1479,5 +1500,21 @@ export const pl: Record<MessageKey, string> = {
   'edge.presetAutomatique': 'Automatyczny',
   'edge.presetAdd': 'Nowy szablon…',
   'edge.presetName': 'Nazwa szablonu',
-  'edge.presetDelete': 'Usuń szablon'
+  'edge.presetDelete': 'Usuń szablon',
+  'setup.factsTitle': 'Co robi aplikacja',
+  'setup.fact1Title': 'Brak serwera centralnego',
+  'setup.fact1Text': 'Tablice są zapisywane na tym komputerze i wymieniane bezpośrednio między komputerami, szyfrowane od końca do końca.',
+  'setup.fact2Title': 'Brak telemetrii',
+  'setup.fact2Text': 'Aplikacja nie wysyła żadnych statystyk użycia.',
+  'setup.fact3Title': 'Udostępnianie kodem',
+  'setup.fact3Text': 'Współpracownik dołącza do tablicy za pomocą 12-znakowego kodu, który mu przekazujesz.',
+  'home.joinInline': 'Kod udostępniania',
+  'home.deleteNote': 'Usunięcie tablicy usuwa ją tylko z tego komputera. Kopie współpracowników pozostają nienaruszone.',
+  'entityPicker.all': 'Wszystkie typy',
+  'entityPicker.categories': 'Kategorie',
+  'entityPicker.hintEnter': 'pierwszy wynik',
+  'entityPicker.hintEsc': 'zamknij',
+  'entityPicker.keyEnter': 'Enter',
+  'entityPicker.keyEsc': 'Esc',
+  'entity.iconChange': 'Zmień ikonę'
 }

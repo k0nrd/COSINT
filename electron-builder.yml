@@ -22,20 +22,22 @@ win:
     - nsis
     - portable
   icon: build/icon.ico
-  # Nom d'éditeur affiché (doit correspondre au sujet du certificat une fois signé).
-  publisherName: COSINT
   # ——— Signature de code Windows (§2 v1.4) — voir le guide du README ———
   # Pilotée par variables d'environnement (aucun secret dans le dépôt) :
   #   - Certificat OV (.pfx) : définir CSC_LINK (chemin ou base64 du .pfx) et
   #     CSC_KEY_PASSWORD ; electron-builder les détecte automatiquement.
   #   - Certificat EV (jeton matériel / magasin Windows) : signer via
-  #     `electron-builder --win --config.win.certificateSubjectName="Nom Légal"`.
+  #     `electron-builder --win --config.win.signtoolOptions.certificateSubjectName="Nom Légal"`.
   # Sans ces variables, le build produit un exécutable NON signé (fonctionnel) :
   # `npm run build:win` marche toujours. Algorithme et horodatage ci-dessous ne
   # s'appliquent QU'À la signature (ignorés si aucun certificat n'est fourni).
-  signingHashAlgorithms:
-    - sha256
-  rfc3161TimeStampServer: http://timestamp.sectigo.com
+  # (electron-builder ≥ 26 : ces options vivent sous `signtoolOptions`.)
+  signtoolOptions:
+    # Nom d'éditeur affiché (doit correspondre au sujet du certificat une fois signé).
+    publisherName: COSINT
+    signingHashAlgorithms:
+      - sha256
+    rfc3161TimeStampServer: http://timestamp.sectigo.com
   # Auto-update sans blocage tant que l'app n'est pas signée (repasser à true une
   # fois un certificat en place pour vérifier la signature des mises à jour).
   verifyUpdateCodeSignature: false

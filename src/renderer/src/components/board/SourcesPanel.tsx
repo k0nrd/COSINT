@@ -53,7 +53,7 @@ export function SourcesPanel({
   }, [sources, sort])
 
   return (
-    <aside className="bd-sources" aria-label={t('sources.title')}>
+    <aside className="bd-sources bd-dock" aria-label={t('sources.title')}>
       <div className="bd-sources-head">
         <BookMarked size={14} />
         <h3 className="bd-sources-title">{t('sources.title')}</h3>

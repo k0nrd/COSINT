@@ -22,7 +22,8 @@ export type CategoryId =
 export interface TaxonomyCategory {
   id: CategoryId
   nameKey: MessageKey
-  /** Couleur d'accent de la catégorie (lisible sur fond sombre). */
+  /** Couleur d'accent de la catégorie : teintes désaturées, de clarté voisine (lisibles
+   *  sur fond sombre sans effet « arc-en-ciel »). */
   color: string
 }
 
@@ -40,14 +41,14 @@ export interface TaxonomyType {
 }
 
 export const TAXONOMY_CATEGORIES: TaxonomyCategory[] = [
-  { id: 'business', nameKey: 'category.business', color: '#6366f1' },
-  { id: 'crypto', nameKey: 'category.crypto', color: '#f59e0b' },
-  { id: 'forensics', nameKey: 'category.forensics', color: '#14b8a6' },
-  { id: 'generic', nameKey: 'category.generic', color: '#3b82f6' },
-  { id: 'group', nameKey: 'category.group', color: '#a855f7' },
-  { id: 'internet', nameKey: 'category.internet', color: '#06b6d4' },
-  { id: 'location', nameKey: 'category.location', color: '#ec4899' },
-  { id: 'hardware', nameKey: 'category.hardware', color: '#ef4444' }
+  { id: 'business', nameKey: 'category.business', color: '#8f97e0' },
+  { id: 'crypto', nameKey: 'category.crypto', color: '#d6a54a' },
+  { id: 'forensics', nameKey: 'category.forensics', color: '#56b5a6' },
+  { id: 'generic', nameKey: 'category.generic', color: '#7f9bf5' },
+  { id: 'group', nameKey: 'category.group', color: '#b08dd6' },
+  { id: 'internet', nameKey: 'category.internet', color: '#5eb0d0' },
+  { id: 'location', nameKey: 'category.location', color: '#d58ba8' },
+  { id: 'hardware', nameKey: 'category.hardware', color: '#d9776e' }
 ]
 
 const T = (id: string, category: CategoryId, icon: string, rich?: boolean): TaxonomyType => ({
@@ -182,7 +183,7 @@ export function taxonomyCategory(id: CategoryId): TaxonomyCategory | undefined {
 export function typeColor(id: string): string {
   const type = TYPE_BY_ID.get(id)
   const cat = type ? CATEGORY_BY_ID.get(type.category) : undefined
-  return cat?.color ?? '#3b82f6'
+  return cat?.color ?? '#7f9bf5'
 }
 
 /** Nom d'icône d'un type (fallback « Circle »). */

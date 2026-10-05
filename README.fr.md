@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.1-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
   <img src="https://img.shields.io/badge/tests-578%20au%20vert-3fbf6a" alt="Tests">
@@ -74,7 +74,19 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.9.0
+## 🚀 Nouveautés de la 1.9.1
+
+- **🎨 Interface refondue** — thème graphite neutre (sombre et clair), polices IBM Plex
+  embarquées, accueil en liste avec barre latérale, barre d'outils ancrée en rail, recherche
+  et annuler/rétablir dans la barre supérieure, barre d'état, sélecteur d'entité en deux
+  volets, Légende et Sources ancrées.
+- **🔧 Base à jour** — Electron 43, aucune vulnérabilité connue dans `npm audit`,
+  intégration continue et builds de release automatisés (GitHub Actions).
+- Les tableaux, le format `.trace` et le protocole pair-à-pair sont inchangés.
+
+Notes complètes : [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+
+## Nouveautés de la 1.9.0
 
 - **🖼️ Une copie d'image qui marche vraiment sous Windows** — Ctrl+C sur une image pose
   **l'image elle-même** dans le presse-papiers, pour n'importe quelle autre application.
@@ -283,7 +295,7 @@ courante. Testé sur Ubuntu 24.04. Également en
 
 ## 🛠️ Compiler depuis les sources
 
-Prérequis : Node.js ≥ 20, npm.
+Prérequis : Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

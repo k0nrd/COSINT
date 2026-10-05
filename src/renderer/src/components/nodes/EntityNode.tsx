@@ -1,6 +1,6 @@
 /**
- * Nœud fiche entité (§3) : icône du gabarit + titre éditable, aperçu des
- * 3 premiers champs renseignés, badge du type. Le détail complet des champs
+ * Nœud fiche entité (§3) : icône du gabarit, étiquette « Catégorie · Type » + titre
+ * éditable, aperçu des premiers champs renseignés. Le détail complet des champs
  * s'édite dans le panneau Détails.
  */
 import {
@@ -193,7 +193,18 @@ export const EntityNode = memo(function EntityNode({ id, data, selected }: Cosin
             <EntityIcon icon={iconName} size={13} />
           </span>
           <div className="nd-entity-head-text">
-            {categoryName !== '' && <span className="nd-entity-cat">{categoryName}</span>}
+            {/* Refonte UI : « Catégorie · Type » en étiquette (le badge de pied est
+                retiré). Titre vide → le type sert déjà de titre estompé : on n'affiche
+                alors que la catégorie, sans redite. */}
+            {(categoryName !== '' || board.title !== '') && (
+              <span className="nd-entity-cat">
+                {board.title === ''
+                  ? categoryName
+                  : categoryName !== ''
+                    ? `${categoryName} · ${resolved.label}`
+                    : resolved.label}
+              </span>
+            )}
             <InlineTitle nodeId={id} value={board.title} fallback={resolved.label} />
           </div>
         </div>
@@ -246,9 +257,6 @@ export const EntityNode = memo(function EntityNode({ id, data, selected }: Cosin
             ))}
           </div>
         )}
-        <div className="nd-entity-foot">
-          <span className="nd-entity-badge">{resolved.label}</span>
-        </div>
         {dropActive && (
           <div className="nd-entity-dropover" aria-hidden>
             <ImagePlus size={18} />

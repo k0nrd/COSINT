@@ -52,7 +52,7 @@ export function LegendPanel({ nodes, edges, onClose }: LegendPanelProps): JSX.El
   const empty = categories.length === 0 && colors.length === 0 && styles.length === 0
 
   return (
-    <div className="bd-legend">
+    <div className="bd-legend bd-dock">
       <div className="bd-legend__head">
         <span className="bd-legend__title">{t('legend.title')}</span>
         <button

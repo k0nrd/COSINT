@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.1-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
   <img src="https://img.shields.io/badge/tests-578%20passing-3fbf6a" alt="Tests">
@@ -73,7 +73,18 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.9.0
+## 🚀 What's new in 1.9.1
+
+- **🎨 Redesigned interface** — neutral graphite theme (dark and light), bundled IBM Plex
+  fonts, home screen as a list with a sidebar, toolbar docked as a rail, search and
+  undo/redo in the top bar, status bar, two-pane entity picker, docked Legend and Sources.
+- **🔧 Up-to-date base** — Electron 43, no known vulnerability in `npm audit`, continuous
+  integration and automated release builds (GitHub Actions).
+- Boards, the `.trace` format and the peer-to-peer protocol are unchanged.
+
+Full notes: [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+
+## What was new in 1.9.0
 
 - **🖼️ Image copy that really works on Windows** — Ctrl+C on an image puts the **actual
   picture** on the clipboard for any other app. It used to fail because the stored WebP
@@ -270,7 +281,7 @@ on Ubuntu 24.04. Also available in
 
 ## 🛠️ Build from source
 
-Requirements: Node.js ≥ 20, npm.
+Requirements: Node.js ≥ 22.12, npm.
 
 ```bash
 npm install

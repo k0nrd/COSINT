@@ -32,10 +32,15 @@ export async function renderBoardToPng(
   const height = Math.max(1, Math.round(bounds.height * scale))
   const transform = getViewportForBounds(bounds, width, height, 0.05, 10, 0)
 
+  // Polices embarquées fournies en data: URI (chargées à la demande) : l'image exportée
+  // utilise la même typographie que l'écran, sans requête de police.
+  const { FONT_EMBED_CSS } = await import('@/lib/fontEmbed')
+
   return toPng(viewport, {
     width,
     height,
     backgroundColor,
+    fontEmbedCSS: FONT_EMBED_CSS,
     pixelRatio: 1,
     style: {
       width: `${width}px`,

@@ -4,7 +4,7 @@
  * « Favoris » épinglables (étoile). Les préférences sont stockées localement par
  * utilisateur.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ArrowDownAZ, LayoutGrid, Pencil, Plus, Search, Star } from 'lucide-react'
 import { Modal } from '@/components/common/Modal'
 import { EntityIcon } from '@/components/nodes/entityIcons'
@@ -14,6 +14,7 @@ import {
   taxonomyCategory,
   taxonomyType,
   typesOfCategory,
+  type CategoryId,
   type TaxonomyType
 } from '@/lib/taxonomy'
 import { CUSTOM_CATEGORY_COLOR } from '@/lib/entityTypes'
@@ -38,12 +39,15 @@ interface EntityPickerProps {
 export const CODE_BLOCK_PICK = '__code_block__'
 
 /** Couleur d'accent de la catégorie « Code » (cohérente thème sombre/clair). */
-const CODE_CATEGORY_COLOR = '#22d3ee'
+const CODE_CATEGORY_COLOR = '#8fb86a'
 
 /** Minuscule + suppression des diacritiques, pour une recherche tolérante. */
 function fold(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
 }
+
+/** Vue affichée dans le volet de droite : tout, un groupe transversal ou une catégorie. */
+type PickerView = 'all' | 'favorites' | 'recent' | 'custom' | 'code' | CategoryId
 
 function typeLabel(type: TaxonomyType): string {
   return t(entityTypeLabelKey(type.id))
@@ -60,6 +64,10 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
   // §2 v1.8 : types personnalisés du tableau + dialogue de création/édition.
   const { customTypes, canEdit } = useBoardContext()
   const [customDialog, setCustomDialog] = useState<{ editing: CustomEntityType | null } | null>(null)
+
+  // Refonte UI : sélecteur en deux volets — catégories à gauche, types à droite.
+  const [view, setView] = useState<PickerView>('all')
+  const listRef = useRef<HTMLDivElement>(null)
 
   const needle = fold(query.trim())
 
@@ -86,7 +94,6 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
         <div className="ep-type-wrap">
           <button
             className="ep-type"
-            style={{ borderColor: withAlpha(CODE_CATEGORY_COLOR, 0.35) }}
             onClick={() => {
               onPick(CODE_BLOCK_PICK)
               onClose()
@@ -124,7 +131,6 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
             <div key={type.id} className="ep-type-wrap">
               <button
                 className="ep-type"
-                style={{ borderColor: withAlpha(type.color, 0.35) }}
                 onClick={() => {
                   onPick(type.id)
                   onClose()
@@ -173,13 +179,12 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
 
   const TypeButton = ({ type }: { type: TaxonomyType }): JSX.Element => {
     const category = taxonomyCategory(type.category)
-    const color = category?.color ?? '#3b82f6'
+    const color = category?.color ?? '#7f9bf5'
     const isFavorite = favorites.includes(type.id)
     return (
       <div className="ep-type-wrap">
         <button
           className="ep-type"
-          style={{ borderColor: withAlpha(color, 0.35) }}
           onClick={() => pick(type)}
         >
           <span
@@ -234,8 +239,75 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
     []
   )
 
+  // Volet de gauche : groupes transversaux puis catégories, avec leur nombre de types.
+  const showCustomRail = customTypes.length > 0 || canEdit
+  const railItems: Array<{ id: PickerView; label: string; color?: string; count: number; star?: boolean }> = [
+    { id: 'all', label: t('entityPicker.all'), count: alphaTypes.length },
+    ...(favoriteTypes.length > 0
+      ? [{ id: 'favorites' as const, label: t('entityPicker.favorites'), count: favoriteTypes.length, star: true }]
+      : []),
+    ...(recentTypes.length > 0
+      ? [{ id: 'recent' as const, label: t('entityPicker.recent'), count: recentTypes.length }]
+      : []),
+    ...TAXONOMY_CATEGORIES.map((category) => ({
+      id: category.id as PickerView,
+      label: t(category.nameKey),
+      color: category.color,
+      count: typesOfCategory(category.id).length
+    })),
+    { id: 'code', label: t('category.code'), color: CODE_CATEGORY_COLOR, count: 1 },
+    ...(showCustomRail
+      ? [{ id: 'custom' as const, label: t('customType.section'), color: CUSTOM_CATEGORY_COLOR, count: customTypes.length }]
+      : [])
+  ]
+  // Une vue qui n'existe plus (dernier favori retiré…) retombe sur « tous les types ».
+  const activeView: PickerView = railItems.some((item) => item.id === view) ? view : 'all'
+  const activeCategory = TAXONOMY_CATEGORIES.find((category) => category.id === activeView)
+
+  const CategorySection = ({ id }: { id: CategoryId }): JSX.Element | null => {
+    const category = taxonomyCategory(id)
+    if (!category) return null
+    return (
+      <section className="ep-category">
+        <div className="ep-category__head">
+          <span className="ep-category__dot" style={{ background: category.color }} />
+          {t(category.nameKey)}
+        </div>
+        <div className="ep-types">
+          {typesOfCategory(id).map((type) => (
+            <TypeButton key={type.id} type={type} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+  const FavoritesSection = (): JSX.Element | null =>
+    favoriteTypes.length === 0 ? null : (
+      <section className="ep-category">
+        <div className="ep-category__head">
+          <Star size={12} /> {t('entityPicker.favorites')}
+        </div>
+        <div className="ep-types">
+          {favoriteTypes.map((type) => (
+            <TypeButton key={`fav-${type.id}`} type={type} />
+          ))}
+        </div>
+      </section>
+    )
+  const RecentSection = (): JSX.Element | null =>
+    recentTypes.length === 0 ? null : (
+      <section className="ep-category">
+        <div className="ep-category__head">{t('entityPicker.recent')}</div>
+        <div className="ep-types">
+          {recentTypes.map((type) => (
+            <TypeButton key={`rec-${type.id}`} type={type} />
+          ))}
+        </div>
+      </section>
+    )
+
   return (
-    <Modal title={t('entityPicker.title')} onClose={onClose} width={640}>
+    <Modal title={t('entityPicker.title')} onClose={onClose} width={720}>
       <div className="ep-topbar">
         <div className="ep-search">
           <Search size={15} />
@@ -245,6 +317,15 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
             autoFocus
             placeholder={t('entityPicker.search')}
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              // Entrée : choisit le premier type affiché (recherche au clavier).
+              if (event.key !== 'Enter') return
+              const first = listRef.current?.querySelector<HTMLButtonElement>('.ep-type:not(.ep-type--create)')
+              if (first) {
+                event.preventDefault()
+                first.click()
+              }
+            }}
           />
         </div>
         <div className="ep-sort" role="group">
@@ -267,79 +348,106 @@ export function EntityPicker({ onPick, onClose }: EntityPickerProps): JSX.Elemen
         </div>
       </div>
 
-      <div className="ep-scroll">
-        {searchGroups ? (
-          searchGroups.length === 0 && !codeMatchesSearch && filteredCustom.length === 0 ? (
-            <p className="cm-hint">{t('entityPicker.noResult')}</p>
+      <div className="ep-panes">
+        <nav className="ep-rail" aria-label={t('entityPicker.categories')}>
+          {railItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`ep-rail__item${!searchGroups && activeView === item.id ? ' ep-rail__item--active' : ''}`}
+              aria-current={!searchGroups && activeView === item.id ? 'true' : undefined}
+              onClick={() => {
+                setQuery('')
+                setView(item.id)
+              }}
+            >
+              {item.star ? (
+                <Star size={10} className="ep-rail__star" />
+              ) : (
+                <span
+                  className="ep-rail__dot"
+                  style={{ background: item.color ?? 'var(--text-mute)' }}
+                />
+              )}
+              <span className="ep-rail__label">{item.label}</span>
+              <span className="ep-rail__count">{item.count}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="ep-scroll" ref={listRef}>
+          {searchGroups ? (
+            searchGroups.length === 0 && !codeMatchesSearch && filteredCustom.length === 0 ? (
+              <p className="cm-hint">{t('entityPicker.noResult')}</p>
+            ) : (
+              <>
+                {searchGroups.map(({ category, types }) => (
+                  <section key={category.id} className="ep-category">
+                    <div className="ep-category__head">
+                      <span className="ep-category__dot" style={{ background: category.color }} />
+                      {t(category.nameKey)}
+                    </div>
+                    <div className="ep-types">
+                      {types.map((type) => (
+                        <TypeButton key={type.id} type={type} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+                {codeMatchesSearch && <CodeSection />}
+                <CustomSection />
+              </>
+            )
+          ) : activeView === 'favorites' ? (
+            <FavoritesSection />
+          ) : activeView === 'recent' ? (
+            <RecentSection />
+          ) : activeView === 'custom' ? (
+            <CustomSection />
+          ) : activeView === 'code' ? (
+            <CodeSection />
+          ) : activeCategory ? (
+            <CategorySection id={activeCategory.id} />
           ) : (
             <>
-              <CustomSection />
-              {codeMatchesSearch && <CodeSection />}
-              {searchGroups.map(({ category, types }) => (
-              <section key={category.id} className="ep-category">
-                <div className="ep-category__head">
-                  <span className="ep-category__dot" style={{ background: category.color }} />
-                  {t(category.nameKey)}
-                </div>
-                <div className="ep-types">
-                  {types.map((type) => (
-                    <TypeButton key={type.id} type={type} />
-                  ))}
-                </div>
-              </section>
-              ))}
-            </>
-          )
-        ) : (
-          <>
-            <CustomSection />
-            <CodeSection />
-            {favoriteTypes.length > 0 && (
-              <section className="ep-category">
-                <div className="ep-category__head">
-                  <Star size={12} /> {t('entityPicker.favorites')}
-                </div>
-                <div className="ep-types">
-                  {favoriteTypes.map((type) => (
-                    <TypeButton key={`fav-${type.id}`} type={type} />
-                  ))}
-                </div>
-              </section>
-            )}
-            {recentTypes.length > 0 && (
-              <section className="ep-category">
-                <div className="ep-category__head">{t('entityPicker.recent')}</div>
-                <div className="ep-types">
-                  {recentTypes.map((type) => (
-                    <TypeButton key={`rec-${type.id}`} type={type} />
-                  ))}
-                </div>
-              </section>
-            )}
-            {entitySort === 'alpha' ? (
-              <section className="ep-category">
-                <div className="ep-types">
-                  {alphaTypes.map((type) => (
-                    <TypeButton key={type.id} type={type} />
-                  ))}
-                </div>
-              </section>
-            ) : (
-              TAXONOMY_CATEGORIES.map((category) => (
-                <section key={category.id} className="ep-category">
-                  <div className="ep-category__head">
-                    <span className="ep-category__dot" style={{ background: category.color }} />
-                    {t(category.nameKey)}
-                  </div>
+              <FavoritesSection />
+              <RecentSection />
+              {entitySort === 'alpha' ? (
+                <section className="ep-category">
                   <div className="ep-types">
-                    {typesOfCategory(category.id).map((type) => (
+                    {alphaTypes.map((type) => (
                       <TypeButton key={type.id} type={type} />
                     ))}
                   </div>
                 </section>
-              ))
-            )}
-          </>
+              ) : (
+                TAXONOMY_CATEGORIES.map((category) => (
+                  <CategorySection key={category.id} id={category.id} />
+                ))
+              )}
+              <CodeSection />
+              <CustomSection />
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="ep-foot">
+        <span className="ep-foot__hint">
+          <kbd>{t('entityPicker.keyEnter')}</kbd> {t('entityPicker.hintEnter')}
+        </span>
+        <span className="ep-foot__hint">
+          <kbd>{t('entityPicker.keyEsc')}</kbd> {t('entityPicker.hintEsc')}
+        </span>
+        {canEdit && (
+          <button
+            type="button"
+            className="cm-btn cm-btn--ghost ep-foot__create"
+            onClick={() => setCustomDialog({ editing: null })}
+          >
+            <Plus size={13} />
+            {t('customType.new')}
+          </button>
         )}
       </div>
 

@@ -15,6 +15,9 @@ export const en: Record<MessageKey, string> = {
   'home.recent': 'Recent boards',
   'home.noRecent': 'No boards yet. Create one or join a colleague with a code.',
   'home.lastOpened': 'Last opened: {date}',
+  'home.colName': 'Name',
+  'home.colShare': 'Sharing',
+  'home.colOpened': 'Last opened',
   'home.open': 'Open',
   'home.delete': 'Remove from this computer',
   'home.deleteConfirm': 'Remove “{title}” from this computer? Copies held by your colleagues are not affected.',
@@ -144,6 +147,22 @@ export const en: Record<MessageKey, string> = {
   'board.untitled': 'Untitled board',
   'board.empty':
     'Empty board — double-click the background or use the toolbar to add a first element.',
+  // Refonte UI : état vide du tableau (liste d’amorces) et barre d’état.
+  'board.emptyTitle': 'Empty board',
+  'board.emptyLead': 'Add a first item. Everything stays on this machine until you share the board.',
+  'board.emptyAdd': 'Add an item',
+  'board.emptyAddHint': 'double-click the background',
+  'board.emptyPaste': 'Paste an image, text or a URL',
+  'board.emptyPasteHint': 'Ctrl+V',
+  'board.emptyDrop': 'Drop files',
+  'board.emptyDropHint': 'drag onto the board',
+  'board.emptyCsv': 'Import a CSV',
+  'board.emptyCsvHint': 'Export menu',
+  'footer.local': 'Peer-to-peer · no data on any server',
+  'footer.elements': '{count} element(s)',
+  'footer.links': '{count} link(s)',
+  'footer.selected': '{count} selected',
+  'footer.zoom': 'Zoom level',
   'board.full': 'Board full ({count}/{max}). Try again when a slot frees up.',
   'board.fullHard':
     'Board full ({count}/{max}) — cannot join right now.',
@@ -1169,7 +1188,9 @@ export const en: Record<MessageKey, string> = {
   // ——— v1.8.8: author signature (§2) ———
   'app.madeBy': 'made by',
   'app.author': 'k0nrd',
+  'app.authorAnd': 'and',
   'app.authorLink': 'Open k0nrd’s GitHub',
+  'app.coAuthorLink': 'Open w4ll-i’s GitHub',
 
   // ——— v1.8.8: tabbed settings (§4) ———
   'settings.tabProfile': 'Profile',
@@ -1479,5 +1500,21 @@ export const en: Record<MessageKey, string> = {
   'edge.presetAutomatique': 'Automatic',
   'edge.presetAdd': 'New preset…',
   'edge.presetName': 'Preset name',
-  'edge.presetDelete': 'Delete preset'
+  'edge.presetDelete': 'Delete preset',
+  'setup.factsTitle': 'What the application does',
+  'setup.fact1Title': 'No central server',
+  'setup.fact1Text': 'Boards are stored on this computer and exchanged directly between computers, end-to-end encrypted.',
+  'setup.fact2Title': 'No telemetry',
+  'setup.fact2Text': 'The application sends no usage statistics.',
+  'setup.fact3Title': 'Sharing by code',
+  'setup.fact3Text': 'A colleague joins a board with a 12-character code that you give them.',
+  'home.joinInline': 'Share code',
+  'home.deleteNote': 'Deleting a board only removes it from this computer. Your colleagues’ copies are not affected.',
+  'entityPicker.all': 'All types',
+  'entityPicker.categories': 'Categories',
+  'entityPicker.hintEnter': 'first result',
+  'entityPicker.hintEsc': 'close',
+  'entityPicker.keyEnter': 'Enter',
+  'entityPicker.keyEsc': 'Esc',
+  'entity.iconChange': 'Change the icon'
 }

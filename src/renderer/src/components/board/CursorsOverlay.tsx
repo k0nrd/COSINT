@@ -4,6 +4,7 @@
  */
 import { ViewportPortal, useViewport } from '@xyflow/react'
 import type { PresenceState } from '@/types'
+import { contrastText } from '@/lib/colors'
 
 interface CursorsOverlayProps {
   others: Array<PresenceState & { clientId: number }>
@@ -34,7 +35,13 @@ export function CursorsOverlay({ others }: CursorsOverlayProps): JSX.Element {
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="bd-cursor__label" style={{ background: presence.user.color }}>
+            <span
+              className="bd-cursor__label"
+              style={{
+                background: presence.user.color,
+                color: contrastText(presence.user.color)
+              }}
+            >
               {presence.user.name}
             </span>
           </div>

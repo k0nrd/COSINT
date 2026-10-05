@@ -6,29 +6,33 @@
  * (migration transparente des anciens tableaux .trace).
  */
 
-/** 12 couleurs prédéfinies, choisies pour rester lisibles sur fond sombre (§5). */
+/**
+ * 12 couleurs prédéfinies, lisibles sur fond sombre (§5) : teintes désaturées de
+ * clarté voisine. Les couleurs déjà posées sur d'anciens tableaux sont des hex
+ * stockés dans le document — elles restent affichées telles quelles.
+ */
 export const PRESET_COLORS: string[] = [
   '#8a94a6', // ardoise
-  '#ef4444', // rouge
-  '#f97316', // orange
-  '#f5b301', // ambre
-  '#22c55e', // vert
-  '#10b981', // émeraude
-  '#06b6d4', // cyan
-  '#3b82f6', // bleu
-  '#6366f1', // indigo
-  '#a855f7', // violet
-  '#ec4899', // rose
-  '#94a3b8' // gris clair
+  '#d9776e', // rouge brique
+  '#d9905a', // orange
+  '#d6a54a', // ambre
+  '#8fb86a', // vert tendre
+  '#4cb782', // vert
+  '#56b5a6', // sarcelle
+  '#5eb0d0', // cyan
+  '#7f9bf5', // bleu acier
+  '#8f97e0', // indigo
+  '#b08dd6', // violet
+  '#d58ba8' // rose
 ]
 
 /** Couleur par défaut d'un nœud / lien / zone. */
 export const DEFAULT_NODE_COLOR = '#8a94a6'
 export const DEFAULT_EDGE_COLOR = '#8a94a6'
-export const DEFAULT_GROUP_COLOR = '#3b82f6'
+export const DEFAULT_GROUP_COLOR = '#7f9bf5'
 
 /** Couleurs proposées par défaut pour identifier un utilisateur (curseur, avatar). */
-export const USER_COLORS = ['#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ec4899', '#06b6d4', '#ef4444', '#f5b301']
+export const USER_COLORS = ['#7f9bf5', '#4cb782', '#d9905a', '#b08dd6', '#d58ba8', '#5eb0d0', '#d9776e', '#d6a54a']
 
 /** Correspondance des 8 couleurs nommées de la v1 → hex (migration .trace). */
 const LEGACY_COLOR_MAP: Record<string, string> = {
