@@ -16,9 +16,9 @@
      les défauts du thème pour les nœuds non personnalisés. */
   background: var(--nd-fill, var(--node-bg));
   border: var(--nd-border-width, 1px) var(--nd-border-style, solid)
-    var(--nd-border-color, var(--border));
+    var(--nd-border-color, var(--node-border));
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   /* PAS d'overflow:hidden ici : sinon les poignées débordantes sont rognées et
      la connexion devient impossible (§1). Le contenu est clippé par .nd-clip. */
   overflow: visible;
@@ -47,14 +47,14 @@
   height: 26px;
 }
 .nd-shell:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--node-border) 55%, var(--text-mute));
 }
 .nd-shell--selected,
 .nd-shell--selected:hover {
   border-color: var(--accent);
   box-shadow:
-    var(--shadow-sm),
-    0 0 0 1px var(--accent);
+    0 0 0 1px var(--accent),
+    0 0 0 4px var(--accent-soft);
 }
 
 /* Wrapper interne : clippe le contenu aux coins arrondis, sans rogner les poignées. */
@@ -158,15 +158,17 @@
   /* Refonte UI : couleur d'accent du thème (le bleu par défaut de React Flow jurait). */
   background: var(--accent);
   border-color: var(--node-bg);
-  width: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
-  height: calc(9px * clamp(0.75, var(--fl-inv-zoom, 1), 2));
+  width: calc(7px * clamp(0.85, var(--fl-inv-zoom, 1), 2.4));
+  height: calc(7px * clamp(0.85, var(--fl-inv-zoom, 1), 2.4));
   border-radius: 2px;
   border-width: 1.5px;
   z-index: 5;
 }
 /* Les bords (lignes) de redimensionnement : zone de saisie plus épaisse au dézoom. */
+/* Refonte UI : lignes INVISIBLES (le cadre de sélection du nœud suffit) — elles restent
+   des zones de saisie pour redimensionner par un bord. */
 .react-flow__resize-control.line {
-  border-color: var(--accent);
+  border-color: transparent;
   border-width: calc(1px * clamp(1, var(--fl-inv-zoom, 1), 3));
   z-index: 5;
 }

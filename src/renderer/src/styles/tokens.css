@@ -51,8 +51,10 @@
 
   /* Canvas */
   --canvas-bg: #0b0c0e;
-  --canvas-dots: #22252b;
-  --node-bg: #151619;
+  --canvas-dots: #2c3038;
+  --node-bg: #16181b;
+  /* Bordure des nœuds : plus marquée que --border, pour qu'ils se détachent du canvas. */
+  --node-border: #31353c;
 
   --scrollbar: #2e3238;
 
@@ -93,6 +95,7 @@
   --canvas-bg: #eceef0;
   --canvas-dots: #cdd1d7;
   --node-bg: #ffffff;
+  --node-border: #cdd1d7;
 
   --scrollbar: #c6cad1;
 

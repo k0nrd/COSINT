@@ -8,11 +8,6 @@
 .bd-details-head {
   margin-bottom: var(--sp-3);
 }
-.bd-details-entitytype {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
 /* Refonte UI : en-tête d'identité du panneau (icône, « Catégorie · Type », titre). */
 .bd-details-hero {
   display: flex;
@@ -252,29 +247,39 @@
   font-size: 12.5px;
   font-weight: 600;
 }
+.bd-sources-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+}
+/* Tri : contrôle segmenté (actif neutre). */
 .bd-sources-sort {
   display: flex;
-  gap: var(--sp-1);
   flex: none;
-  padding: var(--sp-2) var(--sp-3);
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
 .bd-sources-sort__chip {
-  padding: 3px 8px;
+  padding: 4px 11px;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-dim);
   font-family: var(--font-ui);
-  font-size: 11.5px;
+  font-size: 12px;
   cursor: pointer;
-  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.bd-sources-sort__chip:first-child {
+  border-radius: var(--r-md) 0 0 var(--r-md);
+}
+.bd-sources-sort__chip:last-child {
+  margin-left: -1px;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
 }
 .bd-sources-sort__chip:hover {
-  border-color: var(--border-strong);
+  color: var(--text);
 }
 .bd-sources-sort__chip--active {
-  border-color: var(--border-strong);
   background: var(--panel-3);
   color: var(--text);
   font-weight: 600;
@@ -285,84 +290,125 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
-  padding: var(--sp-2);
 }
 .bd-sources-empty {
-  margin: var(--sp-3) 0;
+  margin: var(--sp-4) 0;
   color: var(--text-mute);
   font-size: 12px;
   text-align: center;
 }
+/* Une source = un bloc pleine largeur (titre, adresse, date · fiabilité · rattachés). */
 .bd-sources-item {
   display: flex;
-  align-items: center;
-  gap: var(--sp-2);
+  flex-direction: column;
+  gap: 5px;
   width: 100%;
-  padding: var(--sp-2);
-  border: 1px solid transparent;
-  border-radius: var(--r-md);
+  padding: 11px 14px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  box-shadow: inset 2px 0 0 transparent;
   background: transparent;
   color: var(--text);
   font-family: var(--font-ui);
   text-align: left;
   cursor: pointer;
-  transition: background var(--t-fast), border-color var(--t-fast);
+  transition: background var(--t-fast);
 }
 .bd-sources-item:hover {
   background: var(--panel-2);
-  border-color: var(--border);
 }
-.bd-sources-item__main {
-  flex: 1;
-  min-width: 0;
+.bd-sources-item--selected {
+  background: var(--panel-2);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.bd-sources-item__top {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--sp-2);
 }
 .bd-sources-item__title {
-  font-size: 12.5px;
-  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-sources-item__locate {
+  flex: none;
+  color: var(--text-mute);
+}
+.bd-sources-item:hover .bd-sources-item__locate {
+  color: var(--text);
+}
+.bd-sources-item__url {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 11px;
+  color: var(--text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .bd-sources-item__meta {
-  color: var(--text-mute);
-  font-size: 11px;
-}
-.bd-sources-item__locate {
-  flex: none;
-  color: var(--text-mute);
-  opacity: 0;
-  transition: opacity var(--t-fast);
-}
-.bd-sources-item:hover .bd-sources-item__locate {
-  opacity: 1;
-}
-
-/* ——— Badge de fiabilité (échelle Amirauté) ——— */
-.bd-sources-badge {
-  flex: none;
-  width: 22px;
-  height: 22px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  gap: 9px;
+  min-width: 0;
+}
+.bd-sources-item__date {
   font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.bd-sources-item__count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.bd-sources-foot {
+  flex: none;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+.bd-sources-report {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ——— Pastille de fiabilité (échelle Amirauté) ——— */
+.bd-sources-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border-radius: var(--r-sm);
+  background: var(--panel-3);
   font-size: 11px;
   font-weight: 600;
   color: var(--text-dim);
+  white-space: nowrap;
+}
+.bd-sources-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: currentColor;
 }
 .bd-sources-badge--good {
+  background: var(--success-soft);
   color: var(--success);
 }
 .bd-sources-badge--mid {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
   color: var(--warn);
 }
 .bd-sources-badge--bad {
+  background: var(--danger-soft);
   color: var(--danger);
 }
 .bd-sources-badge--unknown {
@@ -513,8 +559,10 @@
   color: var(--text);
 }
 .bd-event__mode--on {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--panel-3);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 .bd-event__mode:disabled {
   cursor: default;

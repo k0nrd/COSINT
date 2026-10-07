@@ -22,13 +22,14 @@ export interface StatusDef {
 
 /** Liste ordonnée des statuts (ordre d'affichage dans les sélecteurs). */
 export const STATUS_DEFS: StatusDef[] = [
-  { id: 'none', labelKey: 'status.badge.none', color: '#64707e', glyph: '' },
-  { id: 'confirmed', labelKey: 'status.badge.confirmed', color: '#29c26f', glyph: '✓' },
-  { id: 'issue', labelKey: 'status.badge.issue', color: '#f5910b', glyph: '!' },
-  { id: 'false_positive', labelKey: 'status.badge.false_positive', color: '#1a1f27', glyph: '✕' },
-  { id: 'question', labelKey: 'status.badge.question', color: '#3b82f6', glyph: '?' },
-  { id: 'stop', labelKey: 'status.badge.stop', color: '#f0616d', glyph: '−' },
-  { id: 'onhold', labelKey: 'status.badge.onhold', color: '#8a94a6', glyph: '⧗' }
+  // Refonte UI : teintes alignées sur les états sémantiques du thème (plus de couleurs vives).
+  { id: 'none', labelKey: 'status.badge.none', color: '#6b7280', glyph: '' },
+  { id: 'confirmed', labelKey: 'status.badge.confirmed', color: '#3fa873', glyph: '✓' },
+  { id: 'issue', labelKey: 'status.badge.issue', color: '#d39a2f', glyph: '!' },
+  { id: 'false_positive', labelKey: 'status.badge.false_positive', color: '#2b2f36', glyph: '✕' },
+  { id: 'question', labelKey: 'status.badge.question', color: '#5b84d8', glyph: '?' },
+  { id: 'stop', labelKey: 'status.badge.stop', color: '#d9584f', glyph: '−' },
+  { id: 'onhold', labelKey: 'status.badge.onhold', color: '#808792', glyph: '⧗' }
 ]
 
 const STATUS_BY_ID = new Map(STATUS_DEFS.map((def) => [def.id, def]))

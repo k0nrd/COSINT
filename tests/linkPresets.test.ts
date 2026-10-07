@@ -374,9 +374,9 @@ describe('lib/linkPresets — aperçu (miroir de CosintEdge)', () => {
   })
 
   it('edgeWidthPx suit les paliers de CosintEdge', () => {
-    expect(edgeWidthPx('thin')).toBe(1.5)
-    expect(edgeWidthPx('normal')).toBe(2.25)
-    expect(edgeWidthPx('thick')).toBe(4)
+    expect(edgeWidthPx('thin')).toBe(1.25)
+    expect(edgeWidthPx('normal')).toBe(1.75)
+    expect(edgeWidthPx('thick')).toBe(3.5)
   })
 
   it('previewPath distingue courbe, droite et coudé', () => {

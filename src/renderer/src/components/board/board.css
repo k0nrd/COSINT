@@ -408,6 +408,12 @@
   letter-spacing: 3px;
   user-select: all;
 }
+/* Bouton « Générer un code » (tableau solo) : détaché de la liste des modes, à droite. */
+.bd-share-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-4);
+}
 .bd-share-participants {
   margin: var(--sp-2) 0 0;
   color: var(--text-mute);
@@ -850,4 +856,9 @@
 }
 .fl-canvas-wrap:has(.bd-side):has(.bd-toolbar[data-position='right']) .bd-dock {
   right: 375px;
+}
+/* …et sous la barre de mise en forme du nœud sélectionné, qui occupe le haut du canvas. */
+.fl-canvas-wrap:has(.bd-side) .bd-sources {
+  top: 108px;
+  max-height: min(480px, calc(100% - 132px));
 }

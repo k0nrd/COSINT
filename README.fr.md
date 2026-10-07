@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.1-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.2-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/licence-MIT-3fbf6a" alt="Licence">
   <img src="https://img.shields.io/badge/plateforme-Windows%20·%20Linux-8b5cf6" alt="Plateforme">
   <img src="https://img.shields.io/badge/tests-578%20au%20vert-3fbf6a" alt="Tests">
@@ -74,17 +74,23 @@ sous-graphes entiers dans le presse-papiers et collez-les où vous voulez.
 
 ---
 
-## 🚀 Nouveautés de la 1.9.1
+## 🚀 Nouveautés de la 1.9.2
 
-- **🎨 Interface refondue** — thème graphite neutre (sombre et clair), polices IBM Plex
-  embarquées, accueil en liste avec barre latérale, barre d'outils ancrée en rail, recherche
-  et annuler/rétablir dans la barre supérieure, barre d'état, sélecteur d'entité en deux
-  volets, Légende et Sources ancrées.
-- **🔧 Base à jour** — Electron 43, aucune vulnérabilité connue dans `npm audit`,
-  intégration continue et builds de release automatisés (GitHub Actions).
+- **🕒 Chronologie refondue** — les cartes alternent au-dessus et au-dessous de l'axe, un
+  tableau des événements s'affiche sous la frise, et onglets, période et exports tiennent
+  dans un seul en-tête.
+- **📚 Sources et import CSV** — les sources affichent titre, adresse, date, fiabilité et
+  nombre d'éléments rattachés ; l'import CSV suit des étapes numérotées sur deux volets.
+- **🧩 Tableau affiné** — fiches plus compactes, couleurs de statut adoucies, liens plus
+  fins, et un premier élément qui ne s'ouvre plus à 400 % de zoom.
+- **🐛 Correctifs** — pastilles de statut dans le filtre de la chronologie, cadrage de la
+  frise après un changement de vue, actions de la chronologie masquées par le panneau de
+  détails.
 - Les tableaux, le format `.trace` et le protocole pair-à-pair sont inchangés.
 
-Notes complètes : [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+Notes complètes : [`docs/RELEASE_NOTES_v1.9.2.md`](docs/RELEASE_NOTES_v1.9.2.md) — la refonte
+de l'interface elle-même est décrite dans
+[`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
 
 ## Nouveautés de la 1.9.0
 

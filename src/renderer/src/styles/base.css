@@ -28,6 +28,22 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Les contrôles de formulaire n'héritent pas de la police par défaut : sans cette règle,
+   tout bouton/champ non stylé retombe sur la police système (Arial, Segoe UI…). */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
 /** Données techniques (URLs, IP, identifiants, codes) en monospace (§1). */
 .cm-mono {
   font-family: var(--font-mono);
@@ -188,6 +204,18 @@ body {
   margin: 0;
   letter-spacing: 0.01em;
 }
+.cm-modal__extra {
+  flex: 1;
+  min-width: 0;
+  margin: 0 var(--sp-2) 0 var(--sp-3);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .cm-modal__body {
   padding: var(--sp-2) var(--sp-4) var(--sp-4);
   overflow-y: auto;
@@ -196,7 +224,8 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: var(--sp-2);
-  padding: 0 var(--sp-4) var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border);
 }
 
 /* ——— Pastilles de couleur (aperçu) ——— */

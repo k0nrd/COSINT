@@ -11,6 +11,7 @@
  * La frise se met à jour en temps réel (dérivée de `nodes`, source Yjs).
  */
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -23,6 +24,7 @@ import {
 } from 'react'
 import { toPng } from 'html-to-image'
 import {
+  ArrowLeft,
   Clock,
   Code2,
   Contact,
@@ -54,6 +56,7 @@ import {
 import { resolveType, type CustomTypeMap } from '@/lib/entityTypes'
 import { EntityIcon } from '@/components/nodes/entityIcons'
 import { StatusBadge } from '@/components/board/StatusBadge'
+import { hasStatusBadge, statusDef } from '@/lib/status'
 import { NodeDetails } from '@/components/board/SidePanel'
 import { ColorField } from '@/components/common/ColorPicker'
 import { TagInput } from '@/components/common/TagInput'
@@ -80,12 +83,20 @@ import { eventHasModifier, modifierKeyLabel, type DragModifier } from '@/lib/sho
 import { useToasts } from '@/store/toasts'
 import './timeline.css'
 
-const CARD_W = 158
+const CARD_W = 244
+/** Hauteur d'une carte (date, titre, type sur trois lignes). */
+const CARD_H = 56
 const GAP = 8
-const LANE_H = 34
-const AXIS_H = 46
-const TOP_PAD = 58
-const BOTTOM_PAD = 24
+// Refonte UI : l'axe passe AU MILIEU — les voies paires se rangent sous l'axe, les voies
+// impaires au-dessus (cartes reliées à leur date par un fil). Une plage garde sa barre,
+// posée entre la carte et l'axe.
+const LANE_H = 74
+/** Bande sous l'axe : graduations + barre de plage de la 1re voie du bas. */
+const AXIS_BAND = 40
+/** Écart entre le bas des cartes du haut et l'axe (place de leur barre de plage). */
+const AXIS_GAP_UP = 22
+const TOP_PAD = 20
+const BOTTOM_PAD = 28
 const MIN_PX_PER_DAY = 0.02
 const MAX_PX_PER_DAY = 800
 // §1 v1.8.2 : marge de défilement de part et d'autre du contenu, pour pouvoir se
@@ -123,6 +134,8 @@ const monthFmt = new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numer
 const timeFmt = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 const fullFmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
 const dateOnlyFmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' })
+/** Date compacte affichée dans les cartes de la frise (jj/mm/aa). */
+const cardDateFmt = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
 /** Formate une borne d'événement (jour, ou jour + heure selon `hasTime`). */
 function fmtBound(ms: number, hasTime: boolean): string {
@@ -296,23 +309,39 @@ export function TimelinePanel({
   const spanDays = Math.max((maxDate - minDate) / DAY_MS, 0.5)
   const hasContent = tab === 'added' ? items.length > 0 : eventItems.length > 0
   const showFrise = tab === 'added' || eventView === 'frise'
+  // Refonte UI : sous la frise des Événements, un tableau récapitulatif des mêmes éléments.
+  const showTable = tab === 'events' && eventView === 'frise' && eventItems.length > 0
 
   // ——— Zoom (px par jour) ———
   const [pxPerDay, setPxPerDay] = useState<number | null>(null)
   // §1 v1.8.2 : demande de recentrage — après (re)calcul de la mise en page, on ramène
   // le défilement sur le début du contenu (au-delà de la marge de pan libre PAN_PAD).
   const pendingCenterRef = useRef(true)
+  // Deux effets, DANS CET ORDRE (React les exécute dans l'ordre de déclaration) :
+  //  1. au changement d'onglet/vue, le zoom repasse à « à recalculer » (null) + recentrage ;
+  //  2. dès que le zoom est à recalculer ET que la piste est montée, on l'ajuste à toute la
+  //     période.
+  // L'ordre inverse (historique) annulait l'ajustement : le (2) posait une valeur, le (1) la
+  // remettait à null dans le même lot, et React — ne voyant aucun changement d'état — ne
+  // relançait pas de rendu. La frise restait alors à l'échelle par défaut (60 px/jour) à
+  // l'ouverture, au retour de la vue liste et à chaque changement d'onglet.
+  // Le (1) ne fait rien au montage ; le (2) n'a volontairement PAS de dépendances (la piste
+  // est démontée en vue liste : il doit pouvoir s'exécuter au rendu où elle réapparaît), et
+  // ne boucle pas puisqu'il ne fait rien dès que le zoom est défini.
+  const viewKeyRef = useRef(`${tab}/${eventView}`)
+  useLayoutEffect(() => {
+    const key = `${tab}/${eventView}`
+    if (viewKeyRef.current === key) return
+    viewKeyRef.current = key
+    setPxPerDay(null)
+    pendingCenterRef.current = true
+  }, [tab, eventView])
   useLayoutEffect(() => {
     if (pxPerDay === null && scrollRef.current) {
       const width = scrollRef.current.clientWidth - 2 * GAP - CARD_W
       setPxPerDay(Math.max(MIN_PX_PER_DAY, Math.min(MAX_PX_PER_DAY, width / spanDays)))
     }
-  }, [pxPerDay, spanDays])
-  // Réinitialise l'ajustement au changement d'onglet/vue (span différent) + recentre.
-  useLayoutEffect(() => {
-    setPxPerDay(null)
-    pendingCenterRef.current = true
-  }, [tab, eventView])
+  })
   // Le détail affiché se referme si l'on change d'onglet/vue (l'élément peut ne pas
   // figurer dans l'autre frise).
   useEffect(() => {
@@ -402,7 +431,19 @@ export function TimelinePanel({
 
   const laneCount = lanes.length > 0 ? Math.max(...lanes) + 1 : 1
   const contentWidth = Math.max((maxDate - minDate) * pxPerMs + CARD_W + 2 * GAP, 600)
-  const contentHeight = TOP_PAD + AXIS_H + laneCount * LANE_H + BOTTOM_PAD
+  // Voies paires sous l'axe, impaires au-dessus ; on réserve toujours une rangée en haut
+  // pour que l'axe ne colle pas au bord quand il n'y a qu'une voie.
+  const lanesBelow = Math.ceil(laneCount / 2)
+  const lanesAbove = Math.max(1, Math.floor(laneCount / 2))
+  const axisY = TOP_PAD + AXIS_GAP_UP + CARD_H + (lanesAbove - 1) * LANE_H
+  const contentHeight = axisY + AXIS_BAND + lanesBelow * LANE_H + BOTTOM_PAD
+  const laneSide = (lane: number): 'up' | 'down' => (lane % 2 === 1 ? 'up' : 'down')
+  const laneTop = (lane: number): number => {
+    const depth = Math.floor(lane / 2)
+    return laneSide(lane) === 'down'
+      ? axisY + AXIS_BAND + depth * LANE_H
+      : axisY - AXIS_GAP_UP - CARD_H - depth * LANE_H
+  }
 
   // §1 v1.8.2 / §5 v1.8.3 : après (re)layout, applique le défilement en attente —
   // priorité au repositionnement de zoom (une date précise ramenée au bord gauche),
@@ -670,7 +711,7 @@ export function TimelinePanel({
     })
 
   return (
-    <div className="tl-panel">
+    <div className={`tl-panel${showTable ? ' tl-panel--table' : ''}`}>
       <div className="tl-header">
         <span className="tl-title">{t('timeline.title')}</span>
         {/* Onglets Événements / Ajouts (§3 v1.8 ; ordre §3 v1.8.1 : Événements d'abord). */}
@@ -696,16 +737,26 @@ export function TimelinePanel({
         </div>
         <span className="tl-count">{t('timeline.count', { count: hasContent ? (tab === 'added' ? items.length : eventItems.length) : 0 })}</span>
         <div className="tl-header__spacer" />
-        <button className="cm-btn" onClick={() => void exportPng()}>
-          <ImageIcon size={13} />
-          {t('timeline.exportPng')}
-        </button>
-        <button className="cm-btn" onClick={() => void exportCsv()}>
+        {/* Refonte UI : la période filtrée vit dans l'en-tête, à côté des exports. */}
+        <label className="tl-date">
+          <span className="tl-date__lbl">{t('timeline.from')}</span>
+          <input type="date" className="csv-select" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        </label>
+        <label className="tl-date">
+          <span className="tl-date__lbl">{t('timeline.to')}</span>
+          <input type="date" className="csv-select" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+        </label>
+        <button className="cm-btn" onClick={() => void exportPng()} title={t('timeline.exportPng')}>
           <Download size={13} />
-          {t('timeline.exportCsv')}
+          {t('timeline.pngShort')}
         </button>
-        <button className="cm-btn cm-btn--ghost cm-btn--icon" onClick={onClose} title={t('timeline.backCanvas')} aria-label={t('timeline.backCanvas')}>
-          <X size={16} />
+        <button className="cm-btn" onClick={() => void exportCsv()} title={t('timeline.exportCsv')}>
+          <Download size={13} />
+          {t('timeline.csvShort')}
+        </button>
+        <button className="cm-btn cm-btn--ghost tl-back" onClick={onClose}>
+          <ArrowLeft size={14} />
+          {t('timeline.backCanvas')}
         </button>
       </div>
 
@@ -761,14 +812,6 @@ export function TimelinePanel({
             </button>
           ))}
         </div>
-        <label className="tl-date">
-          {t('timeline.from')}
-          <input type="date" className="csv-select" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </label>
-        <label className="tl-date">
-          {t('timeline.to')}
-          <input type="date" className="csv-select" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-        </label>
         {authors.length > 1 && (
           <div className="tl-authors">
             {authors.map((author) => (
@@ -841,42 +884,60 @@ export function TimelinePanel({
           ) : (
             <div className="tl-track" style={{ paddingLeft: PAN_PAD, paddingRight: PAN_PAD }}>
               <div className="tl-content" ref={contentRef} style={{ width: contentWidth, height: contentHeight }}>
-              <div className="tl-axis" style={{ top: TOP_PAD }} />
+              <div className="tl-axis" style={{ top: axisY }} />
               {ticks.map((tick, i) => (
                 <div key={i} className="tl-tick" style={{ left: tick.x }}>
-                  <div className="tl-tick__line" style={{ top: TOP_PAD, height: contentHeight - TOP_PAD - 4 }} />
-                  <div className="tl-tick__label" style={{ top: TOP_PAD - 20 }}>{tick.label}</div>
+                  <div className="tl-tick__line" style={{ top: 4, height: contentHeight - 8 }} />
+                  <div className="tl-tick__mark" style={{ top: axisY - 4 }} />
+                  <div className="tl-tick__label" style={{ top: axisY + 8 }}>{tick.label}</div>
                 </div>
               ))}
               {tab === 'added'
                 ? items.map((item, i) => {
                     const x = (item.date - minDate) * pxPerMs
-                    const top = TOP_PAD + AXIS_H + lanes[i] * LANE_H
-                    const label = item.label || typeLabelOf(item)
+                    const top = laneTop(lanes[i])
+                    const side = laneSide(lanes[i])
+                    const typeLabel = typeLabelOf(item)
+                    const label = item.label || typeLabel
                     const itemNode = nodeById.get(item.id)
                     const color = itemNode ? colorHex(itemNode.color) : 'var(--accent)'
                     return (
-                      <button
-                        key={item.id}
-                        className={`tl-item${selectedId === item.id ? ' tl-item--selected' : ''}`}
-                        style={{ left: x, top }}
-                        onClick={() => selectNode(item.id)}
-                        title={`${label}\n${typeLabelOf(item)} · ${item.author}\n${fullFmt.format(new Date(item.date))}${item.isEventDate ? ` (${t('timeline.eventDate')})` : ''}`}
-                      >
-                        {/* §2 v1.8.5 : repère coloré marquant la date exacte (bord gauche = date). */}
-                        <span className="tl-item__pin" style={{ background: color }} />
-                        <span className="tl-item__ico"><EventItemIcon entityType={item.entityType} kind={item.kind} customTypeMap={customTypeMap} /></span>
-                        <span className="tl-item__label">{label}</span>
-                        {item.status && item.status !== 'none' && (
-                          <span className="tl-item__badge"><StatusBadge status={item.status} size={13} /></span>
-                        )}
-                      </button>
+                      <Fragment key={item.id}>
+                        {/* Fil reliant la carte à sa date sur l'axe. */}
+                        <span
+                          className={`tl-thread tl-thread--${side}${selectedId === item.id ? ' tl-thread--sel' : ''}`}
+                          style={
+                            {
+                              left: x,
+                              top: side === 'down' ? axisY : top + CARD_H / 2,
+                              height: side === 'down' ? top - axisY + CARD_H / 2 : axisY - top - CARD_H / 2,
+                              '--evt': color
+                            } as CSSProperties
+                          }
+                        />
+                        <button
+                          className={`tl-item${selectedId === item.id ? ' tl-item--selected' : ''}`}
+                          style={{ left: x, top }}
+                          onClick={() => selectNode(item.id)}
+                          title={`${label}\n${typeLabel} · ${item.author}\n${fullFmt.format(new Date(item.date))}${item.isEventDate ? ` (${t('timeline.eventDate')})` : ''}`}
+                        >
+                          <TimelineCardBody
+                            icon={<EventItemIcon entityType={item.entityType} kind={item.kind} customTypeMap={customTypeMap} />}
+                            color={color}
+                            date={cardDateFmt.format(new Date(item.date))}
+                            label={label}
+                            sub={label === typeLabel ? item.author : typeLabel}
+                            status={item.status}
+                          />
+                        </button>
+                      </Fragment>
                     )
                   })
                 : eventItems.map((event, i) => {
-                    const top = TOP_PAD + AXIS_H + lanes[i] * LANE_H
+                    const top = laneTop(lanes[i])
                     const node = nodeById.get(event.id)
-                    const label = event.label || (node ? typeLabelOfNode(node) : '')
+                    const typeLabel = node ? typeLabelOfNode(node) : ''
+                    const label = event.label || typeLabel
                     // §1 v1.8.4 : couleur = celle du nœud (reflète les changements
                     // graphiques faits dans l'éditeur), repli sur l'accent.
                     const color = node ? colorHex(node.color) : 'var(--accent)'
@@ -885,8 +946,10 @@ export function TimelinePanel({
                         key={event.id}
                         event={event}
                         top={top}
-                        axisTop={TOP_PAD}
+                        axisTop={axisY}
+                        side={laneSide(lanes[i])}
                         label={label}
+                        sub={label === typeLabel ? '' : typeLabel}
                         color={color}
                         minDate={minDate}
                         pxPerMs={pxPerMs}
@@ -926,6 +989,48 @@ export function TimelinePanel({
           onZoomTo={applyView}
           onPanTo={panToStart}
         />
+      )}
+
+      {showTable && (
+        <div className="tl-table">
+          <table className="tl-list">
+            <thead>
+              <tr>
+                <th>{t('timeline.colElement')}</th>
+                <th>{t('timeline.colEventDate')}</th>
+                <th>{t('timeline.colKind')}</th>
+                <th>{t('timeline.colAuthor')}</th>
+                <th>{t('timeline.colStatus')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {eventItems.map((event) => {
+                const node = nodeById.get(event.id)
+                const typeLabel = node ? typeLabelOfNode(node) : ''
+                const { timing } = event
+                return (
+                  <tr
+                    key={event.id}
+                    className={`tl-list__row${selectedId === event.id ? ' tl-list__row--selected' : ''}`}
+                    onClick={() => selectNode(event.id)}
+                  >
+                    <td className="tl-list__name">{event.label || typeLabel}</td>
+                    <td>
+                      {timing.isRange
+                        ? `${cardDateFmt.format(new Date(timing.start))} → ${cardDateFmt.format(new Date(timing.end))}`
+                        : fmtBound(timing.start, timing.hasTime)}
+                    </td>
+                    <td>{typeLabel}</td>
+                    <td>{event.author}</td>
+                    <td>
+                      <StatusPill status={event.status} />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* §2 v1.8.2 : barre d'outils HORIZONTALE en bas de la frise — retour au tableau,
@@ -1212,6 +1317,62 @@ function eventTooltip(timing: EventTiming): string {
 }
 
 /**
+ * Contenu d'une carte de la frise (refonte UI) : pastille d'icône teintée, puis date
+ * (monospace), titre et type sur trois lignes ; statut à droite.
+ */
+function TimelineCardBody({
+  icon,
+  color,
+  date,
+  label,
+  sub,
+  status
+}: {
+  icon: JSX.Element
+  color: string
+  date: string
+  label: string
+  sub: string
+  status?: ElementStatus
+}): JSX.Element {
+  return (
+    <>
+      <span
+        className="tl-item__ico"
+        style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}
+      >
+        {icon}
+      </span>
+      <span className="tl-item__text">
+        <span className="tl-item__date">{date}</span>
+        <span className="tl-item__label">{label}</span>
+        {sub !== '' && <span className="tl-item__sub">{sub}</span>}
+      </span>
+      {status && status !== 'none' && (
+        <span className="tl-item__badge">
+          <StatusBadge status={status} size={13} />
+        </span>
+      )}
+    </>
+  )
+}
+
+/** Pastille de statut du tableau récapitulatif (point coloré + libellé). */
+function StatusPill({ status }: { status?: ElementStatus }): JSX.Element | null {
+  if (!hasStatusBadge(status)) return null
+  const def = statusDef(status)
+  return (
+    <span
+      className="tl-pill"
+      style={{ color: def.color, background: `color-mix(in srgb, ${def.color} 14%, transparent)` }}
+    >
+      <span className="tl-pill__dot" aria-hidden="true" />
+      {t(def.labelKey)}
+    </span>
+  )
+}
+
+/**
  * §6 v1.8.3 (§7 v1.8.4) : ligne d'un événement sur la piste — carte + barre de plage
  * éditable VISUELLEMENT. L'édition ne démarre qu'avec **Ctrl (⌘) enfoncé** : Ctrl+glisser
  * la barre la déplace, Ctrl+glisser un embout ajuste début/fin ; sinon un simple clic
@@ -1224,7 +1385,11 @@ interface EventRowProps {
   top: number
   /** §4 v1.8.6 : ordonnée de l'axe temporel (haut), pour tracer les fils vers les dates. */
   axisTop: number
+  /** Côté de l'axe où se range la carte (voies paires dessous, impaires dessus). */
+  side: 'up' | 'down'
   label: string
+  /** Seconde ligne de la carte (type de l'élément) ; vide si le titre est déjà le type. */
+  sub: string
   color: string
   minDate: number
   pxPerMs: number
@@ -1260,7 +1425,9 @@ function EventRow({
   event,
   top,
   axisTop,
+  side,
   label,
+  sub,
   color,
   minDate,
   pxPerMs,
@@ -1405,23 +1572,24 @@ function EventRow({
 
   // §4 v1.8.6 : hauteur des fils reliant la barre à l'axe (haut). Le fil part du niveau
   // de l'axe (au-dessus de la ligne) et descend jusqu'au centre de la barre.
-  const threadTop = axisTop - top
-  const threadH = top - axisTop + 15
+  // Refonte UI : la carte est sous l'axe (fil qui descend) ou au-dessus (fil qui remonte).
+  const threadTop = side === 'down' ? axisTop - top : CARD_H / 2
+  const threadH = side === 'down' ? top - axisTop + CARD_H / 2 : axisTop - top - CARD_H / 2
 
   return (
-    <div className="tl-eventrow" style={{ left: x, top }}>
+    <div className={`tl-eventrow tl-eventrow--${side}`} style={{ left: x, top }}>
       {/* §4 v1.8.6 : fil fin reliant l'extrémité de DÉBUT (ou la date exacte) à sa date en
           haut ; pour une plage, un second fil relie la FIN. La date exacte s'affiche au
           sommet du fil quand l'élément est sélectionné. */}
       <span
-        className={`tl-thread${selected ? ' tl-thread--sel' : ''}`}
+        className={`tl-thread tl-thread--${side}${selected ? ' tl-thread--sel' : ''}`}
         style={{ left: 0, top: threadTop, height: threadH, '--evt': color } as CSSProperties}
       >
         {selected && <span className="tl-thread__date">{fmtBound(pStart, timing.hasTime)}</span>}
       </span>
       {timing.isRange && (
         <span
-          className={`tl-thread tl-thread--end${selected ? ' tl-thread--sel' : ''}`}
+          className={`tl-thread tl-thread--${side} tl-thread--end${selected ? ' tl-thread--sel' : ''}`}
           style={{ left: barW, top: threadTop, height: threadH, '--evt': color } as CSSProperties}
         >
           {selected && <span className="tl-thread__date">{fmtBound(pEnd, timing.hasTime)}</span>}
@@ -1498,18 +1666,18 @@ function EventRow({
         title={canEdit ? `${label}\n${t('timeline.barMoveExact', { key: modKeyLabel })}` : `${label}\n${eventTooltip(timing)}`}
         {...dragProps}
       >
-        {/* §2 v1.8.5 : DATE PRÉCISE (pas de barre de plage) → repère coloré à la position
-            exacte ; une plage affiche déjà sa couleur sur la barre, donc pas de repère. */}
-        {!timing.isRange && <span className="tl-item__pin" style={{ background: color }} />}
-        <span className="tl-item__ico">
-          <EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} />
-        </span>
-        <span className="tl-item__label">{label}</span>
-        {event.status && event.status !== 'none' && (
-          <span className="tl-item__badge">
-            <StatusBadge status={event.status} size={13} />
-          </span>
-        )}
+        <TimelineCardBody
+          icon={<EventItemIcon entityType={event.entityType} kind={event.kind} customTypeMap={customTypeMap} />}
+          color={color}
+          date={
+            timing.isRange
+              ? `${cardDateFmt.format(new Date(pStart))} → ${cardDateFmt.format(new Date(pEnd))}`
+              : cardDateFmt.format(new Date(pStart))
+          }
+          label={label}
+          sub={sub}
+          status={event.status}
+        />
       </button>
     </div>
   )

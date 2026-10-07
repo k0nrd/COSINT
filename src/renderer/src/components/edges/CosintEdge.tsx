@@ -24,7 +24,8 @@ import { StatusBadge } from '@/components/board/StatusBadge'
 import '../nodes/nodes.css'
 
 /** Épaisseur de base (px) selon le réglage, avant surépaisseur de sélection. */
-const WIDTH_PX: Record<EdgeWidth, number> = { thin: 1.5, normal: 2.25, thick: 4 }
+// Refonte UI : traits affinés (le lien normal ne domine plus les fiches).
+const WIDTH_PX: Record<EdgeWidth, number> = { thin: 1.25, normal: 1.75, thick: 3.5 }
 
 /** §5b v1.7 : décalages du libellé (au-dessus) et du badge (au-dessous) de la ligne,
  *  pour dégager la poignée de tracé centrale. */
@@ -210,7 +211,8 @@ export const CosintEdge = memo(function CosintEdge({
             className="nodrag nopan nd-edge-label"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - LABEL_OFFSET_Y}px)`,
-              borderColor: hex,
+              // Bordure à la couleur du lien, atténuée : le libellé reste lisible sans « flasher ».
+              borderColor: `color-mix(in srgb, ${hex} 55%, transparent)`,
               pointerEvents: showGrips ? 'none' : undefined
             }}
           >

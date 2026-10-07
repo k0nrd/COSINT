@@ -9,9 +9,11 @@ interface ModalProps {
   children: ReactNode
   footer?: ReactNode
   width?: number
+  /** Information discrète affichée à droite du titre (ex. nom du fichier en cours d'import). */
+  headerExtra?: ReactNode
 }
 
-export function Modal({ title, onClose, children, footer, width }: ModalProps): JSX.Element {
+export function Modal({ title, onClose, children, footer, width, headerExtra }: ModalProps): JSX.Element {
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') onClose()
@@ -31,6 +33,7 @@ export function Modal({ title, onClose, children, footer, width }: ModalProps): 
       >
         <div className="cm-modal__header">
           <h2 className="cm-modal__title">{title}</h2>
+          {headerExtra && <span className="cm-modal__extra">{headerExtra}</span>}
           <button
             className="cm-btn cm-btn--ghost cm-btn--icon"
             onClick={onClose}

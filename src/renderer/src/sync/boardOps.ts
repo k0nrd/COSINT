@@ -82,7 +82,7 @@ export const DEFAULT_SIZES: Record<NodeKind, { width: number; height: number }> 
   group: { width: 420, height: 300 },
   // Refonte UI : fiches compactes — la hauteur est un MINIMUM, le nœud grandit avec
   // son contenu (AUTO_HEIGHT_KINDS). Les nœuds existants gardent leur taille stockée.
-  entity: { width: 260, height: 96 },
+  entity: { width: 260, height: 78 },
   source: { width: 280, height: 110 },
   code: { width: 380, height: 240 },
   file: { width: 260, height: 96 }

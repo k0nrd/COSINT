@@ -75,7 +75,7 @@ export function NodeShell({ id, board, selected, className, children }: NodeShel
       {/* Badge de statut (§3 v1.5) : pastille en coin HAUT-GAUCHE (§5c v1.7 : déplacée
           du coin haut-droit pour libérer la poignée de resize, cf. status.css). §2 v1.6 :
           taille de base 18 px ; la compensation zoom est en CSS. */}
-      <StatusBadge status={board.status} size={18} className="bd-status-badge--corner" />
+      <StatusBadge status={board.status} size={15} className="bd-status-badge--corner" />
       {/* Poignées de connexion (§1) : larges cibles, discrètes au repos, révélées
           au survol/sélection. 4 côtés, en mode Loose chacune sert de départ OU
           d'arrivée — on peut tirer un lien depuis n'importe quel côté. */}

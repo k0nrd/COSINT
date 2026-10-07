@@ -16,6 +16,12 @@
   box-shadow: var(--shadow-md);
   z-index: 26;
 }
+/* Panneau de détails ouvert : la barre se centre sur la zone restante du canvas (elle ne
+   passe plus dessous, et ne se replie plus sur trois lignes). */
+.fl-canvas-wrap:has(.bd-side) .et-bar {
+  left: calc((100% - 320px) / 2 + 21px);
+  max-width: calc(100% - 320px - 70px);
+}
 .et-sep {
   width: 1px;
   align-self: stretch;
@@ -77,9 +83,11 @@
   background: var(--panel-3);
   color: var(--text);
 }
+/* Refonte UI : segment actif neutre (l'accent reste réservé à la sélection). */
 .et-seg__btn--active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--panel-3);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
 /* Icônes maison pour style/épaisseur */

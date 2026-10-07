@@ -272,6 +272,9 @@ export interface BoardViewProps {
   onRegenerateShare: (mode: AccessMode) => void
 }
 
+/** « Tout afficher » : plafond de zoom, pour qu'un tableau de 1 ou 2 éléments ne s'affiche pas en géant. */
+const FIT_MAX_ZOOM = 1.25
+
 export function BoardView(props: BoardViewProps): ReactElement {
   return (
     <ReactFlowProvider>
@@ -464,7 +467,7 @@ function BoardCanvas({
   // Presse-style de la pipette (§4) : style copié en attente d'application.
   const [copiedStyle, setCopiedStyle] = useState<EntityStyle | null>(null)
   // §1 v1.7 : texte CSV à importer (assistant ouvert) ; null = fermé.
-  const [csvImport, setCsvImport] = useState<{ text: string; encoding?: string } | null>(null)
+  const [csvImport, setCsvImport] = useState<{ text: string; encoding?: string; fileName?: string } | null>(null)
   // §4 v1.8 : dialogue de choix des colonnes pour l'export CSV (entités ou liens).
   const [csvExport, setCsvExport] = useState<
     | { kind: 'entities'; columns: Array<CsvColumn<BoardNodeData>> }
@@ -961,8 +964,8 @@ function BoardCanvas({
         const arrow = {
           type: MarkerType.ArrowClosed,
           color: colorHex(board.color),
-          width: 16,
-          height: 16
+          width: 11,
+          height: 11
         }
         const dimmed = !exporting && neighborIds !== null && !incidentEdgeIds.has(board.id)
         // §3 v1.7 : surlignage des liens correspondant à la recherche.
@@ -1941,7 +1944,7 @@ function BoardCanvas({
       )
       if (csv && canEdit) {
         event.preventDefault()
-        void csv.text().then((text) => setCsvImport({ text }))
+        void csv.text().then((text) => setCsvImport({ text, fileName: csv.name }))
         return
       }
       const images = dropped.filter((file) => file.type.startsWith('image/'))
@@ -2177,7 +2180,7 @@ function BoardCanvas({
       delete: deleteSelection,
       zoomIn: () => void reactFlow.zoomIn({ duration: 150 }),
       zoomOut: () => void reactFlow.zoomOut({ duration: 150 }),
-      fitView: () => void reactFlow.fitView({ padding: 0.2, duration: 300 }),
+      fitView: () => void reactFlow.fitView({ padding: 0.2, duration: 300, maxZoom: FIT_MAX_ZOOM }),
       search: () => setSearchOpen(true),
       toggleFilter: () => setFilterOpen((open) => !open),
       toggleSources: () => setSourcesOpen((open) => !open),
@@ -2407,7 +2410,7 @@ function BoardCanvas({
       // Recadre la vue sur le résultat (une fois les nœuds rendus).
       requestAnimationFrame(() =>
         requestAnimationFrame(() =>
-          reactFlow.fitView({ nodes: ids.map((id) => ({ id })), padding: 0.25, duration: 400 })
+          reactFlow.fitView({ nodes: ids.map((id) => ({ id })), padding: 0.25, duration: 400, maxZoom: FIT_MAX_ZOOM })
         )
       )
     },
@@ -2422,7 +2425,11 @@ function BoardCanvas({
       pushToast(t('csv.importError', { message: picked.error }), 'error')
       return
     }
-    setCsvImport({ text: picked.text, encoding: picked.encoding })
+    setCsvImport({
+      text: picked.text,
+      encoding: picked.encoding,
+      fileName: picked.path?.split(/[\\/]/).pop()
+    })
   }, [pushToast])
 
   // §1d : rafraîchit l'affichage sans quitter l'app — force React Flow à re-mesurer
@@ -2604,6 +2611,9 @@ function BoardCanvas({
         >
           <ReactFlow
             className={connecting ? 'fl-connecting' : undefined}
+            // Refonte UI : mention React Flow en bas à GAUCHE — en bas à droite, elle était à
+            // moitié cachée par la mini-carte et la barre d'état.
+            attributionPosition="bottom-left"
             nodes={flowNodes}
             edges={flowEdges}
             nodeTypes={nodeTypes}
@@ -2644,7 +2654,9 @@ function BoardCanvas({
             onNodesDelete={onNodesDelete}
             onEdgesDelete={onEdgesDelete}
             fitView
-            fitViewOptions={{ padding: 0.2 }}
+            // Refonte UI : le cadrage initial ne zoome JAMAIS au-delà de 100 % — sinon le
+            // premier élément posé sur un tableau vide s'affichait à 400 % (zoom maximal).
+            fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
             minZoom={0.05}
             maxZoom={4}
             // Visiteur (§6) : navigation/sélection possibles, mais ni déplacement,
@@ -2679,7 +2691,7 @@ function BoardCanvas({
             // dans le viewport courant (§7 exige le tableau entier).
             onlyRenderVisibleElements={!exporting}
           >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="var(--canvas-dots)" />
+            <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="var(--canvas-dots)" />
             {/* §2 v1.6 : publie --fl-inv-zoom sur le conteneur pour la compensation
                 inverse-zoom des poignées, zones de clic, waypoints et badges. */}
             <ZoomCompensator targetRef={wrapperRef} />
@@ -2816,7 +2828,7 @@ function BoardCanvas({
             canEdit={canEdit}
             onZoomIn={() => void reactFlow.zoomIn({ duration: 150 })}
             onZoomOut={() => void reactFlow.zoomOut({ duration: 150 })}
-            onFitView={() => void reactFlow.fitView({ padding: 0.2, duration: 300 })}
+            onFitView={() => void reactFlow.fitView({ padding: 0.2, duration: 300, maxZoom: FIT_MAX_ZOOM })}
             onToggleFilter={() => setFilterOpen((open) => !open)}
             onToggleSources={() => setSourcesOpen((open) => !open)}
             onToggleLegend={() => setLegendOpen((open) => !open)}
@@ -3050,6 +3062,8 @@ function BoardCanvas({
               sources={sources}
               attachedCounts={attachedCounts}
               onLocate={locateNode}
+              selectedId={selectedNodeIds.size === 1 ? [...selectedNodeIds][0] : null}
+              onExportReport={() => void doExportReport()}
               onClose={() => setSourcesOpen(false)}
             />
           )}
@@ -3164,6 +3178,7 @@ function BoardCanvas({
           <CsvImportDialog
             csvText={csvImport.text}
             encoding={csvImport.encoding}
+            fileName={csvImport.fileName}
             author={author}
             onClose={() => setCsvImport(null)}
             onImportHere={importGraphHere}

@@ -71,7 +71,7 @@ export const en: Record<MessageKey, string> = {
   'settings.icePlaceholder': 'stun:10.0.0.6:3478\nturn:10.0.0.6:3478 username password',
   'settings.iceHint':
     'Empty: in standard mode, default public STUN (Google, Cloudflare, Twilio); in 100% local mode, NONE — on the same subnet, local addresses are enough for a direct connection. For computers on different subnets, host an internal STUN/TURN (e.g. coturn) and enter it here. TURN format: turn:host:port username password.',
-  'settings.iceInvalid': 'Invalid line(s): {lines}',
+  'settings.iceInvalid': 'Invalid lines: {lines}',
   'settings.autoUpdateLabel': 'Check for updates on startup (GitHub Releases)',
   'settings.autoUpdateLockedLocal':
     'Automatic updates: disabled in 100% local mode (no GitHub contact). Distribute new versions through your internal channel.',
@@ -159,16 +159,16 @@ export const en: Record<MessageKey, string> = {
   'board.emptyCsv': 'Import a CSV',
   'board.emptyCsvHint': 'Export menu',
   'footer.local': 'Peer-to-peer · no data on any server',
-  'footer.elements': '{count} element(s)',
-  'footer.links': '{count} link(s)',
-  'footer.selected': '{count} selected',
+  'footer.elements': 'Elements: {count}',
+  'footer.links': 'Links: {count}',
+  'footer.selected': 'Selected: {count}',
   'footer.zoom': 'Zoom level',
   'board.full': 'Board full ({count}/{max}). Try again when a slot frees up.',
   'board.fullHard':
     'Board full ({count}/{max}) — cannot join right now.',
   'board.backHome': 'Home',
   'board.titlePlaceholder': 'Board title',
-  'status.connected': 'Connected — {count} participant(s)',
+  'status.connected': 'Connected · participants: {count}',
   'status.waiting': 'Online — waiting for participants',
   'status.connecting': 'Connecting to the network…',
   'status.unreachable': 'Network unreachable — local mode',
@@ -179,7 +179,7 @@ export const en: Record<MessageKey, string> = {
   'sync.title': 'Syncing the board…',
   'sync.sub': 'Receiving the current board state. You can edit as soon as it is complete.',
   'sync.connecting': 'Connecting to participants…',
-  'sync.received': '{nodes} element(s) and {edges} link(s) received…',
+  'sync.received': 'Received — elements: {nodes}, links: {edges}…',
 
   // ——— Connection diagnostics (v1.3, §1.4) ———
   'diag.title': 'Connection diagnostics',
@@ -190,7 +190,7 @@ export const en: Record<MessageKey, string> = {
     'These servers only match peers together. They only see derived (non-reversible) identifiers and encrypted messages — never the board content.',
   'diag.signalingConnected': 'connected',
   'diag.signalingConnecting': 'connecting…',
-  'diag.signalingFailed': 'failed ({retries} attempt(s))',
+  'diag.signalingFailed': 'failed (attempts: {retries})',
   'diag.noSignaling': 'No signalling server configured (local mode).',
   'diag.peersTitle': 'Peers discovered ({count})',
   'diag.noPeers': 'No peers discovered.',
@@ -274,7 +274,6 @@ export const en: Record<MessageKey, string> = {
   // ——— Details panel ———
   'details.title': 'Details',
   'details.noSelection': 'Select a node or a connection to see its details.',
-  'details.type': 'Type',
   'details.createdBy': 'Created by',
   'details.createdAt': 'Created on',
   'details.updatedBy': 'Modified by',
@@ -316,7 +315,7 @@ export const en: Record<MessageKey, string> = {
   'filter.byColor': 'By colour',
   'filter.noTags': 'No tags on this board.',
   'filter.clear': 'Clear filters',
-  'filter.hiddenCount': '{count} node(s) hidden by filters',
+  'filter.hiddenCount': 'Nodes hidden by filters: {count}',
 
   // ——— Export / import ———
   'export.trace': 'Export the board (.trace)',
@@ -443,7 +442,6 @@ export const en: Record<MessageKey, string> = {
   'field.hashValue': 'Digest (hash)',
 
   // ——— v1.1: entity details panel ———
-  'entity.type': 'Entity type',
   'entity.title': 'Name / title',
   'entity.addField': 'Add a custom field',
   'entity.fieldLabel': 'Label',
@@ -504,7 +502,6 @@ export const en: Record<MessageKey, string> = {
   'credibility.6': '6 — Cannot be judged',
   'sources.title': 'Sources',
   'sources.empty': 'No sources on this board.',
-  'sources.attached': '{count} element(s) attached',
   'sources.sortDate': 'Sort by date',
   'sources.sortReliability': 'Sort by reliability',
   'sources.locate': 'Center the view on this source',
@@ -585,7 +582,7 @@ export const en: Record<MessageKey, string> = {
   'approval.wantsToJoin': '{name} wants to join the board.',
   'approval.accept': 'Accept',
   'approval.refuse': 'Refuse',
-  'approval.pendingCount': '{count} pending request(s)',
+  'approval.pendingCount': 'Pending requests: {count}',
 
   // ——— v1.1: enriched profile (§7) ———
   'profile.myProfile': 'My profile',
@@ -805,7 +802,7 @@ export const en: Record<MessageKey, string> = {
   'legend.colors': 'Colours used',
   'legend.categories': 'Entity categories',
   'legend.empty': 'Nothing to show in the legend yet.',
-  'legend.count': '{count} element(s)',
+  'legend.count': 'Elements: {count}',
 
   // ——— v1.4: sharing lifecycle (§5) ———
   'status.solo': 'Private board (solo)',
@@ -871,7 +868,7 @@ export const en: Record<MessageKey, string> = {
 
   // ——— v1.4: keyboard / right-click deletion (§6bis) ———
   'delete.confirmMany': 'Delete {count} elements?',
-  'delete.selection': 'Delete {count} element(s)',
+  'delete.selection': 'Delete selection ({count})',
 
   // ——— v1.4: entity picker sorting (§6bis) ———
   'entityPicker.sortCategory': 'By category',
@@ -921,7 +918,7 @@ export const en: Record<MessageKey, string> = {
   'csv.import.assisted': 'Assisted',
   'csv.import.assistedDesc': 'You confirm each step: separator, entity type, columns, links, layout.',
   'csv.import.preview': 'Preview',
-  'csv.import.rowsDetected': '{count} row(s) detected.',
+  'csv.import.rowsDetected': 'Rows detected: {count}',
   'csv.step.format': 'Format',
   'csv.step.type': 'Entity type',
   'csv.step.columns': 'Columns',
@@ -963,7 +960,7 @@ export const en: Record<MessageKey, string> = {
   'csv.import.next': 'Next',
   'csv.import.back': 'Back',
   'csv.warnLarge': 'This file contains {count} rows. Generating that many entities may be slow. Continue?',
-  'csv.imported': '{nodes} entity/entities and {edges} link(s) imported.',
+  'csv.imported': 'Import complete — entities: {nodes}, links: {edges}.',
   'csv.importEmpty': 'No usable data in this file.',
   'csv.importError': 'CSV import failed: {message}.',
   'csv.exportEntitiesDone': 'Entities exported as CSV.',
@@ -973,7 +970,7 @@ export const en: Record<MessageKey, string> = {
 
   // ——— v1.7: timeline (§4) ———
   'timeline.title': 'Timeline',
-  'timeline.count': '{count} element(s)',
+  'timeline.count': 'Elements: {count}',
   'timeline.empty': 'No elements to place on the timeline.',
   'timeline.exportPng': 'Export PNG',
   'timeline.exportCsv': 'Export CSV',
@@ -991,9 +988,9 @@ export const en: Record<MessageKey, string> = {
   'timeline.clearEventDate': 'Clear the event date',
 
   // ——— v1.7: native canvas copy-paste (§2) ———
-  'clipboard.copied': '{count} element(s) copied.',
-  'clipboard.cut': '{count} element(s) cut.',
-  'clipboard.pasted': '{count} element(s) pasted.',
+  'clipboard.copied': 'Elements copied: {count}.',
+  'clipboard.cut': 'Elements cut: {count}.',
+  'clipboard.pasted': 'Elements pasted: {count}.',
   'clipboard.pastedEmail': 'Pasted as an “email address” entity.',
   'clipboard.pastedPhone': 'Pasted as a “phone” entity.',
   'clipboard.pastedLink': 'Pasted as a link node.',
@@ -1413,7 +1410,7 @@ export const en: Record<MessageKey, string> = {
   'entity.imagesNone': 'Nothing to add (only images are accepted).',
   'entity.imagesFull': 'This entity already has {max} images (the maximum).',
   'entity.imagesProcessing': 'Compressing {count} images…',
-  'entity.imagesAdded': '{count} image(s) added to the entity.',
+  'entity.imagesAdded': 'Images added to the entity: {count}.',
   'entity.imagesDuplicate': 'This image is already attached to the entity.',
   'entity.imagesOverflow': '{count} image(s) skipped: at most {max} images per entity.',
   'entity.imageCover': 'Cover',
@@ -1429,7 +1426,7 @@ export const en: Record<MessageKey, string> = {
   'entity.imagePrev': 'Previous image',
   'entity.imageNext': 'Next image',
   'entity.imagePosition': 'Image {index} of {count}',
-  'entity.imageMore': '{count} more image(s) — click to see them all',
+  'entity.imageMore': 'More images: {count} — click to see them all',
   'entity.imageOpen': 'Click to enlarge',
   'entity.imageViewerTitle': 'Images of “{name}”',
   'entity.imageFileName': 'image',
@@ -1516,5 +1513,20 @@ export const en: Record<MessageKey, string> = {
   'entityPicker.hintEsc': 'close',
   'entityPicker.keyEnter': 'Enter',
   'entityPicker.keyEsc': 'Esc',
-  'entity.iconChange': 'Change the icon'
+  'entity.iconChange': 'Change the icon',
+  'sources.byDate': 'By date',
+  'sources.byReliability': 'By reliability',
+  'sources.attachedShort': 'Attached: {count}',
+  'sources.toneGood': 'Reliable',
+  'sources.toneMid': 'To cross-check',
+  'sources.toneBad': 'Unreliable',
+  'sources.toneUnknown': 'Not rated',
+  'timeline.colElement': 'Element',
+  'timeline.colEventDate': 'Event date',
+  'timeline.colKind': 'Type',
+  'timeline.colAuthor': 'Author',
+  'timeline.colStatus': 'Status',
+  'timeline.pngShort': 'PNG',
+  'timeline.csvShort': 'CSV',
+  'csv.mappingTitle': 'Column mapping'
 }

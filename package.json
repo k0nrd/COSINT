@@ -1,6 +1,6 @@
 {
   "name": "cosint",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Tableau collaboratif OSINT en pair-à-pair — aucune donnée sur serveur",
   "main": "./out/main/index.js",
   "author": "COSINT",

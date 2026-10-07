@@ -168,8 +168,9 @@
   line-height: 1.35;
 }
 .nd-entity-field-label {
-  flex: 0 0 auto;
-  max-width: 42%;
+  /* Colonne de libellés de largeur fixe : les valeurs s'alignent d'une ligne à l'autre. */
+  flex: 0 0 36%;
+  max-width: 108px;
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;

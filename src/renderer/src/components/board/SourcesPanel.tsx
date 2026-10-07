@@ -4,10 +4,10 @@
  * la source. Tri local par date ou par fiabilité.
  */
 import { useMemo, useState } from 'react'
-import { BookMarked, Crosshair, X } from 'lucide-react'
+import { Crosshair, Download, X } from 'lucide-react'
 import type { BoardNodeData } from '@/types'
 import { RELIABILITY_SCALE } from '@/lib/entities'
-import { t } from '@/i18n'
+import { formatDateTime, t, type MessageKey } from '@/i18n'
 import './details.css'
 
 interface SourcesPanelProps {
@@ -15,7 +15,19 @@ interface SourcesPanelProps {
   /** Nombre d'éléments reliés à chaque source (id de source → compte). */
   attachedCounts: Record<string, number>
   onLocate: (nodeId: string) => void
+  /** Source actuellement sélectionnée sur le tableau (mise en évidence), le cas échéant. */
+  selectedId?: string | null
+  /** Export « Rapport des sources (Markdown) » — même action que le menu Exporter. */
+  onExportReport?: () => void
   onClose: () => void
+}
+
+/** Libellé court de la pastille de fiabilité, par nuance. */
+const TONE_LABEL: Record<string, MessageKey> = {
+  good: 'sources.toneGood',
+  mid: 'sources.toneMid',
+  bad: 'sources.toneBad',
+  unknown: 'sources.toneUnknown'
 }
 
 type SortKey = 'date' | 'reliability'
@@ -32,6 +44,8 @@ export function SourcesPanel({
   sources,
   attachedCounts,
   onLocate,
+  selectedId,
+  onExportReport,
   onClose
 }: SourcesPanelProps): JSX.Element {
   const [sort, setSort] = useState<SortKey>('date')
@@ -55,8 +69,8 @@ export function SourcesPanel({
   return (
     <aside className="bd-sources bd-dock" aria-label={t('sources.title')}>
       <div className="bd-sources-head">
-        <BookMarked size={14} />
         <h3 className="bd-sources-title">{t('sources.title')}</h3>
+        <span className="bd-sources-count">{sources.length}</span>
         <button
           className="cm-btn cm-btn--ghost cm-btn--icon"
           onClick={onClose}
@@ -67,18 +81,22 @@ export function SourcesPanel({
         </button>
       </div>
 
-      <div className="bd-sources-sort">
+      <div className="bd-sources-sort" role="group">
         <button
           className={`bd-sources-sort__chip${sort === 'date' ? ' bd-sources-sort__chip--active' : ''}`}
           onClick={() => setSort('date')}
+          title={t('sources.sortDate')}
+          aria-pressed={sort === 'date'}
         >
-          {t('sources.sortDate')}
+          {t('sources.byDate')}
         </button>
         <button
           className={`bd-sources-sort__chip${sort === 'reliability' ? ' bd-sources-sort__chip--active' : ''}`}
           onClick={() => setSort('reliability')}
+          title={t('sources.sortReliability')}
+          aria-pressed={sort === 'reliability'}
         >
-          {t('sources.sortReliability')}
+          {t('sources.byReliability')}
         </button>
       </div>
 
@@ -91,11 +109,21 @@ export function SourcesPanel({
               key={source.id}
               source={source}
               count={attachedCounts[source.id] ?? 0}
+              selected={selectedId === source.id}
               onLocate={onLocate}
             />
           ))
         )}
       </div>
+
+      {onExportReport && (
+        <div className="bd-sources-foot">
+          <button className="cm-btn bd-sources-report" onClick={onExportReport} disabled={sources.length === 0}>
+            <Download size={14} />
+            {t('export.report')}
+          </button>
+        </div>
+      )}
     </aside>
   )
 }
@@ -103,31 +131,41 @@ export function SourcesPanel({
 function SourceItem({
   source,
   count,
+  selected,
   onLocate
 }: {
   source: BoardNodeData
   count: number
+  selected: boolean
   onLocate: (nodeId: string) => void
 }): JSX.Element {
   const entry = RELIABILITY_SCALE.find((scale) => scale.code === source.reliability)
+  const tone = reliabilityTone(source.reliability ?? '')
+  const url = source.content.trim()
 
   return (
     <button
-      className="bd-sources-item"
+      className={`bd-sources-item${selected ? ' bd-sources-item--selected' : ''}`}
       onClick={() => onLocate(source.id)}
       title={t('sources.locate')}
     >
-      <span
-        className={`bd-sources-badge bd-sources-badge--${reliabilityTone(source.reliability ?? '')}`}
-        title={entry ? t(entry.labelKey) : t('common.none')}
-      >
-        {source.reliability || '—'}
-      </span>
-      <span className="bd-sources-item__main">
+      <span className="bd-sources-item__top">
         <span className="bd-sources-item__title">{source.title || t('nodeType.source')}</span>
-        <span className="bd-sources-item__meta">{t('sources.attached', { count })}</span>
+        <Crosshair size={13} className="bd-sources-item__locate" />
       </span>
-      <Crosshair size={13} className="bd-sources-item__locate" />
+      {url !== '' && <span className="bd-sources-item__url">{url}</span>}
+      <span className="bd-sources-item__meta">
+        <span className="bd-sources-item__date">{formatDateTime(source.createdAt)}</span>
+        <span
+          className={`bd-sources-badge bd-sources-badge--${tone}`}
+          title={entry ? t(entry.labelKey) : t('common.none')}
+        >
+          <span className="bd-sources-badge__dot" aria-hidden="true" />
+          {source.reliability ? `${source.reliability} · ` : ''}
+          {t(TONE_LABEL[tone])}
+        </span>
+        <span className="bd-sources-item__count">{t('sources.attachedShort', { count })}</span>
+      </span>
     </button>
   )
 }

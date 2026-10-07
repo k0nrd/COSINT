@@ -70,7 +70,7 @@ export const fr = {
   'settings.icePlaceholder': 'stun:10.0.0.6:3478\nturn:10.0.0.6:3478 utilisateur motdepasse',
   'settings.iceHint':
     'Vide : en mode standard, STUN publics par défaut (Google, Cloudflare, Twilio) ; en mode 100 % local, AUCUN — sur un même sous-réseau, les adresses locales suffisent à la connexion directe. Pour des postes sur des sous-réseaux différents, hébergez un STUN/TURN interne (ex. coturn) et saisissez-le ici. Format TURN : turn:hôte:port utilisateur motdepasse.',
-  'settings.iceInvalid': 'Ligne(s) invalide(s) : {lines}',
+  'settings.iceInvalid': 'Lignes invalides : {lines}',
   'settings.autoUpdateLabel': 'Vérifier les mises à jour au démarrage (GitHub Releases)',
   'settings.autoUpdateLockedLocal':
     'Mises à jour automatiques : désactivées en mode 100 % local (aucun contact GitHub). Distribuez les nouvelles versions par votre canal interne.',
@@ -158,9 +158,9 @@ export const fr = {
   'board.emptyCsv': 'Importer un CSV',
   'board.emptyCsvHint': 'menu Exporter',
   'footer.local': 'Pair-à-pair · aucune donnée sur serveur',
-  'footer.elements': '{count} élément(s)',
-  'footer.links': '{count} lien(s)',
-  'footer.selected': '{count} sélectionné(s)',
+  'footer.elements': 'Éléments : {count}',
+  'footer.links': 'Liens : {count}',
+  'footer.selected': 'Sélection : {count}',
   'footer.zoom': 'Niveau de zoom',
   'board.full': 'Tableau complet ({count}/{max}). Réessayez quand une place se libère.',
   'board.fullHard':
@@ -168,7 +168,7 @@ export const fr = {
   'board.backHome': 'Accueil',
   'board.titlePlaceholder': 'Titre du tableau',
   // États de connexion (v1.3, §1.5) — quatre situations réellement distinctes.
-  'status.connected': 'Connecté — {count} participant(s)',
+  'status.connected': 'Connecté · participants : {count}',
   'status.waiting': 'En ligne — en attente de participants',
   'status.connecting': 'Connexion au réseau…',
   'status.unreachable': 'Réseau inaccessible — mode local',
@@ -179,7 +179,7 @@ export const fr = {
   'sync.title': 'Synchronisation du tableau…',
   'sync.sub': 'Réception de l’état actuel du tableau. Vous pourrez éditer dès qu’il sera complet.',
   'sync.connecting': 'Connexion aux participants en cours…',
-  'sync.received': '{nodes} élément(s) et {edges} lien(s) reçus…',
+  'sync.received': 'Reçu — éléments : {nodes}, liens : {edges}…',
 
   // ——— Diagnostic de connexion (v1.3, §1.4) ———
   'diag.title': 'Diagnostic de connexion',
@@ -190,7 +190,7 @@ export const fr = {
     'Ces serveurs ne servent qu’à mettre les pairs en relation. Ils ne voient passer que des identifiants dérivés (non réversibles) et des messages chiffrés — jamais le contenu du tableau.',
   'diag.signalingConnected': 'connecté',
   'diag.signalingConnecting': 'connexion…',
-  'diag.signalingFailed': 'échec ({retries} tentative(s))',
+  'diag.signalingFailed': 'échec (tentatives : {retries})',
   'diag.noSignaling': 'Aucun serveur de signalisation configuré (mode local).',
   'diag.peersTitle': 'Pairs découverts ({count})',
   'diag.noPeers': 'Aucun pair découvert.',
@@ -275,7 +275,6 @@ export const fr = {
   // ——— Panneau détails ———
   'details.title': 'Détails',
   'details.noSelection': 'Sélectionnez un nœud ou une connexion pour voir ses détails.',
-  'details.type': 'Type',
   'details.createdBy': 'Créé par',
   'details.createdAt': 'Créé le',
   'details.updatedBy': 'Modifié par',
@@ -318,7 +317,7 @@ export const fr = {
   'filter.byColor': 'Par couleur',
   'filter.noTags': 'Aucun tag sur ce tableau.',
   'filter.clear': 'Effacer les filtres',
-  'filter.hiddenCount': '{count} nœud(s) masqué(s) par les filtres',
+  'filter.hiddenCount': 'Nœuds masqués par les filtres : {count}',
 
   // ——— Export / import ———
   'export.trace': 'Exporter le tableau (.trace)',
@@ -447,7 +446,6 @@ export const fr = {
   'field.hashValue': 'Empreinte (hash)',
 
   // ——— v1.1 : panneau détails d'entité ———
-  'entity.type': 'Type d’entité',
   'entity.title': 'Nom / titre',
   'entity.addField': 'Ajouter un champ personnalisé',
   'entity.fieldLabel': 'Libellé',
@@ -508,7 +506,6 @@ export const fr = {
   'credibility.6': '6 — Indéterminée',
   'sources.title': 'Sources',
   'sources.empty': 'Aucune source sur ce tableau.',
-  'sources.attached': '{count} élément(s) rattaché(s)',
   'sources.sortDate': 'Trier par date',
   'sources.sortReliability': 'Trier par fiabilité',
   'sources.locate': 'Centrer la vue sur cette source',
@@ -589,7 +586,7 @@ export const fr = {
   'approval.wantsToJoin': '{name} souhaite rejoindre le tableau.',
   'approval.accept': 'Accepter',
   'approval.refuse': 'Refuser',
-  'approval.pendingCount': '{count} demande(s) en attente',
+  'approval.pendingCount': 'Demandes en attente : {count}',
 
   // ——— v1.1 : profil enrichi (§7) ———
   'profile.myProfile': 'Mon profil',
@@ -810,7 +807,7 @@ export const fr = {
   'legend.colors': 'Couleurs utilisées',
   'legend.categories': 'Catégories d’entités',
   'legend.empty': 'Rien à légender pour l’instant.',
-  'legend.count': '{count} élément(s)',
+  'legend.count': 'Éléments : {count}',
 
   // ——— v1.4 : cycle de vie du partage (§5) ———
   'status.solo': 'Tableau privé (solo)',
@@ -876,7 +873,7 @@ export const fr = {
 
   // ——— v1.4 : suppression clavier / clic droit (§6bis) ———
   'delete.confirmMany': 'Supprimer {count} éléments ?',
-  'delete.selection': 'Supprimer {count} élément(s)',
+  'delete.selection': 'Supprimer la sélection ({count})',
 
   // ——— v1.4 : tri du sélecteur d'entités (§6bis) ———
   'entityPicker.sortCategory': 'Par catégorie',
@@ -926,7 +923,7 @@ export const fr = {
   'csv.import.assisted': 'Assisté',
   'csv.import.assistedDesc': 'Vous confirmez chaque étape : séparateur, type d’entité, colonnes, liens, disposition.',
   'csv.import.preview': 'Aperçu',
-  'csv.import.rowsDetected': '{count} ligne(s) détectée(s).',
+  'csv.import.rowsDetected': 'Lignes détectées : {count}',
   'csv.step.format': 'Format',
   'csv.step.type': 'Type d’entité',
   'csv.step.columns': 'Colonnes',
@@ -968,7 +965,7 @@ export const fr = {
   'csv.import.next': 'Suivant',
   'csv.import.back': 'Précédent',
   'csv.warnLarge': 'Ce fichier contient {count} lignes. Générer autant d’entités peut être long. Continuer ?',
-  'csv.imported': '{nodes} entité(s) et {edges} lien(s) importés.',
+  'csv.imported': 'Import terminé — entités : {nodes}, liens : {edges}.',
   'csv.importEmpty': 'Aucune donnée exploitable dans ce fichier.',
   'csv.importError': 'Import CSV impossible : {message}.',
   'csv.exportEntitiesDone': 'Entités exportées en CSV.',
@@ -978,7 +975,7 @@ export const fr = {
 
   // ——— v1.7 : chronologie / frise (§4) ———
   'timeline.title': 'Chronologie',
-  'timeline.count': '{count} élément(s)',
+  'timeline.count': 'Éléments : {count}',
   'timeline.empty': 'Aucun élément à placer sur la frise.',
   'timeline.exportPng': 'Export PNG',
   'timeline.exportCsv': 'Export CSV',
@@ -996,9 +993,9 @@ export const fr = {
   'timeline.clearEventDate': 'Effacer la date d’événement',
 
   // ——— v1.7 : copier-coller natif du canvas (§2) ———
-  'clipboard.copied': '{count} élément(s) copié(s).',
-  'clipboard.cut': '{count} élément(s) coupé(s).',
-  'clipboard.pasted': '{count} élément(s) collé(s).',
+  'clipboard.copied': 'Éléments copiés : {count}.',
+  'clipboard.cut': 'Éléments coupés : {count}.',
+  'clipboard.pasted': 'Éléments collés : {count}.',
   'clipboard.pastedEmail': 'Collé comme entité « adresse e-mail ».',
   'clipboard.pastedPhone': 'Collé comme entité « téléphone ».',
   'clipboard.pastedLink': 'Collé comme nœud lien.',
@@ -1418,7 +1415,7 @@ export const fr = {
   'entity.imagesNone': 'Aucune image à ajouter (seules les images sont acceptées).',
   'entity.imagesFull': 'Cette entité a déjà {max} images (le maximum).',
   'entity.imagesProcessing': 'Compression de {count} images…',
-  'entity.imagesAdded': '{count} image(s) ajoutée(s) à l’entité.',
+  'entity.imagesAdded': 'Images ajoutées à l’entité : {count}.',
   'entity.imagesDuplicate': 'Cette image est déjà attachée à l’entité.',
   'entity.imagesOverflow': '{count} image(s) ignorée(s) : {max} images au maximum par entité.',
   'entity.imageCover': 'Couverture',
@@ -1434,7 +1431,7 @@ export const fr = {
   'entity.imagePrev': 'Image précédente',
   'entity.imageNext': 'Image suivante',
   'entity.imagePosition': 'Image {index} sur {count}',
-  'entity.imageMore': '{count} autre(s) image(s) — cliquer pour tout voir',
+  'entity.imageMore': 'Autres images : {count} — cliquer pour tout voir',
   'entity.imageOpen': 'Cliquer pour agrandir',
   'entity.imageViewerTitle': 'Images de « {name} »',
   'entity.imageFileName': 'image',
@@ -1521,5 +1518,20 @@ export const fr = {
   'entityPicker.hintEsc': 'fermer',
   'entityPicker.keyEnter': 'Entrée',
   'entityPicker.keyEsc': 'Échap',
-  'entity.iconChange': 'Changer l’icône'
+  'entity.iconChange': 'Changer l’icône',
+  'sources.byDate': 'Par date',
+  'sources.byReliability': 'Par fiabilité',
+  'sources.attachedShort': 'Rattachés : {count}',
+  'sources.toneGood': 'Fiable',
+  'sources.toneMid': 'À recouper',
+  'sources.toneBad': 'Non fiable',
+  'sources.toneUnknown': 'Non évaluée',
+  'timeline.colElement': 'Élément',
+  'timeline.colEventDate': 'Date de l’événement',
+  'timeline.colKind': 'Type',
+  'timeline.colAuthor': 'Auteur',
+  'timeline.colStatus': 'Statut',
+  'timeline.pngShort': 'PNG',
+  'timeline.csvShort': 'CSV',
+  'csv.mappingTitle': 'Correspondance des colonnes'
 } as const

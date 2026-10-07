@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.1-06b6d4" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.9.2-06b6d4" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-3fbf6a" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows%20·%20Linux-8b5cf6" alt="Platform">
   <img src="https://img.shields.io/badge/tests-578%20passing-3fbf6a" alt="Tests">
@@ -73,16 +73,20 @@ whole subgraphs to the clipboard and paste them anywhere.
 
 ---
 
-## 🚀 What's new in 1.9.1
+## 🚀 What's new in 1.9.2
 
-- **🎨 Redesigned interface** — neutral graphite theme (dark and light), bundled IBM Plex
-  fonts, home screen as a list with a sidebar, toolbar docked as a rail, search and
-  undo/redo in the top bar, status bar, two-pane entity picker, docked Legend and Sources.
-- **🔧 Up-to-date base** — Electron 43, no known vulnerability in `npm audit`, continuous
-  integration and automated release builds (GitHub Actions).
+- **🕒 Timeline redesigned** — cards alternate above and below the axis, a table of the
+  events sits under the timeline, and tabs, date range and exports share a single header.
+- **📚 Sources and CSV import** — sources show title, address, date, reliability and
+  number of attached elements; the CSV import follows numbered steps on two panes.
+- **🧩 Finer board** — more compact cards, softer status colours, thinner links, and a
+  first element that no longer opens at 400 % zoom.
+- **🐛 Fixes** — status badges in the timeline filter, timeline framing after a view
+  change, timeline actions hidden behind the details panel.
 - Boards, the `.trace` format and the peer-to-peer protocol are unchanged.
 
-Full notes: [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+Full notes: [`docs/RELEASE_NOTES_v1.9.2.md`](docs/RELEASE_NOTES_v1.9.2.md) — the interface
+redesign itself is described in [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
 
 ## What was new in 1.9.0
 

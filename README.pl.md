@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/wersja-1.9.1-06b6d4" alt="Wersja">
+  <img src="https://img.shields.io/badge/wersja-1.9.2-06b6d4" alt="Wersja">
   <img src="https://img.shields.io/badge/licencja-MIT-3fbf6a" alt="Licencja">
   <img src="https://img.shields.io/badge/platforma-Windows%20·%20Linux-8b5cf6" alt="Platforma">
   <img src="https://img.shields.io/badge/testy-578%20zielone-3fbf6a" alt="Testy">
@@ -74,17 +74,21 @@ podgrafy do schowka i wklejaj je gdziekolwiek.
 
 ---
 
-## 🚀 Nowości w 1.9.1
+## 🚀 Nowości w 1.9.2
 
-- **🎨 Przeprojektowany interfejs** — neutralny grafitowy motyw (ciemny i jasny), wbudowane
-  czcionki IBM Plex, ekran główny w formie listy z panelem bocznym, pasek narzędzi
-  zadokowany jako szyna, wyszukiwanie oraz cofnij/ponów w górnym pasku, pasek stanu,
-  dwupanelowy wybór encji, zadokowane Legenda i Źródła.
-- **🔧 Aktualna baza** — Electron 43, brak znanych podatności w `npm audit`, ciągła
-  integracja i automatyczne budowanie wydań (GitHub Actions).
+- **🕒 Przeprojektowana oś czasu** — karty na przemian nad i pod osią, tabela zdarzeń pod
+  osią czasu, a zakładki, zakres dat i eksporty mieszczą się w jednym nagłówku.
+- **📚 Źródła i import CSV** — źródła pokazują tytuł, adres, datę, wiarygodność i liczbę
+  powiązanych elementów; import CSV przebiega w ponumerowanych krokach na dwóch panelach.
+- **🧩 Dopracowana tablica** — bardziej zwarte karty, stonowane kolory statusów, cieńsze
+  połączenia, a pierwszy element nie otwiera się już w powiększeniu 400 %.
+- **🐛 Poprawki** — znaczniki statusu w filtrze osi czasu, kadrowanie osi czasu po zmianie
+  widoku, akcje osi czasu zasłonięte przez panel szczegółów.
 - Tablice, format `.trace` i protokół peer-to-peer pozostają bez zmian.
 
-Pełne informacje: [`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
+Pełne informacje: [`docs/RELEASE_NOTES_v1.9.2.md`](docs/RELEASE_NOTES_v1.9.2.md) — samo
+przeprojektowanie interfejsu opisano w
+[`docs/RELEASE_NOTES_v1.9.1.md`](docs/RELEASE_NOTES_v1.9.1.md).
 
 ## Nowości w 1.9.0
 

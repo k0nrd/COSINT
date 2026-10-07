@@ -510,7 +510,7 @@ export function edgeDashArray(style: EdgeStyle): string | undefined {
 
 /** Largeur (px) d'un style de trait — miroir de `WIDTH_PX` de CosintEdge. */
 export function edgeWidthPx(width: EdgeWidth): number {
-  return width === 'thin' ? 1.5 : width === 'thick' ? 4 : 2.25
+  return width === 'thin' ? 1.25 : width === 'thick' ? 3.5 : 1.75
 }
 
 /**

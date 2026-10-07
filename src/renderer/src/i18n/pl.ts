@@ -274,7 +274,6 @@ export const pl: Record<MessageKey, string> = {
   // ——— Panel szczegółów ———
   'details.title': 'Szczegóły',
   'details.noSelection': 'Wybierz węzeł lub połączenie, aby zobaczyć jego szczegóły.',
-  'details.type': 'Typ',
   'details.createdBy': 'Utworzone przez',
   'details.createdAt': 'Utworzono',
   'details.updatedBy': 'Zmienione przez',
@@ -443,7 +442,6 @@ export const pl: Record<MessageKey, string> = {
   'field.hashValue': 'Skrót (hash)',
 
   // ——— v1.1: panel szczegółów jednostki ———
-  'entity.type': 'Typ jednostki',
   'entity.title': 'Nazwa / tytuł',
   'entity.addField': 'Dodaj własne pole',
   'entity.fieldLabel': 'Etykieta',
@@ -504,7 +502,6 @@ export const pl: Record<MessageKey, string> = {
   'credibility.6': '6 — Nieokreślona',
   'sources.title': 'Źródła',
   'sources.empty': 'Brak źródeł na tej tablicy.',
-  'sources.attached': 'Dołączone elementy: {count}',
   'sources.sortDate': 'Sortuj według daty',
   'sources.sortReliability': 'Sortuj według wiarygodności',
   'sources.locate': 'Wyśrodkuj widok na tym źródle',
@@ -1516,5 +1513,20 @@ export const pl: Record<MessageKey, string> = {
   'entityPicker.hintEsc': 'zamknij',
   'entityPicker.keyEnter': 'Enter',
   'entityPicker.keyEsc': 'Esc',
-  'entity.iconChange': 'Zmień ikonę'
+  'entity.iconChange': 'Zmień ikonę',
+  'sources.byDate': 'Wg daty',
+  'sources.byReliability': 'Wg wiarygodności',
+  'sources.attachedShort': 'Powiązane: {count}',
+  'sources.toneGood': 'Wiarygodne',
+  'sources.toneMid': 'Do weryfikacji',
+  'sources.toneBad': 'Niewiarygodne',
+  'sources.toneUnknown': 'Nieocenione',
+  'timeline.colElement': 'Element',
+  'timeline.colEventDate': 'Data zdarzenia',
+  'timeline.colKind': 'Typ',
+  'timeline.colAuthor': 'Autor',
+  'timeline.colStatus': 'Status',
+  'timeline.pngShort': 'PNG',
+  'timeline.csvShort': 'CSV',
+  'csv.mappingTitle': 'Mapowanie kolumn'
 }

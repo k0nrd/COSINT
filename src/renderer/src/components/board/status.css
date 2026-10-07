@@ -10,11 +10,14 @@
   font-weight: 700;
   line-height: 1;
   border: 1.5px solid var(--panel);
-  box-shadow: var(--shadow-sm);
   user-select: none;
-  /* §2 v1.6 : compensation inverse-zoom bornée [0,85 ; 2,4] pour rester lisible au
-     dézoom sans devenir énorme. Hors canvas la variable --fl-inv-zoom n'est pas
-     posée → repli 1 → aucune mise à l'échelle (panneaux, légende, etc.). */
+}
+/* §2 v1.6 : compensation inverse-zoom bornée [0,85 ; 2,4] pour rester lisible au dézoom
+   sans devenir énorme. Limitée aux pastilles posées DANS le canvas (nœuds, liens) : la
+   variable --fl-inv-zoom est publiée sur tout le conteneur du tableau, donc sans cette
+   portée les pastilles des filtres (chronologie, panneau Filtres…) grossissaient elles
+   aussi — jusqu'à se chevaucher — dès que le tableau était dézoomé. */
+.react-flow__viewport .bd-status-badge {
   scale: clamp(0.85, var(--fl-inv-zoom, 1), 2.4);
   transition: scale var(--t-fast);
 }
@@ -26,8 +29,8 @@
    reste au-dessus du contenu clippé (z-index par défaut du contenu). */
 .bd-status-badge--corner {
   position: absolute;
-  top: -7px;
-  left: -7px;
+  top: -6px;
+  left: -6px;
   z-index: 2;
 }
 
@@ -39,12 +42,12 @@
   flex-wrap: wrap;
 }
 .bd-status-opt {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 1.5px solid var(--border-strong);
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   display: inline-flex;
@@ -56,10 +59,12 @@
     box-shadow var(--t-fast);
 }
 .bd-status-opt:hover {
-  transform: scale(1.12);
+  transform: scale(1.1);
 }
 .bd-status-opt--active {
-  box-shadow: 0 0 0 2px var(--accent);
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 3.5px var(--text);
 }
 .bd-status-picker--compact .bd-status-opt {
   width: 19px;

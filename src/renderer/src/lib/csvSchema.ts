@@ -30,7 +30,7 @@ import type { CsvDelimiter, ParsedCsv } from '@/lib/csv'
 
 /** Taille par défaut d'une entité (miroir de DEFAULT_SIZES.entity de boardOps). */
 const ENTITY_W = 260
-const ENTITY_H = 96
+const ENTITY_H = 78
 
 /** Cible d'une colonne à l'import. */
 export type ColumnTarget = 'field' | 'title' | 'type' | 'ignore' | 'source' | 'target' | 'relation' | 'label'

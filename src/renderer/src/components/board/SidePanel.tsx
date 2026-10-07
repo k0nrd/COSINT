@@ -311,7 +311,9 @@ export function NodeDetails({ node }: { node: BoardNodeData }): JSX.Element {
         )}
         <div className="bd-details-hero__text">
           <span className="bd-details-hero__kicker">{kicker}</span>
-          <span className="bd-details-hero__title">{node.title || t(KIND_LABEL[node.kind])}</span>
+          <span className="bd-details-hero__title">
+            {node.title || resolvedType?.label || t(KIND_LABEL[node.kind])}
+          </span>
         </div>
       </div>
 
@@ -1147,9 +1149,18 @@ function EdgeDetails({ edge }: { edge: BoardEdgeData }): JSX.Element {
   const [customMode, setCustomMode] = useState(isCustomValue)
   const showCustom = customMode || isCustomValue
 
+  // Refonte UI : même en-tête d'identité que pour un nœud (« Connexion » + son intitulé).
+  const relationKey = relationId !== '' ? relationLabelKey(relationId) : null
+  const heroTitle = edge.label.trim() || (relationKey ? t(relationKey) : relationId) || t('relation.none')
+
   return (
     <div className="bd-side__body">
-      <TraceBlock item={edge} />
+      <div className="bd-details-head bd-details-hero">
+        <div className="bd-details-hero__text">
+          <span className="bd-details-hero__kicker">{t('edge.title')}</span>
+          <span className="bd-details-hero__title">{heroTitle}</span>
+        </div>
+      </div>
 
       <label className="cm-label">{t('relation.choose')}</label>
       <select
@@ -1255,6 +1266,8 @@ function EdgeDetails({ edge }: { edge: BoardEdgeData }): JSX.Element {
         <Route size={14} />
         {t('edge.resetRouting')}
       </button>
+
+      <TraceBlock item={edge} />
 
       <div className="bd-side__danger">
         <button className="cm-btn cm-btn--danger" onClick={() => deleteEdges([edge.id])}>

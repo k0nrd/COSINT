@@ -6,7 +6,8 @@
  * lignes. Le parsing/heuristiques/construction vivent dans lib/csv*.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { t } from '@/i18n'
+import { ArrowRight, Check } from 'lucide-react'
+import { t, type MessageKey } from '@/i18n'
 import { Modal } from '@/components/common/Modal'
 import { parseCsv, type CsvDelimiter } from '@/lib/csv'
 import {
@@ -29,6 +30,8 @@ const FIELD_KINDS = ['text', 'longtext', 'url', 'email', 'phone', 'date'] as con
 interface CsvImportDialogProps {
   csvText: string
   encoding?: string
+  /** Nom du fichier importé (affiché dans l'en-tête), quand il est connu. */
+  fileName?: string
   author: string
   onClose: () => void
   onImportHere: (nodes: BoardNodeData[], edges: BoardEdgeData[]) => void
@@ -55,6 +58,7 @@ function TypeSelect({ value, onChange }: { value: string; onChange: (id: string)
 export function CsvImportDialog({
   csvText,
   encoding,
+  fileName,
   author,
   onClose,
   onImportHere,
@@ -111,26 +115,29 @@ export function CsvImportDialog({
 
   // ——— Aperçu du CSV (en-tête + premières lignes) ———
   const previewHeader = parsed.header ?? Array.from({ length: width }, (_, i) => columnLabel(null, i))
-  const preview = (
-    <div className="csv-preview">
-      <table className="csv-preview__table">
-        <thead>
-          <tr>
-            {previewHeader.map((cell, i) => (
-              <th key={i}>{cell}</th>
+  const previewTable = (
+    <table className="csv-preview__table">
+      <thead>
+        <tr>
+          {previewHeader.map((cell, i) => (
+            <th key={i}>{cell}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {parsed.rows.slice(0, PREVIEW_ROWS).map((row, r) => (
+          <tr key={r}>
+            {Array.from({ length: width }, (_, c) => (
+              <td key={c}>{row[c] ?? ''}</td>
             ))}
           </tr>
-        </thead>
-        <tbody>
-          {parsed.rows.slice(0, PREVIEW_ROWS).map((row, r) => (
-            <tr key={r}>
-              {Array.from({ length: width }, (_, c) => (
-                <td key={c}>{row[c] ?? ''}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        ))}
+      </tbody>
+    </table>
+  )
+  const preview = (
+    <div className="csv-preview">
+      {previewTable}
       <div className="csv-preview__meta">
         {t('csv.import.rowsDetected', { count: rowCount })}
         {encoding ? ` · ${t('csv.encoding')} : ${encoding}` : ''}
@@ -205,12 +212,31 @@ export function CsvImportDialog({
     )
   } else {
     // ——— Mode assisté : 5 étapes ———
-    const steps = ['csv.step.format', 'csv.step.type', 'csv.step.columns', 'csv.step.links', 'csv.step.layout']
+    const steps: MessageKey[] = [
+      'csv.step.format',
+      'csv.step.type',
+      'csv.step.columns',
+      'csv.step.links',
+      'csv.step.layout'
+    ]
+    // Refonte UI : étapes numérotées (coche une fois passées), cliquables pour REVENIR en arrière.
     const stepper = (
       <ol className="csv-stepper">
         {steps.map((key, i) => (
-          <li key={key} className={i === step ? 'csv-stepper__item--active' : i < step ? 'csv-stepper__item--done' : ''}>
-            {t(key as Parameters<typeof t>[0])}
+          <li
+            key={key}
+            className={`csv-stepper__item${i === step ? ' csv-stepper__item--active' : i < step ? ' csv-stepper__item--done' : ''}`}
+            aria-current={i === step ? 'step' : undefined}
+          >
+            <button
+              type="button"
+              className="csv-stepper__btn"
+              disabled={i >= step}
+              onClick={() => setStep(i)}
+            >
+              <span className="csv-stepper__num">{i < step ? <Check size={12} strokeWidth={3} /> : i + 1}</span>
+              {t(key)}
+            </button>
           </li>
         ))}
       </ol>
@@ -302,8 +328,10 @@ export function CsvImportDialog({
           {mapping.columns.map((column) => (
             <div key={column.index} className="csv-column-row">
               <span className="csv-column-row__name" title={column.header}>
-                {column.header}
+                <span className="csv-column-row__header">{column.header}</span>
+                <span className="csv-column-row__sample">{parsed.rows[0]?.[column.index] || '—'}</span>
               </span>
+              <ArrowRight size={14} className="csv-column-row__arrow" aria-hidden="true" />
               <select
                 className="csv-select"
                 value={column.target}
@@ -466,14 +494,32 @@ export function CsvImportDialog({
     }
 
     body = (
-      <>
+      <div className="csv-wizard">
         {stepper}
-        {step === 0 && preview}
-        {stepBody}
-      </>
+        {/* Deux volets : réglages de l'étape à gauche, aperçu du fichier TOUJOURS à droite. */}
+        <div className="csv-split">
+          <div className="csv-split__pane">
+            <h3 className="csv-pane-title">{t(step === 2 ? 'csv.mappingTitle' : steps[step])}</h3>
+            {stepBody}
+          </div>
+          <div className="csv-split__pane">
+            <div className="csv-pane-head">
+              <h3 className="csv-pane-title">{t('csv.import.preview')}</h3>
+              <span className="csv-pane-meta">
+                {t('csv.import.rowsDetected', { count: rowCount })}
+                {encoding ? ` · ${encoding}` : ''}
+              </span>
+            </div>
+            <div className="csv-preview csv-preview--pane">{previewTable}</div>
+          </div>
+        </div>
+      </div>
     )
     footer = (
       <>
+        <span className="csv-foot-info">
+          {t('csv.target.destination')} : {t(destination === 'here' ? 'csv.addToBoard' : 'csv.newBoard')}
+        </span>
         <button
           className="cm-btn cm-btn--ghost"
           onClick={() => (step === 0 ? setMode('choose') : setStep((s) => s - 1))}
@@ -494,7 +540,7 @@ export function CsvImportDialog({
   }
 
   return (
-    <Modal title={t('csv.import.title')} width={720} onClose={onClose} footer={footer}>
+    <Modal title={t('csv.import.title')} width={mode === 'assisted' ? 1040 : 720} onClose={onClose} footer={footer} headerExtra={fileName}>
       {body}
     </Modal>
   )
