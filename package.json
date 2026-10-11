@@ -48,7 +48,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^43.7.7",
+    "electron": "^43.7.9",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "pdfjs-dist": "4.10.38",
